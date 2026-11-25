@@ -1,0 +1,465 @@
+{
+ "id": "g1oydt7z",
+ "label": "L15",
+ "title": "Introduction to Deep Learning",
+ "short": "Deep Learning Intro",
+ "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf",
+ "brief": "This lecture introduces deep neural networks from first principles: why automatically learning feature spaces beats handcrafted features for unstructured data, how perceptrons stack into shallow and deep networks, and how backpropagation and SGD train them. It covers universal approximation, regularization, CNNs for exploiting spatial structure, and transformers/attention for long-range dependencies. It closes with generative models (autoencoders, GANs, diffusion) and a discussion of why overparameterized training works despite NP-hardness in general. The throughline is: representation learning via composed nonlinear transformations, optimized by gradient-based methods at scale.",
+ "kp": [
+  "Deep learning automatically learns a good feature space instead of relying on handcrafted/domain-independent features",
+  "A perceptron computes a weighted sum plus bias, passed through a nonlinear activation (sigmoid, tanh, ReLU, leaky/parametric ReLU)",
+  "Shallow networks (one hidden layer) with enough neurons are universal approximators; depth multiplies the number of linear regions exponentially in K",
+  "Training is empirical risk minimization: find parameters minimizing the total loss over the dataset",
+  "Gradient descent updates parameters via the loss gradient; loss surfaces are convex for linear regression but non-convex (local minima, saddle points) for general networks",
+  "SGD uses random mini-batches, escapes local minima, and works with decreasing learning rates (explore then refine)",
+  "Momentum and Adam improve SGD by smoothing trajectories and adaptively normalizing per-parameter step sizes",
+  "Regularization adds a penalty term $\\lambda g[\\phi]$ to the loss to bias solutions and reduce overfitting",
+  "Backpropagation computes gradients efficiently via a forward pass (store activations) and backward pass (chain rule from output to input), reusing redundant computations",
+  "CNNs exploit image grid structure (locality, equivariance) with shared, sparse convolutional kernels, drastically reducing parameters vs. fully connected layers",
+  "Transformers use attention (queries, keys, values) to capture long-range dependencies that CNNs/locality cannot, enabling tokenization + embeddings + stacked transformer layers (BERT, GPT-3)",
+  "Generative models (autoencoders, GANs, diffusion) learn latent representations or data distributions to reconstruct or synthesize new, realistic data",
+  "Despite non-convex, NP-hard optimization in general, overparameterized deep networks train to zero loss in practice, and large models show emergent abilities"
+ ],
+ "topics": [
+  {
+   "n": "From handcrafted features to learned feature spaces",
+   "x": "Structured data has human-interpretable features; unstructured data (images, audio, text) requires either handcrafted/domain-specific features (meaningful but hard to extract) or domain-independent descriptors (easy but less meaningful). Deep learning automates the search for a good feature space by repeatedly transforming the input, e.g. $\\phi(x)=(x_1,x_2,x_1\\cdot x_2)$ making a nonlinear problem linearly separable."
+  },
+  {
+   "n": "Perceptrons and network architecture",
+   "x": "A perceptron computes $z=\\sum_i w_i x_i - b$ then applies a nonlinear activation $a$ (sigmoid, tanh, ReLU, leaky/parametric ReLU). Shallow networks stack perceptrons into one hidden layer ($z=W_1x+b_1$, $u=a(z)$, $y=W_2u+b_2$); deep networks stack multiple such shallow blocks, each layer's output feeding the next."
+  },
+  {
+   "n": "Universal approximation and depth vs width",
+   "x": "A shallow network with enough neurons can approximate any continuous function to arbitrary precision by summing weighted, clipped (ReLU) linear 'bumps': $D$ neurons create $D+1$ linear regions using $3D+1$ parameters. Depth is far more efficient: $K$ layers of $D$ neurons create up to $(D+1)^K$ regions, exponentially more than a shallow net with the same parameter count."
+  },
+  {
+   "n": "Training: loss, gradient descent, SGD, momentum, Adam",
+   "x": "Training is empirical risk minimization: find $\\phi$ minimizing total loss $L[\\phi]=\\sum_i \\ell_i$. Gradient descent is exact but slow and can get stuck in non-convex landscapes (local minima, saddle points); SGD uses random mini-batches each iteration, escaping local minima and working from any start, typically with a decreasing learning rate (explore then refine). Momentum smooths the trajectory; Adam additionally normalizes by a running estimate of squared gradients so steps are comparable magnitude in every direction."
+  },
+  {
+   "n": "Regularization and backpropagation",
+   "x": "Regularization adds $\\lambda g[\\phi]$ to the loss, biasing the optimum toward preferred (e.g. smoother) parameter values and reducing overfitting/local minima. Backpropagation computes all gradients efficiently: a forward pass stores every activation, then a backward pass applies the chain rule from the output loss back to each layer, reusing already-computed terms instead of deriving closed-form gradients per parameter."
+  },
+  {
+   "n": "Convolutional neural networks",
+   "x": "Raw image pixels fed to a fully connected layer require an impractical number of weights (e.g. 22 billion for a 224×224 RGB image to 150,528 neurons). CNNs exploit that nearby pixels are related and that semantics is invariant/equivariant to shifts: a convolutional kernel (e.g. 3×3) is translated across the image, sharing a few weights and yielding an almost-diagonal weight matrix — far fewer parameters than a fully connected layer with the same input/output size."
+  },
+  {
+   "n": "Transformers and attention",
+   "x": "Convolutions only aggregate information locally (limited receptive field); answering questions about images or text often requires linking distant regions/words (e.g. pronoun resolution across a paragraph). Transformers tokenize input, embed tokens, and use an attention mechanism with queries, keys, and values, $Sa[X]=V\\cdot\\text{Softmax}\\left(\\frac{K^TQ}{\\sqrt{D_q}}\\right)$, to dynamically weight relevant tokens regardless of distance; stacking transformer layers (BERT, GPT-3) with pretraining/fine-tuning or prompting yields large language models."
+  },
+  {
+   "n": "Generative AI: autoencoders, GANs, diffusion",
+   "x": "Autoencoders learn a compressed latent representation (encoder) and reconstruct input from it (decoder), enabling unsupervised representation learning. GANs pit a generator against a discriminator in an adversarial game to produce realistic fake samples (e.g. StyleGAN faces). Diffusion models encode by a fixed Markov chain that gradually adds noise to $x$ until it resembles a standard normal, then learn a decoder (sequence of denoising networks) to reverse the process and generate new data."
+  }
+ ],
+ "cards": [
+  {
+   "f": "What is the key idea behind deep neural networks regarding feature spaces?",
+   "b": "They automatically transform the original feature space through repeated nonlinear mappings until the prediction problem becomes (close to) linear.",
+   "x": "Contrast with handcrafted/domain-independent features that require manual feature engineering.",
+   "t": 0,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.11"
+  },
+  {
+   "f": "Give the formula for a perceptron's preactivation $z$.",
+   "b": "$z=\\sum_{i=1}^k w_i x_i - b$, followed by a nonlinear activation $a$ to get the postactivation output.",
+   "x": "Bias is subtracted in the slide's convention ($-b$), not added.",
+   "t": 1,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.12"
+  },
+  {
+   "f": "Why is ReLU popular as an activation function?",
+   "b": "Computational efficiency, sparser representations, smooth-enough gradient, and strong empirical success.",
+   "x": "Not because it's the most 'mathematically elegant' — it's simple and practical.",
+   "t": 1,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.13"
+  },
+  {
+   "f": "How many linear regions can a shallow network with $D$ hidden neurons (ReLU) create, and with how many parameters?",
+   "b": "$D+1$ linear regions, using $3D+1$ parameters.",
+   "x": "Linear in $D$ — contrast with deep networks' exponential scaling.",
+   "t": 2,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.20"
+  },
+  {
+   "f": "How many linear regions can a deep network with $K$ hidden layers of $D$ neurons each create?",
+   "b": "Up to $(D+1)^K$ linear regions, using $3D+1+(K-1)D(D+1)$ parameters.",
+   "x": "Exponential in depth $K$ vs. only linear in width $D$ for a shallow net — this is the core depth-efficiency argument.",
+   "t": 2,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.22"
+  },
+  {
+   "f": "State the universal approximation theorem for shallow networks.",
+   "b": "For any continuous function, there exists a shallow (one hidden layer) network that can approximate it to any specified precision.",
+   "x": "Existence result — doesn't say the network is efficient or easy to train.",
+   "t": 2,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.20"
+  },
+  {
+   "f": "What optimization problem does training a neural network solve (ERM)?",
+   "b": "$\\hat\\phi=\\arg\\min_\\phi L[\\phi]=\\arg\\min_\\phi \\sum_{i=1}^I \\ell_i[x_i,y_i]$, minimizing total loss over training data.",
+   "x": "Empirical risk minimization — approximates minimizing true risk over the unknown distribution.",
+   "t": 3,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.23"
+  },
+  {
+   "f": "Why is gradient descent's loss surface convex for linear regression but not for general neural networks?",
+   "b": "Linear regression's squared loss in the parameters is convex (one global minimum); composing nonlinear activations across layers (e.g. Gabor model) creates non-convex losses with multiple local minima and saddle points.",
+   "x": "Saddle points: gradient is locally zero but function increases in one direction, decreases in another.",
+   "t": 3,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.27"
+  },
+  {
+   "f": "What is a 'batch' and an 'epoch' in SGD?",
+   "b": "A batch is a random subset of training data (drawn without replacement) used to compute one gradient step; an epoch is one full pass through all training data.",
+   "x": "After exhausting the dataset, sampling restarts from the full dataset for the next epoch.",
+   "t": 3,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.28"
+  },
+  {
+   "f": "Why does SGD sometimes move uphill on the global loss?",
+   "b": "Each batch defines its own (different) loss function; SGD moves downhill on the batch loss, which can be uphill on the full-dataset loss — this randomness helps escape local minima.",
+   "x": "This is a feature, not a bug — enables escaping local minima that full-batch GD would get stuck in.",
+   "t": 3,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.29"
+  },
+  {
+   "f": "Give the momentum update rule.",
+   "b": "$m_{t+1}\\leftarrow \\beta m_t + (1-\\beta)\\sum_{i\\in B_t}\\frac{\\partial \\ell_i[\\phi_t]}{\\partial \\phi}$; then $\\phi_{t+1}\\leftarrow \\phi_t - \\alpha m_{t+1}$.",
+   "x": "Combines current batch gradient with the previous step's direction to smooth the trajectory.",
+   "t": 3,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.32"
+  },
+  {
+   "f": "What problem does Adam solve that plain SGD/momentum does not?",
+   "b": "It normalizes gradients per-parameter using a running estimate of the squared gradient $v_t$, so steps are a comparable fixed distance in every direction — avoiding slow convergence in shallow directions and instability/overshoot in steep ones.",
+   "x": "Without normalization, one learning rate can't be stable for both steep and shallow gradient directions simultaneously.",
+   "t": 3,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.34"
+  },
+  {
+   "f": "How does regularization modify the ERM objective?",
+   "b": "$\\hat\\phi=\\arg\\min_\\phi\\left[\\sum_i \\ell_i[x_i,y_i] + \\lambda\\cdot g[\\phi]\\right]$, where $g[\\phi]$ penalizes less-preferred parameters and $\\lambda>0$ controls the strength.",
+   "x": "Can reduce the number of local minima and shift the global minimum's location.",
+   "t": 4,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.36"
+  },
+  {
+   "f": "What are the two passes of backpropagation and what does each compute/store?",
+   "b": "Forward pass: compute and store all activations (including the final loss). Backward pass: starting from the loss, apply the chain rule backward through layers to compute all parameter gradients, reusing previously computed terms.",
+   "x": "Deriving each gradient in closed form independently would be wasteful — backprop exploits redundancy via the chain rule.",
+   "t": 4,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.39-41"
+  },
+  {
+   "f": "Why are fully connected layers impractical for raw images, and how does a convolutional layer fix this?",
+   "b": "A 224×224 RGB image fully connected to the next layer can require ~22 billion weights; a convolutional layer instead shares a small kernel (e.g. 3×3, with just a few weights) translated across the image, producing an almost-diagonal weight matrix with far fewer parameters.",
+   "x": "Convolution encodes locality and translation equivariance as architectural priors, not learned from scratch.",
+   "t": 5,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.47,p.50"
+  },
+  {
+   "f": "Define invariance vs. equivariance to a transformation $t$.",
+   "b": "Invariant: $f[t[x]]=f[x]$ (output unchanged, e.g. classification label stays 'mountain' despite a shift). Equivariant: $f[t[x]]=t[f[x]]$ (output transforms the same way as input, e.g. semantic segmentation mask shifts with the image).",
+   "x": "Classification wants invariance; segmentation wants equivariance — same transformation, different desired network behavior.",
+   "t": 5,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.48"
+  },
+  {
+   "f": "Why are convolutional layers insufficient for tasks requiring long-range reasoning (e.g. 'are there two elephants in this image/text')?",
+   "b": "Convolutions aggregate information only locally; capturing global relationships requires enlarging the kernel or stacking many layers to expand the receptive field, which is inefficient for word-level or scene-level dependencies that can span large distances.",
+   "x": "Motivates attention/transformers as a mechanism for direct long-range connections.",
+   "t": 6,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.53-54"
+  },
+  {
+   "f": "Write the scaled dot-product self-attention formula.",
+   "b": "$Sa[X]=V\\cdot\\text{Softmax}\\left(\\frac{K^TQ}{\\sqrt{D_q}}\\right)$, where $Q$=queries, $K$=keys, $V$=values, and $D_q$ is the dimension of queries/keys.",
+   "x": "The output is a weighted sum of value vectors, weighted by query–key similarity, not a fixed local window.",
+   "t": 6,
+   "ref": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.62"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "A shallow ReLU network has $D=5$ hidden neurons. How many linear regions can it create and how many parameters does it use?",
+   "o": [
+    "6 regions, 16 parameters",
+    "5 regions, 15 parameters",
+    "6 regions, 15 parameters",
+    "25 regions, 16 parameters"
+   ],
+   "a": 0,
+   "e": "Formula: $D+1$ regions and $3D+1$ parameters. With $D=5$: $5+1=6$ regions, $3(5)+1=16$ parameters. The second option miscounts regions as $D$ instead of $D+1$; the third gets regions right but miscalculates parameters; the fourth confuses the shallow formula with the deep $(D+1)^K$-style exponential growth.",
+   "d": "medium",
+   "t": 2,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.20"
+  },
+  {
+   "q": "Why can deep networks represent far more complex functions than shallow networks with the same number of parameters?",
+   "o": [
+    "Depth creates up to $(D+1)^K$ linear regions, growing exponentially in the number of layers $K$, vs. only $D+1$ (linear in width) for a shallow net",
+    "Deep networks always have a convex loss surface, so they converge to better optima",
+    "Deep networks use fewer activation functions per layer, saving parameters for more regions",
+    "Each additional layer doubles the number of training examples needed, which improves generalization"
+   ],
+   "a": 0,
+   "e": "The slides explicitly give $(D+1)^K$ regions for $K$ layers of $D$ neurons vs. $D+1$ for one shallow layer, showing exponential vs. linear growth. Depth does NOT make the loss convex (it's generally non-convex for deep nets); activation count isn't about saving parameters; more layers don't directly mean more required training examples in the sense described.",
+   "d": "medium",
+   "t": 2,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.22"
+  },
+  {
+   "q": "In gradient descent for 1D linear regression ($y=\\phi_0+\\phi_1 x$) with least-squares loss, what is $\\partial \\ell_i/\\partial \\phi_1$?",
+   "o": [
+    "$2x_i(\\phi_0+\\phi_1 x_i - y_i)$",
+    "$2(\\phi_0+\\phi_1 x_i - y_i)$",
+    "$x_i(\\phi_0+\\phi_1 x_i-y_i)$",
+    "$2x_i^2(\\phi_0+\\phi_1x_i-y_i)$"
+   ],
+   "a": 0,
+   "e": "The slide gives $\\partial\\ell_i/\\partial\\phi = [2(\\phi_0+\\phi_1x_i-y_i),\\ 2x_i(\\phi_0+\\phi_1x_i-y_i)]$, so the $\\phi_1$ component is $2x_i(\\phi_0+\\phi_1x_i-y_i)$. The second option is actually the $\\phi_0$ derivative; the third drops the factor of 2 and the chain rule's constant; the fourth incorrectly squares $x_i$.",
+   "d": "medium",
+   "t": 3,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.24"
+  },
+  {
+   "q": "Why does SGD sometimes move 'uphill' with respect to the full dataset loss during an update?",
+   "o": [
+    "Each batch loss function differs from the global loss, so moving downhill on the batch loss can be uphill globally — this is how SGD escapes local minima",
+    "SGD always uses the wrong sign for the gradient by design to add noise",
+    "The learning rate is negative in some iterations, reversing the descent direction",
+    "SGD computes an exact gradient but then intentionally reverses it every other epoch"
+   ],
+   "a": 0,
+   "e": "The slides state explicitly that a different batch creates a different loss function, so the algorithm can move downhill on the batch loss but uphill on the global loss — this is exactly the mechanism that helps SGD escape local minima. The other options describe mechanisms not in the material and are factually wrong about SGD's design.",
+   "d": "easy",
+   "t": 3,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.29"
+  },
+  {
+   "q": "What is the main practical motivation for decreasing the learning rate over the course of SGD training?",
+   "o": [
+    "High learning rate early for exploration across valleys, low learning rate later for fine-tuning near a minimum",
+    "Low learning rate early prevents numerical overflow, then it's increased later for speed",
+    "Learning rate must decrease monotonically to guarantee convexity of the loss",
+    "Decreasing learning rate ensures the gradient itself becomes smaller over time"
+   ],
+   "a": 0,
+   "e": "The slides describe exactly this two-phase 'exploration then refinement' strategy. The other options misstate the rationale: learning rate doesn't control numerical overflow in this context, it doesn't make the loss convex, and it's the learning rate (not the gradient) that we control to shrink — gradients shrink near minima on their own.",
+   "d": "easy",
+   "t": 3,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.31"
+  },
+  {
+   "q": "What problem does Adam's normalization (division by $\\sqrt{v_{t+1}}+\\epsilon$) specifically address?",
+   "o": [
+    "Gradients that are much steeper in one parameter direction than another, making a single learning rate unstable in one direction or slow in the other",
+    "Vanishing gradients caused by too many layers in very deep CNNs",
+    "Overfitting due to too many parameters relative to training examples",
+    "The non-differentiability of ReLU at zero"
+   ],
+   "a": 0,
+   "e": "The slide motivates Adam exactly with the example of a loss that is steep in one direction and shallow in another, where one learning rate can't do well in both; normalizing by the squared-gradient estimate equalizes step sizes per direction. Vanishing gradients, overfitting, and ReLU non-differentiability are real issues but are not what Adam's normalization term is introduced to solve in this material.",
+   "d": "medium",
+   "t": 3,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.33-34"
+  },
+  {
+   "q": "What role does the regularization term $\\lambda\\cdot g[\\phi]$ play in training, according to the Gabor model example?",
+   "o": [
+    "It biases the solution toward preferred parameters (e.g. closer to center), which can reduce the number of local minima and shift the global minimum's location",
+    "It guarantees the loss becomes globally convex",
+    "It removes the need for a validation set entirely",
+    "It only affects inference time, not training"
+   ],
+   "a": 0,
+   "e": "The slide shows the regularized Gabor loss has fewer local minima and the global minimum moves to a different position — regularization reshapes the loss landscape and biases toward preferred solutions. It does not make the loss convex in general, doesn't eliminate the need for validation, and it's part of the training objective, not an inference-time adjustment.",
+   "d": "medium",
+   "t": 4,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.37"
+  },
+  {
+   "q": "In backpropagation, why is the forward pass necessary before the backward pass can compute gradients?",
+   "o": [
+    "The backward pass needs the stored activations from the forward pass (e.g. $h_1, f_1, h_2,...$) to apply the chain rule at each layer",
+    "The forward pass computes the final gradients directly, and the backward pass just stores them",
+    "The backward pass can be run independently without ever running a forward pass",
+    "The forward pass is only needed once at the very start of training and never again"
+   ],
+   "a": 0,
+   "e": "The slides show the forward pass computes and stores all activations $\\upsilon=[x,f_0,h_1,...,y]$, which the backward pass then uses to compute $\\partial\\ell_i/\\partial\\phi$ via chain rule. The forward pass does not compute gradients itself; backprop requires activations from a forward pass at every iteration (not just once), so skipping it is not possible.",
+   "d": "easy",
+   "t": 4,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.39-41"
+  },
+  {
+   "q": "Why is backpropagation described as computationally efficient but not memory-efficient?",
+   "o": [
+    "Matrix multiplications parallelize well on GPUs, but all intermediate activations must be stored in memory for the backward pass",
+    "It requires recomputing all forward activations at every layer of the backward pass, which is computationally slow but memory-cheap",
+    "It avoids using GPUs entirely, which saves memory but costs compute",
+    "Memory usage is irrelevant because gradients are computed in closed form without storing anything"
+   ],
+   "a": 0,
+   "e": "The slide states matrix multiplications are simple and parallelizable (computational efficiency) but all intermediate values must be stored throughout (memory cost), and GPU memory access is a serious bottleneck for high-parameter networks. The other options invert or misstate this tradeoff.",
+   "d": "medium",
+   "t": 4,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.44"
+  },
+  {
+   "q": "A 224×224 RGB image fed into a fully connected layer with 150,528 neurons requires roughly how many weights, according to the slides?",
+   "o": [
+    "22 billion",
+    "150,528",
+    "1 million",
+    "3 million"
+   ],
+   "a": 0,
+   "e": "The slide states this configuration needs about 22 billion weights — illustrating why fully connected layers are impractical for raw images. 150,528 is just the number of input neurons (pixels × channels), not the weight count; the other numbers are unrelated magnitudes from elsewhere in the deck (e.g. dataset sizes).",
+   "d": "easy",
+   "t": 5,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.47"
+  },
+  {
+   "q": "A classification model correctly labels an image as 'mountain' both before and after the image is shifted horizontally. Which property does this illustrate?",
+   "o": [
+    "Invariance: $f[t[x]]=f[x]$",
+    "Equivariance: $f[t[x]]=t[f[x]]$",
+    "Convolution sparsity",
+    "Tokenization"
+   ],
+   "a": 0,
+   "e": "Since the output label is unchanged despite the input transformation, this is invariance as defined on the slide. Equivariance would mean the output transforms along with the input (appropriate for segmentation masks, not class labels); sparsity and tokenization are unrelated concepts.",
+   "d": "easy",
+   "t": 5,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.48"
+  },
+  {
+   "q": "For a 1D convolutional layer with kernel size 3 operating on an input of dimension $D$, how many parameters does it use compared to a fully connected layer with the same input/output dimension, per the slide's example?",
+   "o": [
+    "3 weights + 1 bias (convolution) vs. $D^2$ weights (fully connected), e.g. 36 for $D=6$",
+    "3 weights (convolution) vs. 3 weights (fully connected) — they're identical",
+    "$D$ weights (convolution) vs. $D$ weights (fully connected)",
+    "3 weights + 1 bias (convolution) vs. $3D$ weights (fully connected)"
+   ],
+   "a": 0,
+   "e": "The slide explicitly contrasts a kernel-3 convolution (3 weights, 1 bias; an almost-diagonal $\\Omega$) against a fully connected layer with $D^2$ weights, giving $\\dim[\\Omega]=36$ for $D=6$. The other options misstate the fully connected parameter count or wrongly claim the two layer types use the same number of parameters.",
+   "d": "hard",
+   "t": 5,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.50"
+  },
+  {
+   "q": "What motivates the move from convolution-based attention (local receptive fields) to transformer-style attention?",
+   "o": [
+    "The need to flexibly connect any part of the input to any other part, rather than being limited to small, fixed neighborhoods as in convolution",
+    "Transformers eliminate the need for tokenization entirely",
+    "Convolutional networks cannot process sequences of any kind, only images",
+    "Attention mechanisms were introduced to reduce the number of parameters below convolutional networks"
+   ],
+   "a": 0,
+   "e": "The slides state that convolutional attention is 'fixed and limited to a small neighborhood,' motivating 'more extended attention mechanisms that can flexibly attend to any part of the input.' Transformers still require tokenization (not eliminate it); CNNs can process 1D sequences too (as shown with the 1D convolution example); parameter reduction vs. CNNs isn't the stated motivation.",
+   "d": "medium",
+   "t": 6,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.56"
+  },
+  {
+   "q": "In the scaled dot-product attention formula $Sa[X]=V\\cdot\\text{Softmax}(K^TQ/\\sqrt{D_q})$, what role does the query play?",
+   "o": [
+    "It gives each token a weight reflecting how well its content matches the question being asked of the sequence",
+    "It directly represents the content of the input token to be output",
+    "It is the dimension used only for numerical scaling, with no semantic role",
+    "It replaces the need for an embedding matrix"
+   ],
+   "a": 0,
+   "e": "The slide states: 'The query gives each token a weight reflecting how well its content matches the question.' The content representation is the role of Values ($V$); $D_q$ is just the scaling dimension, not the query itself; queries don't replace embeddings — embeddings are a separate step feeding into $Q,K,V$.",
+   "d": "hard",
+   "t": 6,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.62"
+  },
+  {
+   "q": "According to the slides, GPT-3's architecture uses roughly how many transformer layers and parameters?",
+   "o": [
+    "96 layers, ~175 billion parameters",
+    "24 layers, ~340 million parameters",
+    "8 layers, ~60 million parameters",
+    "19 layers, ~144 million parameters"
+   ],
+   "a": 0,
+   "e": "GPT-3: 96 transformer layers, ~175 billion parameters, 12288-dim embeddings, per the slide. The second option describes BERT (24 layers, ~340M params); the third describes AlexNet (8 hidden layers, ~60M params); the fourth describes VGG (19 hidden layers, ~144M params) — all are real numbers from the deck but attached to the wrong model.",
+   "d": "medium",
+   "t": 6,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.65"
+  },
+  {
+   "q": "What distinguishes the pre-training/fine-tuning paradigm (e.g. BERT) from the prompting paradigm (e.g. GPT-3 in-context learning), per the slides?",
+   "o": [
+    "BERT is fine-tuned on a smaller labeled dataset for a specific downstream task after pre-training; GPT-3 can perform new tasks via prompting without explicit fine-tuning",
+    "BERT uses prompting exclusively and never requires labeled data",
+    "GPT-3 requires fine-tuning on labeled data before it can answer any question",
+    "Both models require identical training procedures; only their parameter counts differ"
+   ],
+   "a": 0,
+   "e": "The slides describe BERT's two-phase process (self-supervised pre-training, then fine-tuning on labeled data) versus GPT-3's in-context learning / few-shot generalization via prompting without explicit fine-tuning. The other options invert or conflate these two described paradigms.",
+   "d": "medium",
+   "t": 6,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.64-66"
+  },
+  {
+   "q": "How does a diffusion model's encoder differ from its decoder, per the slides?",
+   "o": [
+    "The encoder is a prespecified (fixed) Markov chain that gradually adds noise; the decoder is a learned sequence of networks that reverse each diffusion step to remove noise",
+    "Both encoder and decoder are learned jointly end-to-end with no fixed component",
+    "The decoder adds noise and the encoder removes it",
+    "Diffusion models have no encoder, only a decoder"
+   ],
+   "a": 0,
+   "e": "The slide explicitly states the encoder is 'prespecified' (fixed noising Markov chain $x\\to z_1\\to...\\to z_T$) while the decoder is a sequence of trained denoising networks reversing each step. The other options reverse the roles or deny the existence of the (fixed) encoder.",
+   "d": "hard",
+   "t": 7,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.72"
+  },
+  {
+   "q": "Per the slides, why is it surprising that gradient descent trains deep overparameterized networks to zero training loss in practice?",
+   "o": [
+    "Global optimization over non-convex functions is NP-hard in general, yet gradient descent achieves zero training loss in polynomial time for sufficiently overparameterized networks",
+    "Gradient descent is proven to always find the global minimum for any neural network, convex or not",
+    "Training a 3-node neural network was proven to be solvable in constant time",
+    "Overparameterization guarantees the loss function becomes convex"
+   ],
+   "a": 0,
+   "e": "The slides cite that training even small networks (3-node) is NP-complete in general, and global non-convex optimization is NP-hard, yet empirically (and per cited theory) gradient descent finds zero-loss solutions for sufficiently overparameterized deep nets — an open theoretical puzzle. The other options misstate established hardness results or falsely claim convexity emerges from overparameterization.",
+   "d": "hard",
+   "t": 3,
+   "src": "Lecture15-Lecture16-Deep-Learning-Intro.pdf p.45-46"
+  }
+ ],
+ "written": [
+  {
+   "q": "Explain why deep neural networks can represent more complex functions than shallow networks with a comparable parameter budget, and describe the mechanism (forward and backward pass) used to train them.",
+   "m": "A shallow network with $D$ hidden neurons can create $D+1$ linear regions using $3D+1$ parameters — accuracy scales only linearly with added neurons. Stacking $K$ hidden layers of $D$ neurons each instead creates up to $(D+1)^K$ linear regions, an exponential gain from depth, with only $3D+1+(K-1)D(D+1)$ parameters — so for the same parameter budget, depth yields vastly more expressive, complex decision boundaries with intricate dependencies and symmetries. Training such networks requires finding parameters $\\phi$ minimizing total loss $L[\\phi]=\\sum_i \\ell_i$ via gradient-based optimization (typically SGD with momentum/Adam). Gradients are computed efficiently by backpropagation: a forward pass propagates the input through every layer, computing and storing all intermediate activations (preactivations $z$ and postactivations $u$) up to the final loss; a backward pass then starts at the loss and applies the chain rule layer by layer back toward the input, computing $\\partial \\ell_i/\\partial \\beta_k$ and $\\partial \\ell_i/\\partial \\Omega_k$ for every layer's parameters. This reuses intermediate derivative terms already computed closer to the output, avoiding redundant closed-form derivations for each of potentially trillions of parameters. The resulting gradients feed an SGD-style update using a random mini-batch at each iteration.",
+   "k": [
+    "States/derives the $D+1$ vs $(D+1)^K$ region-count contrast and associated parameter counts",
+    "Explains depth gives exponential growth in regions vs. linear growth in width",
+    "Describes forward pass storing activations and backward pass applying chain rule from loss back to input",
+    "Mentions reuse of redundant computation as backprop's key efficiency, and that gradients feed an SGD/Adam-style update"
+   ],
+   "t": 0,
+   "ref": ""
+  },
+  {
+   "q": "Compare how CNNs and transformers each exploit structure in the input, and explain why transformers were introduced despite CNNs already working well for images.",
+   "m": "CNNs exploit the grid structure of images: nearby pixels are statistically related and most image semantics is invariant/equivariant to small geometric transformations (shifts). A convolutional layer applies a small shared kernel (e.g. 3×3) translated across the image, producing an almost-diagonal, sparse weight matrix with far fewer parameters than a fully connected layer connecting the same input/output sizes (e.g. 36 vs. $D^2$ parameters in the slide's toy example, or 3 weights + bias vs. 22 billion weights for a full 224×224 RGB image). This gives CNNs strong locality and translation-equivariance priors, letting them learn hierarchical, increasingly sophisticated spatial features layer by layer. However, convolution's receptive field is inherently local — capturing global relationships (e.g. answering whether an object appears more than once across distant parts of an image, or resolving a pronoun's referent many words away in text) requires either very large kernels or many stacked layers, which is inefficient and still limited. Transformers address this via attention: input is tokenized (words, subwords, image patches) and embedded, then an attention mechanism computes queries, keys, and values for every token, letting each token's output be a weighted sum over all other tokens ($Sa[X]=V\\cdot\\text{Softmax}(K^TQ/\\sqrt{D_q})$) — the weighting ('query matches key') flexibly connects any two tokens regardless of distance, unlike convolution's fixed local window. This is why transformers, not CNNs, underlie large language models (BERT, GPT-3) that must capture long-range dependencies in text (and increasingly in vision too).",
+   "k": [
+    "Explains convolution's locality/weight-sharing and parameter savings vs. fully connected layers, with a concrete figure",
+    "States the invariance/equivariance motivation for CNNs",
+    "Identifies the CNN limitation: local receptive field, inefficient for long-range dependencies",
+    "Describes attention's query/key/value mechanism and how it enables flexible, non-local connections between tokens"
+   ],
+   "t": 0,
+   "ref": ""
+  }
+ ]
+}

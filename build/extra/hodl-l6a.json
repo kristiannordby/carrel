@@ -1,0 +1,447 @@
+{
+ "id": "l6a",
+ "label": "L6.1",
+ "title": "Supervised Learning Continued: One Generic Algorithm, in Code",
+ "short": "Supervised learning in torch",
+ "src": "15.776 Lecture 6.1.pdf",
+ "brief": "Lecture 6.1 replays the supervised-learning recipe (a function class indexed by $\\theta$, a loss, and gradient descent on the average loss) three times in PyTorch, changing as little as possible each time. Linear regression is first trained with a hand-written loop and a hand-derived gradient $\\frac2N X^\\top(\\hat y-y)$, then with four torch lines in which loss.backward() (automatic differentiation) replaces the calculus. Fashion-MNIST classification keeps the solver but swaps both ingredients: a softmax classifier nn.Linear(784, 10) with 7,850 parameters and cross-entropy loss reaches 0.839 test accuracy. A neural network changes only the function class (Linear(784, 256), ReLU, Linear(256, 10): 203,530 parameters) and lifts test accuracy to 0.875, or 0.888 with Adam. Two practical issues close the lecture: capacity enables memorisation, so a validation set decides when to stop and the test set is touched once; and full-data gradients are expensive, so mini-batch SGD averages the gradient over a random handful of rows.",
+ "kp": [
+  "Supervised learning: pick a function class (predictors indexed by $\\theta$) and a loss; then find a $\\theta$ that makes the average loss small.",
+  "One solver for every problem: gradient descent on $\\theta$, whether $\\theta$ has 2 entries or a hundred million.",
+  "Loss by prediction type: a number (regression) → squared error; class probabilities (two or $K$ classes) → cross-entropy.",
+  "Hand-written loop for linear regression: yhat = X @ a, resid = yhat − y, loss = mean(resid²), grad = (2/N)·Xᵀresid, a ← a − η·grad.",
+  "Shapes: $X$ is $N\\times d$, resid is $N\\times1$, grad is $d\\times1$ (one slope per parameter).",
+  "Autograd: loss.backward() multiplies simple local derivatives right to left and stores every $\\partial L/\\partial\\theta$ in θ.grad; opt.zero_grad() clears them because gradients accumulate.",
+  "Torch loop = model (function class, holds $\\theta$) + optimizer (update rule) + loss + zero_grad / backward / step.",
+  "Softmax classifier on 28×28 images: 784 inputs → 10 scores → softmax; $784\\times10+10=7{,}850$ parameters; test accuracy 0.839.",
+  "Neural network: only the model changes (Linear(784,256), ReLU, Linear(256,10)), 203,530 parameters; 0.875, and 0.888 with Adam.",
+  "Training loss falls either way: use a validation set to stop early and tune, touch the test set once; mini-batch SGD (128 rows) gives an unbiased, noisier, far cheaper gradient."
+ ],
+ "topics": [
+  {
+   "n": "The supervised learning recipe",
+   "x": "Every supervised learning problem has two ingredients: a function class (a family of predictors indexed by $\\theta$) and a loss (how bad one prediction is). Averaging the loss over the data gives one number for goodness of fit, and the problem is to find a $\\theta$ that makes it small. Gradient descent is the single generic solver; squared error serves regression and cross-entropy-type losses serve two-class and $K$-class probability predictions."
+  },
+  {
+   "n": "Linear regression by hand",
+   "x": "The hand-written loop starts at a = 0, predicts yhat = X @ a, forms residuals, averages their squares and steps a ← a − η·grad with grad = (2/N)·Xᵀresid. The matrix form updates every parameter at once ($X$: $N\\times d$, resid: $N\\times1$, grad: $d\\times1$). The gradient was derived by hand, so changing the model or loss would mean redoing the calculus."
+  },
+  {
+   "n": "Automatic differentiation and the torch loop",
+   "x": "Autograd walks back through the computation, multiplying simple local derivatives right to left, so loss.backward() delivers every $\\partial L/\\partial\\theta$ into θ.grad. In torch, nn.Linear holds $\\theta$ and is the function class, optim.SGD names the update rule once, F.mse_loss is the squared error, and each step is zero_grad (gradients accumulate), backward, step."
+  },
+  {
+   "n": "Multi-class classification (Fashion-MNIST)",
+   "x": "A 28×28 clothing image is 784 numbers in [0,1]; the classifier outputs ten scores turned into ten probabilities by softmax. Each score has its own row of 784 weights, giving 7,850 parameters. Compared with regression, the function class becomes nn.Linear(784, 10), the loss becomes cross-entropy and data arrive in batches of 128; the solver is unchanged, and test accuracy is 0.839 without anyone deriving a gradient."
+  },
+  {
+   "n": "A neural network: only the function class changes",
+   "x": "Inserting Linear(784, 256) and ReLU before a Linear(256, 10) output layer gives 256 hidden units feeding the ten scores: 200,704 + 256 + 2,560 + 10 = 203,530 parameters. Loss, gradient and loop are untouched; test accuracy rises from 0.839 to 0.875, and to 0.888 after swapping SGD for Adam, with the hard classes (Shirt, Pullover) gaining most. An LLM is, in this view, just a different function class."
+  },
+  {
+   "n": "Overfitting and train/validation/test",
+   "x": "Capacity is needed to learn rich patterns but is exactly what lets a model memorise, and training error falls in both cases, so it cannot diagnose which you have. Hold data back: the training set fits the weights, the validation set decides when to stop and chooses hidden size and step size, and the test set is touched once at the end. In the notebook, validation loss bottoms at 0.96 at step 200 and climbs to 1.15 while training loss falls to 0.0008."
+  },
+  {
+   "n": "Mini-batch stochastic gradient descent",
+   "x": "The full gradient sums over all $N$ rows at every step, which is expensive. SGD averages the gradient over a small random subset $B$ (128 rows in the notebook); over the random draw it has the same expectation as the full gradient, so it is right on average, noisier, and hundreds of times cheaper. An epoch is enough mini-batches to cover all $N$ rows once."
+  }
+ ],
+ "cards": [
+  {
+   "f": "The two ingredients of every supervised learning problem",
+   "b": "(1) A function class: a family of predictors indexed by parameters $\\theta$. (2) A loss: how bad a single prediction is. Averaged over the data set, the loss gives one number; supervised learning = find a $\\theta$ that makes the average loss small.",
+   "x": "The solver (gradient descent) is not an ingredient: it is the same for every problem.",
+   "t": 0,
+   "ref": "15.776 Lecture 6.1.pdf p.3"
+  },
+  {
+   "f": "Gradient descent in 'adult notation'",
+   "b": "$\\theta\\leftarrow\\theta-\\eta\\nabla_\\theta(\\text{average loss})$, where $\\theta$ stands for every parameter at once, two in linear regression or a hundred million in a network. The rule does not change.",
+   "x": "Scale changes the cost, not the algorithm.",
+   "t": 0,
+   "ref": "15.776 Lecture 6.1.pdf p.5"
+  },
+  {
+   "f": "Which loss for which prediction?",
+   "b": "A number → regression → squared error. A probability → two classes; $K$ probabilities → $K$ classes; both use cross-entropy (F.cross_entropy in the notebook).",
+   "x": "The lecture's final recap lists exactly two losses: squared error and cross-entropy.",
+   "t": 0,
+   "ref": "15.776 Lecture 6.1.pdf p.6"
+  },
+  {
+   "f": "Hand-written gradient-descent loop for linear regression",
+   "b": "a = zeros(d); for each step: yhat = X @ a; resid = yhat − y; loss = (resid**2).mean(); grad = (2/N)·(X.T @ resid); a = a − eta·grad.",
+   "x": "Start anywhere: zero will do.",
+   "t": 1,
+   "ref": "15.776 Lecture 6.1.pdf p.13"
+  },
+  {
+   "f": "Shapes in grad = (2/N)·Xᵀ resid",
+   "b": "$X$: $N\\times d$ (one row per example, one column per feature); resid: $N\\times1$ (one per example); grad: $d\\times1$ (one number per parameter).",
+   "x": "If your gradient has N entries, you transposed the wrong thing.",
+   "t": 1,
+   "ref": "15.776 Lecture 6.1.pdf p.12"
+  },
+  {
+   "f": "Why stop doing calculus by hand?",
+   "b": "The gradient (2/N)·Xᵀresid came from manual algebra for this model and loss. Change anything (model, loss) and the derivation must be redone.",
+   "x": "Motivates autograd: write the function, let torch differentiate.",
+   "t": 1,
+   "ref": "15.776 Lecture 6.1.pdf p.14"
+  },
+  {
+   "f": "Automatic differentiation (loss.backward())",
+   "b": "Each arrow in the computation is a simple derivative you could look up; backward multiplies these local derivatives right to left. Write the function and torch hands you every derivative, storing each $\\partial L/\\partial\\theta$ in θ.grad.",
+   "x": "Mechanical, not clever: chain rule applied step by step.",
+   "t": 2,
+   "ref": "15.776 Lecture 6.1.pdf p.15"
+  },
+  {
+   "f": "Torch loop: what each line replaces",
+   "b": "model = nn.Linear(d,1) ↔ yhat = X @ a (function class, holds $\\theta$). opt = optim.SGD(model.parameters(), lr=eta) ↔ the update rule, named once. F.mse_loss ↔ (resid**2).mean(). loss.backward() ↔ grad = (2/N)Xᵀresid. opt.step() ↔ a = a − eta·grad.",
+   "x": "Four lines of torch inside the loop.",
+   "t": 2,
+   "ref": "15.776 Lecture 6.1.pdf p.23"
+  },
+  {
+   "f": "Why call opt.zero_grad() every step?",
+   "b": "Gradients accumulate in θ.grad across backward() calls; zero_grad clears them so each step uses only the current gradient. It has no counterpart in the hand-written loop.",
+   "x": "Forget it and the update uses a running sum of old gradients.",
+   "t": 2,
+   "ref": "15.776 Lecture 6.1.pdf p.21"
+  },
+  {
+   "f": "Softmax classifier for Fashion-MNIST",
+   "b": "Input: one 28×28 image = 784 pixel values in [0,1]. Ten scores, one per class, each a weighted sum of all 784 pixels plus a bias; softmax turns them into ten probabilities. Parameters: $784\\times10$ weights + 10 biases = 7,850.",
+   "x": "The classifier never sees a picture, only 784 numbers.",
+   "t": 3,
+   "ref": "15.776 Lecture 6.1.pdf p.27"
+  },
+  {
+   "f": "Regression → ten-class classification: what changed in the code?",
+   "b": "Function class nn.Linear(d,1) → nn.Linear(784,10); loss F.mse_loss → F.cross_entropy; data: all rows every step → DataLoader batches of 128. Gradient and update (backward / step) unchanged. Test accuracy 0.839.",
+   "x": "Same solver; both ingredients change.",
+   "t": 3,
+   "ref": "15.776 Lecture 6.1.pdf p.38"
+  },
+  {
+   "f": "Parameter count of Linear(784,256) → ReLU → Linear(256,10)",
+   "b": "Hidden layer: $784\\times256=200{,}704$ weights + 256 biases. Output layer: $256\\times10=2{,}560$ weights + 10 biases. Total 203,530 (vs 7,850 for the softmax classifier).",
+   "x": "ReLU has no parameters.",
+   "t": 4,
+   "ref": "15.776 Lecture 6.1.pdf p.43"
+  },
+  {
+   "f": "Does the hidden layer help? (notebook results)",
+   "b": "Test accuracy on 10,000 unseen images: linear softmax 0.839 → hidden layer 0.875 → hidden layer with Adam 0.888. Hard classes gain most: Shirt 0.58 → 0.62, Pullover 0.71 → 0.82.",
+   "x": "Two lines added to the model, one word (SGD → Adam) changed.",
+   "t": 4,
+   "ref": "15.776 Lecture 6.1.pdf p.51"
+  },
+  {
+   "f": "Why more capacity is not free",
+   "b": "Too simple: the model cannot capture the data. Too complex: it starts memorising. Training error falls either way, so it cannot tell you which you have.",
+   "x": "Capacity is exactly what lets a model memorise.",
+   "t": 5,
+   "ref": "15.776 Lecture 6.1.pdf p.55"
+  },
+  {
+   "f": "Train / validation / test: three sets, three jobs",
+   "b": "Train: fit the weights (the only data gradient descent sees). Validation: decide when to stop, and choose hidden size and step size. Test: touch once, at the end; every look makes it less honest. Notebook: validation loss minimum 0.96 at step 200, 1.15 by the end, while training loss falls to 0.0008.",
+   "x": "Early stopping: stop when the held-out loss turns upward.",
+   "t": 5,
+   "ref": "15.776 Lecture 6.1.pdf p.57"
+  },
+  {
+   "f": "Mini-batch SGD and epochs",
+   "b": "Replace the sum over every row with an average over a random subset $B$ (128 rows in the notebook). Over random $B$ it has the same expectation as the full gradient: noisier, right on average, hundreds of times cheaper. Epoch = enough mini-batches to cover all $N$ rows once.",
+   "x": "Only the sum in the update changes; the rest of the loop is untouched.",
+   "t": 6,
+   "ref": "15.776 Lecture 6.1.pdf p.59"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "In one line, what is the supervised learning problem as the lecture states it?",
+   "o": [
+    "Find a $\\theta$ that makes the average loss small",
+    "Find the function class with the most parameters",
+    "Find a $\\theta$ that drives the training loss to exactly zero",
+    "Find the loss function that best matches the data"
+   ],
+   "a": 0,
+   "e": "Function class and loss are chosen; learning is the search for $\\theta$ minimising average loss. Driving training loss to zero is what overfitting looks like, not the goal.",
+   "d": "easy",
+   "t": 0,
+   "src": "15.776 Lecture 6.1.pdf p.4"
+  },
+  {
+   "q": "In the torch version of linear regression, what does model = nn.Linear(d, 1) replace?",
+   "o": [
+    "yhat = X @ a: it is the function class and holds $\\theta$",
+    "a = a − eta * grad: the update rule",
+    "(resid**2).mean(): the loss",
+    "grad = (2/N) * (X.T @ resid): the gradient"
+   ],
+   "a": 0,
+   "e": "The model object computes predictions and stores the parameters. The update rule is the optimizer's job (opt.step()), and the gradient comes from loss.backward().",
+   "d": "easy",
+   "t": 2,
+   "src": "15.776 Lecture 6.1.pdf p.17"
+  },
+  {
+   "q": "What is the validation set used for?",
+   "o": [
+    "Deciding when to stop training and choosing settings such as hidden size and step size",
+    "Fitting the weights by gradient descent",
+    "Reporting the final accuracy of the chosen model",
+    "Adding extra training examples when data are scarce"
+   ],
+   "a": 0,
+   "e": "Train fits weights; validation steers training and model choices; test is touched once at the end to report performance. Reporting final accuracy is the test set's job.",
+   "d": "easy",
+   "t": 5,
+   "src": "15.776 Lecture 6.1.pdf p.57"
+  },
+  {
+   "q": "Going from the softmax classifier to the one-hidden-layer network, which part of the program changes?",
+   "o": [
+    "Only the model (the function class)",
+    "The loss, from cross-entropy to squared error",
+    "The gradient code, which must now be derived by hand",
+    "The optimizer and the data loader"
+   ],
+   "a": 0,
+   "e": "The lecture's point: two lines inserted into nn.Sequential, everything else unchanged. Autograd means no gradient derivation; the Adam swap came later as a separate experiment.",
+   "d": "easy",
+   "t": 4,
+   "src": "15.776 Lecture 6.1.pdf p.46"
+  },
+  {
+   "q": "After loss.backward() runs, where is $\\partial L/\\partial\\theta$ for each parameter?",
+   "o": [
+    "In each parameter's .grad attribute",
+    "In the loss tensor itself",
+    "Already subtracted from the parameters",
+    "In the optimizer's learning rate"
+   ],
+   "a": 0,
+   "e": "backward computes and stores gradients in θ.grad; it does not change the parameters. The update happens only at opt.step().",
+   "d": "easy",
+   "t": 2,
+   "src": "15.776 Lecture 6.1.pdf p.22"
+  },
+  {
+   "q": "$X$ is $N\\times d$ and resid is $N\\times1$. What is the shape of grad = (2/N) * (X.T @ resid), and what does it hold?",
+   "o": [
+    "$d\\times1$: one slope per parameter",
+    "$N\\times1$: one slope per example",
+    "$N\\times d$: one slope per entry of $X$",
+    "$1\\times1$: the loss"
+   ],
+   "a": 0,
+   "e": "$X^\\top$ is $d\\times N$, times $N\\times1$ gives $d\\times1$, matching the parameter vector a. One value per example would be the residuals.",
+   "d": "medium",
+   "t": 1,
+   "src": "15.776 Lecture 6.1.pdf p.12"
+  },
+  {
+   "q": "Hand-written loop with $N=2$, $d=1$: $X=\\begin{pmatrix}1\\\\2\\end{pmatrix}$, $y=(1,3)$, a = 0, eta = 0.1. What is a after one step?",
+   "o": [
+    "$0.7$",
+    "$-0.7$",
+    "$1.4$",
+    "$0.35$"
+   ],
+   "a": 0,
+   "e": "yhat = 0, resid = (−1, −3), Xᵀresid = −1 − 6 = −7, grad = (2/2)(−7) = −7, a = 0 − 0.1(−7) = 0.7. $1.4$ drops the $1/N$; $0.35$ drops the factor 2; $-0.7$ steps uphill.",
+   "d": "medium",
+   "t": 1,
+   "src": "15.776 Lecture 6.1.pdf p.13"
+  },
+  {
+   "q": "A student deletes opt.zero_grad() from the torch training loop. What happens?",
+   "o": [
+    "Gradients accumulate in .grad, so each step uses the sum of the current and all earlier gradients",
+    "Nothing: backward() overwrites .grad every time",
+    "The loss is no longer computed",
+    "opt.step() raises an error"
+   ],
+   "a": 0,
+   "e": "The slide's note on zero_grad: gradients accumulate, so clear them. backward() adds to .grad rather than overwriting it, so the 'nothing happens' answer is the trap.",
+   "d": "medium",
+   "t": 2,
+   "src": "15.776 Lecture 6.1.pdf p.21"
+  },
+  {
+   "q": "How many parameters does nn.Linear(784, 10) have?",
+   "o": [
+    "7,850",
+    "7,840",
+    "794",
+    "78,400"
+   ],
+   "a": 0,
+   "e": "Each of the 10 scores has its own row of 784 weights plus a bias: $7{,}840+10=7{,}850$. $7{,}840$ forgets the biases.",
+   "d": "medium",
+   "t": 3,
+   "src": "15.776 Lecture 6.1.pdf p.27"
+  },
+  {
+   "q": "Moving from linear regression to ten-class Fashion-MNIST classification, what changes in the recipe?",
+   "o": [
+    "Both ingredients (function class and loss); the solver stays",
+    "Only the loss",
+    "Only the solver: classification needs a different algorithm",
+    "Nothing: squared error on the class labels works unchanged"
+   ],
+   "a": 0,
+   "e": "'Same solver. Both ingredients change': nn.Linear(784,10) gives ten scores and cross-entropy replaces squared error. Gradient descent, backward and step are untouched.",
+   "d": "medium",
+   "t": 3,
+   "src": "15.776 Lecture 6.1.pdf p.25"
+  },
+  {
+   "q": "As you add capacity, training error keeps falling. What does that tell you?",
+   "o": [
+    "Nothing about whether the model generalises: training error falls whether it is learning or memorising",
+    "The model is generalising better",
+    "The model is overfitting",
+    "The step size is too small"
+   ],
+   "a": 0,
+   "e": "Training error cannot distinguish a good fit from memorisation; you need held-out data. Concluding 'overfitting' from training error alone is just as unjustified as concluding 'better'.",
+   "d": "medium",
+   "t": 5,
+   "src": "15.776 Lecture 6.1.pdf p.55"
+  },
+  {
+   "q": "Why is the mini-batch gradient a legitimate substitute for the full-data gradient?",
+   "o": [
+    "Over a random batch $B$ it has the same expectation as the full gradient",
+    "With 128 rows it equals the full gradient exactly",
+    "It has lower variance than the full gradient",
+    "It is computed on validation data, so it prevents overfitting"
+   ],
+   "a": 0,
+   "e": "The sum over a random subset is right on average, just noisier. It has higher, not lower, variance than the full gradient, and it uses training rows only.",
+   "d": "medium",
+   "t": 6,
+   "src": "15.776 Lecture 6.1.pdf p.59"
+  },
+  {
+   "q": "A training set has $N=25{,}600$ rows. With batch size 128, how many parameter updates do 10 epochs perform?",
+   "o": [
+    "2,000",
+    "200",
+    "256,000",
+    "20"
+   ],
+   "a": 0,
+   "e": "An epoch covers all $N$ rows once: $25{,}600/128=200$ mini-batch steps; 10 epochs give 2,000 updates. 200 is a single epoch.",
+   "d": "medium",
+   "t": 6,
+   "src": "15.776 Lecture 6.1.pdf p.59"
+  },
+  {
+   "q": "How many parameters does nn.Sequential(nn.Linear(784, 256), nn.ReLU(), nn.Linear(256, 10)) have?",
+   "o": [
+    "203,530",
+    "203,264",
+    "203,786",
+    "7,850"
+   ],
+   "a": 0,
+   "e": "$784\\cdot256+256=200{,}960$ and $256\\cdot10+10=2{,}570$; total 203,530. $203{,}264$ omits the biases; $203{,}786$ wrongly gives ReLU 256 parameters (it has none).",
+   "d": "hard",
+   "t": 4,
+   "src": "15.776 Lecture 6.1.pdf p.43"
+  },
+  {
+   "q": "Same network, but with 128 hidden units instead of 256. How many parameters?",
+   "o": [
+    "101,770",
+    "101,632",
+    "100,480",
+    "7,850"
+   ],
+   "a": 0,
+   "e": "$784\\cdot128+128=100{,}480$ for the hidden layer, $128\\cdot10+10=1{,}290$ for the output layer: 101,770. $101{,}632$ omits the biases; $100{,}480$ counts only the hidden layer.",
+   "d": "hard",
+   "t": 4,
+   "src": "15.776 Lecture 6.1.pdf p.43"
+  },
+  {
+   "q": "In the notebook, validation loss bottoms at 0.96 at step 200 and ends at 1.15, while training loss falls to 0.0008. What is the right reading and action?",
+   "o": [
+    "Overfitting after step 200: keep the weights from about step 200, then evaluate once on the test set",
+    "Keep training: the training loss of 0.0008 shows the model is still improving",
+    "Underfitting: increase the hidden size",
+    "Pick the stopping step by checking test loss as well, to be safe"
+   ],
+   "a": 0,
+   "e": "Rising validation loss while training loss keeps falling is memorisation; stop where held-out loss turns upward. Using test loss to choose the step would spend the test set's honesty.",
+   "d": "hard",
+   "t": 5,
+   "src": "15.776 Lecture 6.1.pdf p.57"
+  },
+  {
+   "q": "A team tries 12 hidden sizes, keeps the one with the best test accuracy, and reports that accuracy. What is wrong?",
+   "o": [
+    "The test set was used for selection, so the reported accuracy is optimistic; selection belongs on the validation set",
+    "Nothing: test accuracy is the honest metric",
+    "They should have selected on training loss instead",
+    "Hidden size cannot affect accuracy, so the search was pointless"
+   ],
+   "a": 0,
+   "e": "Choosing hidden size is a validation-set job; the test set is touched once, since every look makes it less honest. Selecting on training loss would always favour the biggest model.",
+   "d": "hard",
+   "t": 5,
+   "src": "15.776 Lecture 6.1.pdf p.57"
+  },
+  {
+   "q": "Test accuracy goes from 0.839 (linear softmax) to 0.888 (hidden layer + Adam). Roughly what share of the linear model's test errors are eliminated?",
+   "o": [
+    "About 30%",
+    "About 6%",
+    "About 49%",
+    "About 70%"
+   ],
+   "a": 0,
+   "e": "Error rate falls from 0.161 to 0.112, a drop of 0.049, and $0.049/0.161\\approx30\\%$. 6% is the relative gain in accuracy ($0.049/0.839$), not in errors.",
+   "d": "hard",
+   "t": 4,
+   "src": "15.776 Lecture 6.1.pdf p.52"
+  }
+ ],
+ "written": [
+  {
+   "q": "Linear regression with $N$ examples and $d$ features. (a) Write the hand-coded gradient-descent loop and explain each line, including the shapes of X, resid and grad. (b) With $X=\\begin{pmatrix}1\\\\2\\end{pmatrix}$, $y=(1,3)$, a = 0 and eta = 0.1, carry out one step. (c) Rewrite the loop in torch, matching each torch line to what it replaces. (d) Why does the lecture treat automatic differentiation as the key change, and why is opt.zero_grad() needed?",
+   "m": "(a) a = zeros(d) (start anywhere); loop: yhat = X @ a (one prediction per row), resid = yhat − y (error per example), loss = (resid**2).mean() (average squared error), grad = (2/N)·(X.T @ resid) (one slope per parameter), a = a − eta·grad (step downhill). Shapes: X is $N\\times d$, resid $N\\times1$, grad $d\\times1$. (b) yhat = (0, 0); resid = (−1, −3); loss = (1 + 9)/2 = 5; Xᵀresid = −7; grad = (2/2)(−7) = −7; a = 0 + 0.7 = 0.7. (c) model = nn.Linear(d, 1) replaces yhat = X @ a (function class holding $\\theta$); opt = optim.SGD(model.parameters(), lr=eta) names the update rule once; in the loop: loss = F.mse_loss(model(X).squeeze(), y) replaces the residual and mean-square lines; opt.zero_grad() clears old gradients; loss.backward() replaces the hand-derived gradient, putting each $\\partial L/\\partial\\theta$ into θ.grad; opt.step() replaces a = a − eta·grad. (d) The gradient formula was derived by hand for this model and loss; change either and the derivation must be redone. Autograd multiplies simple local derivatives right to left, so any model you can write gets its gradient for free; that is what lets the same loop train a softmax classifier, a neural network or a transformer. Gradients accumulate in .grad across backward calls, so zero_grad is needed so that each step uses only the current gradient.",
+   "k": [
+    "Correct loop with all five lines and their roles",
+    "Correct shapes $N\\times d$, $N\\times1$, $d\\times1$",
+    "Numerical step: resid (−1, −3), grad −7, a = 0.7",
+    "Correct torch mapping for model, optimizer, loss, backward, step",
+    "Explains why autograd generalises (no re-derivation when the model or loss changes)",
+    "Explains gradient accumulation and zero_grad"
+   ],
+   "t": 2
+  },
+  {
+   "q": "You train the Fashion-MNIST network Linear(784, 256) → ReLU → Linear(256, 10) with cross-entropy. (a) Count its parameters and explain what changed relative to the softmax classifier. (b) Explain why more capacity is not free, the job of each of the train, validation and test sets, and how you would act on the notebook's curves (validation loss minimum 0.96 at step 200, 1.15 at the end; training loss 0.0008). (c) Explain why full-data gradient steps are onerous, what mini-batch SGD does instead and why it still works. With $N=25{,}600$ and batch size 128, how many updates do 10 epochs take?",
+   "m": "(a) Hidden layer: $784\\times256=200{,}704$ weights + 256 biases; output: $256\\times10=2{,}560$ weights + 10 biases; total 203,530 (vs 7,850). Only the function class changed: two lines (Linear(784,256), ReLU) inserted; loss, autograd and update loop are identical. Test accuracy rises 0.839 → 0.875 (0.888 with Adam). (b) Capacity is needed to learn rich patterns but also lets the model memorise; training error falls in both cases, so it cannot tell you which is happening. Train set: fit the weights (all gradient descent sees). Validation set: watch its loss during training, stop when it turns upward, and choose hidden size and step size. Test set: touch once, at the end, because every look makes it less honest. Here validation loss bottoms at 0.96 at step 200 then rises to 1.15 while training loss goes to 0.0008: classic overfitting. Keep the step-200 weights (early stopping) and report test performance once. (c) The full gradient sums over all $N$ rows at every step. Mini-batch SGD draws a small random subset $B$ (128 rows) and averages the gradient over it: over random $B$ it has the same expectation as the full gradient, so it is noisier but right on average, and hundreds of times cheaper. The rest of the loop is untouched. Steps per epoch: $25{,}600/128=200$; 10 epochs: 2,000 updates.",
+   "k": [
+    "Parameter count 203,530 with the breakdown",
+    "States that only the function class changes",
+    "Capacity trade-off and why training error cannot diagnose it",
+    "Correct roles of train, validation, test; test touched once",
+    "Diagnoses overfitting from the curves and applies early stopping at about step 200",
+    "Mini-batch gradient is unbiased (same expectation), noisier, cheaper; epoch definition",
+    "Computes 200 steps per epoch, 2,000 updates"
+   ],
+   "t": 5
+  }
+ ]
+}

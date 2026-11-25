@@ -1,0 +1,28 @@
+# --- your data: never committed ---
+userdata/
+carrel.config.json
+*.bak
+
+# generated from your own vault on your own computer (the shipped starting copy is build/seed/courses.js)
+app/data/
+build/slides_text.json
+
+# the desktop window is built on each computer by install.py (desktop/build_exe.cmd)
+Carrel.exe
+Carrel.command
+
+# Python and tooling
+__pycache__/
+*.pyc
+*.tmp
+*.part
+.claude/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# not part of Carrel
+chess-coach/
+Finances/
+IMPROVEMENTS.md

@@ -1,0 +1,443 @@
+{
+ "id": "l17",
+ "label": "L17",
+ "title": "Non-linear optimization modeling",
+ "short": "Non-linear & convex optimization",
+ "src": "Lecture 17.pdf",
+ "brief": "Non-linear optimization (NLO) covers problems with a non-linear objective and/or non-linear constraints, and the right algorithm depends on structure: constrained or not, convex or not. The lecture builds intuition through formulations: norm-based approximation $\\min\\{\\|Ax-b\\|: x\\in X\\}$ (least squares, minimax, absolute residuals), weighted/regularized linear and logistic regression, signal denoising, projection and the maximum inscribed ellipsoid, mean-variance portfolio optimization, Fermat-Weber and ball-circumscription facility location, floor planning, and ride-sharing pickup coordination. It then defines the general NLO, the classes QP, QCQP, SOCP, SDP and NLP, and local versus global minima. Convexity is the dividing line: convex sets and functions, operations that preserve convexity, and the first-order (tangent plane underestimates $f$) and second-order (Hessian PSD) tests. A convex optimization problem (convex objective minimized, convex inequality constraints, linear equalities) has a convex feasible region and every local minimum is global, which is why convex problems are solved efficiently while non-convex ones are much harder.",
+ "kp": [
+  "NLO = non-linear objective and/or constraints; algorithm design depends on whether the problem is constrained and whether it is convex.",
+  "Approximation problem $\\min\\{\\|Ax-b\\|: x\\in X\\}$: squared $\\ell_2$ gives least squares, $\\ell_\\infty$ gives minimax, $\\ell_1$ gives absolute-residual fitting.",
+  "Regularized regression adds $\\lambda R(\\beta)$, e.g. $R(\\beta)=\\sum_j\\beta_j^2$; weights $w_i$ shrink the influence of less important points (outliers).",
+  "Logistic regression maximizes the log-likelihood $\\sum_i y_i\\beta^\\top x_i-\\sum_i\\log(1+e^{\\beta^\\top x_i})$, plus a regularization term.",
+  "Mean-variance portfolio: minimize $x^\\top\\Sigma x$ s.t. budget, expected return $\\ge\\beta$, no short sales; only the objective is non-linear, and it is convex because $\\Sigma\\succeq0$.",
+  "Fermat-Weber minimizes total weighted distance $\\sum_iw_i\\|x-c_i\\|$; ball circumscription minimizes the maximum distance via an epigraph variable $\\Delta$. Both are convex.",
+  "NLO classes: QP (convex iff $Q\\succeq0$), QCQP, SOCP, SDP, general NLP.",
+  "Convexity is preserved by non-negative weighted sums, affine pre-composition, pointwise max, convex non-decreasing $h$ of convex $g$; every norm is convex.",
+  "First-order test: $f$ convex iff $f(y)\\ge f(x)+\\nabla f(x)^\\top(y-x)$; second-order test: iff $H(x)\\succeq0$ everywhere. Quadratic $\\tfrac12x^\\top Px+q^\\top x+r$ is convex iff $P\\succeq0$.",
+  "Convex optimization: convex objective (min), convex $g_i(x)\\le0$, linear $Ax=b$ give a convex feasible set, and every local minimum is global."
+ ],
+ "topics": [
+  {
+   "n": "Approximation problems",
+   "x": "Many NLOs minimize a norm of a residual, $\\min\\{\\|Ax-b\\|: x\\in X\\}$, and the norm sets the model: squared $\\ell_2$ is least squares, $\\ell_\\infty$ is minimax, $\\ell_1$ is absolute residuals. Weighted/regularized linear regression, regularized logistic regression, signal denoising with a jump penalty, projection onto a set, distance between two sets and the maximum inscribed ellipsoid are all instances."
+  },
+  {
+   "n": "Applications: portfolio, location, layout, routing",
+   "x": "Mean-variance portfolio optimization minimizes portfolio variance subject to a budget, an expected-return target and no short sales. Fermat-Weber places a facility to minimize total weighted distance; ball circumscription minimizes worst-case distance. Floor planning (bilinear area and norm distance constraints) and vehicle-customer pickup coordination (norm travel and walking times) add non-linearities to otherwise linear models."
+  },
+  {
+   "n": "The general NLO and its classes",
+   "x": "NLO: minimize continuous $f$ subject to $g_i(x)\\le0$ and $h_j(x)=0$, with feasible region $F$. Named classes are QP, QCQP, SOCP, SDP and general NLP. A local minimum is no worse than every feasible point in some ball $B(x,\\varepsilon)$; a global minimum is no worse than every feasible point."
+  },
+  {
+   "n": "Convex sets and functions",
+   "x": "$S$ is convex if it contains the segment between any two of its points; intersections of convex sets are convex. $f$ is convex if it lies below its chords and concave if it lies above them. Non-negative weighted sums, affine pre-composition, pointwise maxima and convex non-decreasing outer functions preserve convexity, and every norm is convex."
+  },
+  {
+   "n": "Recognizing convexity: first- and second-order tests",
+   "x": "The gradient gives the first-order Taylor approximation and the Hessian the second-order one. A differentiable $f$ is convex iff its tangent plane underestimates it everywhere, which turns local information into global information. A twice continuously differentiable $f$ is convex iff $H(x)\\succeq0$ for all $x$; for a quadratic this means $P\\succeq0$ (all eigenvalues non-negative)."
+  },
+  {
+   "n": "Convex optimization and global optimality",
+   "x": "A convex optimization problem minimizes a convex objective under convex inequality constraints and linear equalities, so its feasible region is convex. LP, Fermat-Weber, ball circumscription, convex quadratically constrained problems and mean-variance portfolio are convex. On a convex set with a convex objective every local minimum is global, which is why convex problems are tractable; some convex classes are easier than others, and non-convex problems are much harder."
+  }
+ ],
+ "cards": [
+  {
+   "f": "Approximation problem: general form and the three norm choices.",
+   "b": "$\\min_x\\{\\|Ax-b\\|: x\\in X\\}$. Least squares: $\\sum_i(a_i^\\top x-b_i)^2$. Minimax: $\\max_i|a_i^\\top x-b_i|$. Absolute residuals: $\\sum_i|a_i^\\top x-b_i|$.",
+   "x": "The model $Ax$ is linear; the non-linearity comes from the norm.",
+   "t": 0,
+   "ref": "Lecture 17.pdf p.4"
+  },
+  {
+   "f": "Weighted and regularized linear regression objective.",
+   "b": "$\\min_\\beta\\sum_i w_i\\big(y_i-\\sum_j x_{ij}\\beta_j\\big)^2+\\lambda R(\\beta)$, e.g. quadratic penalty $R(\\beta)=\\sum_j\\beta_j^2$.",
+   "x": "$w_i$ down-weights less important points (outliers); $\\lambda$ trades fit for well-behaved coefficients.",
+   "t": 0,
+   "ref": "Lecture 17.pdf p.7"
+  },
+  {
+   "f": "Logistic regression: model and what is optimized.",
+   "b": "$p_i=\\dfrac{e^{\\beta^\\top x_i}}{1+e^{\\beta^\\top x_i}}$. Maximize the log-likelihood $\\sum_i[\\log p_i\\,1(y_i=1)+\\log(1-p_i)\\,1(y_i=0)]=\\sum_i y_i\\beta^\\top x_i-\\sum_i\\log(1+e^{\\beta^\\top x_i})$, plus a regularization term.",
+   "x": "Goal: $p_i$ high exactly when $y_i=1$.",
+   "t": 0,
+   "ref": "Lecture 17.pdf p.8"
+  },
+  {
+   "f": "Signal denoising formulation for $b=x+w$.",
+   "b": "$\\min_x\\|x-b\\|^2+\\lambda\\sum_i(x_i-x_{i+1})^2$: stay close to the observations while penalizing jumps between neighbours.",
+   "x": "$\\lambda=0$ returns $x=b$; large $\\lambda$ forces a smooth signal.",
+   "t": 0,
+   "ref": "Lecture 17.pdf p.9"
+  },
+  {
+   "f": "Maximum inscribed ellipsoid formulation.",
+   "b": "$\\max\\log|\\det D|$ s.t. $E(D,d)\\subseteq P$, where $E(D,d)=\\{x:(x-d)^\\top D^{-2}(x-d)\\le1\\}$.",
+   "x": "$d$ is the centre, $D$ the shape; growing $\\log|\\det D|$ inflates the ellipsoid inside polytope $P$.",
+   "t": 0,
+   "ref": "Lecture 17.pdf p.10"
+  },
+  {
+   "f": "Mean-variance portfolio: formulation.",
+   "b": "$\\min\\ x^\\top\\Sigma x=\\sum_i x_i^2\\mathrm{Var}(r_i)+\\sum_{i\\ne j}x_ix_j\\sigma_{ij}$ s.t. $\\sum_ix_i\\le B$, $\\sum_i\\mu_ix_i\\ge\\beta$, $x\\ge0$.",
+   "x": "Constraints are linear; only the risk objective is non-linear, and it is convex because $\\Sigma\\succeq0$.",
+   "t": 1,
+   "ref": "Lecture 17.pdf p.15"
+  },
+  {
+   "f": "Fermat-Weber vs ball circumscription.",
+   "b": "Fermat-Weber: $\\min_x\\sum_iw_i\\|x-c_i\\|$ s.t. $Ax\\le b$ (total weighted distance). Ball circumscription: $\\min\\Delta$ s.t. $\\|x-c_i\\|\\le\\Delta\\ \\forall i$, $Ax\\le b$ (maximum distance).",
+   "x": "Sum vs max of distances; both are convex optimization problems.",
+   "t": 1,
+   "ref": "Lecture 17.pdf p.17"
+  },
+  {
+   "f": "Floor planning: which constraints are non-linear?",
+   "b": "Minimum area $w_ih_i\\ge A_i$ (bilinear) and distance limits $\\|(u_i,v_i)-(u_j,v_j)\\|\\le D_{ij}$ (norm). Containment, relative positioning $x_i+w_i+\\rho\\le x_j$ and the objective $2(W+H)$ are linear.",
+   "x": "Aspect-ratio bounds $l_i\\le h_i/w_i\\le u_i$ look non-linear but become linear after multiplying by $w_i>0$.",
+   "t": 1,
+   "ref": "Lecture 17.pdf p.19"
+  },
+  {
+   "f": "Vehicle-customer pickup coordination: key constraints.",
+   "b": "Minimize arrival time $v_{n+1}$ s.t. $v_i\\ge v_{i-1}+\\|M_i-M_{i-1}\\|/S$ (vehicle travel), $v_i\\ge\\|M_i-H_i\\|/S_i$ (customer walks there first), $\\|M_i-H_i\\|\\le W_i$ (max walk), $M_0=O$, $M_{n+1}=D$.",
+   "x": "Pickup locations $M_i$ are decisions, so distances are norms of decision variables.",
+   "t": 1,
+   "ref": "Lecture 17.pdf p.21"
+  },
+  {
+   "f": "NLO classes named in lecture.",
+   "b": "QP: $\\min x^\\top Qx+c^\\top x$, $Ax=b$, $x\\ge0$ (convex if $Q\\succeq0$). QCQP: quadratic objective and constraints. SOCP: $\\min c_0^\\top x$ s.t. $\\|Q_ix+p_i\\|_2\\le s_i^\\top x+r_i$. SDP: $\\min\\langle C,X\\rangle$ s.t. $\\langle A_i,X\\rangle=b_i$, $X\\succeq0$. NLP: general $f,g_i,h_j$.",
+   "x": "Each class is a special case of the general NLO.",
+   "t": 2,
+   "ref": "Lecture 17.pdf p.24"
+  },
+  {
+   "f": "Local vs global minimum.",
+   "b": "Local: $f(x)\\le f(y)$ for all $y\\in B(x,\\varepsilon)\\cap F$, for some $\\varepsilon>0$. Global: $f(x)\\le f(y)$ for all $y\\in F$.",
+   "x": "Every global minimum is local; the converse needs convexity.",
+   "t": 2,
+   "ref": "Lecture 17.pdf p.25"
+  },
+  {
+   "f": "Operations that preserve convexity.",
+   "b": "$\\alpha f_1+\\beta f_2$ with $\\alpha,\\beta\\ge0$; $f(Ay+b)$; $\\max\\{f_1,\\dots,f_n\\}$; $h(g(x))$ with $h$ convex non-decreasing and $g$ convex; any norm $\\|x\\|$.",
+   "x": "Negative coefficients or a non-monotone outer function break the guarantee.",
+   "t": 3,
+   "ref": "Lecture 17.pdf p.29"
+  },
+  {
+   "f": "First-order condition for convexity.",
+   "b": "A differentiable $f$ is convex iff $f(y)\\ge f(x)+\\nabla f(x)^\\top(y-x)$ for all $x,y$.",
+   "x": "The tangent plane is a global underestimator: local information gives global information.",
+   "t": 4,
+   "ref": "Lecture 17.pdf p.32"
+  },
+  {
+   "f": "Second-order condition; the quadratic case.",
+   "b": "A $C^2$ function is convex iff $H(x)\\succeq0$ for all $x$. For $f=\\tfrac12x^\\top Px+q^\\top x+r$: $\\nabla f=Px+q$, $H=P$, so $f$ is convex iff $P\\succeq0$ (all eigenvalues $\\ge0$).",
+   "x": "Positive entries or a positive diagonal do not imply PSD; check eigenvalues or $u^\\top Pu\\ge0$.",
+   "t": 4,
+   "ref": "Lecture 17.pdf p.35"
+  },
+  {
+   "f": "The three features of a convex optimization problem.",
+   "b": "A convex objective to be minimized, convex inequality constraints $g_i(x)\\le0$, linear equality constraints $Ax=b$. Then the feasible region $F$ is convex.",
+   "x": "Maximizing a convex function or a non-linear equality like $x_1^2+x_2^2=1$ breaks convexity.",
+   "t": 5,
+   "ref": "Lecture 17.pdf p.38"
+  },
+  {
+   "f": "Why is every local minimum of a convex problem global? (proof idea)",
+   "b": "Suppose $y\\in F$ with $f(y)<f(x^*)$. For $\\theta\\in(0,1)$, $\\theta x^*+(1-\\theta)y\\in F$ (convex $F$) and $f(\\theta x^*+(1-\\theta)y)<f(x^*)$ (convex $f$). As $\\theta\\to1$ these points enter every ball around $x^*$, contradicting local optimality.",
+   "x": "Convexity of $f$ gives the lower value; convexity of $F$ gives feasibility.",
+   "t": 5,
+   "ref": "Lecture 17.pdf p.40"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "In the approximation problem $\\min\\|Ax-b\\|$, which choice gives the minimax approximation?",
+   "o": [
+    "$\\ell_\\infty$: $\\max_i|a_i^\\top x-b_i|$",
+    "$\\ell_1$: $\\sum_i|a_i^\\top x-b_i|$",
+    "Squared $\\ell_2$: $\\sum_i(a_i^\\top x-b_i)^2$",
+    "The Frobenius norm of $A$"
+   ],
+   "a": 0,
+   "e": "Minimax minimizes the largest residual, which is the $\\ell_\\infty$ norm. The $\\ell_1$ sum is the absolute-residual approximation, a different model.",
+   "d": "easy",
+   "t": 0,
+   "src": "Lecture 17.pdf p.4"
+  },
+  {
+   "q": "A candidate $x$ has residuals $Ax-b=(3,-1,2)$. What are its least-squares, minimax and absolute-residual objective values?",
+   "o": [
+    "14, 3, 6",
+    "14, 3, 4",
+    "$\\sqrt{14}$, 2, 6",
+    "6, 3, 14"
+   ],
+   "a": 0,
+   "e": "Least squares $9+1+4=14$; minimax $\\max\\{3,1,2\\}=3$; absolute residuals $3+1+2=6$. The tempting 4 sums the signed residuals and forgets the absolute value.",
+   "d": "medium",
+   "t": 0,
+   "src": "Lecture 17.pdf p.4"
+  },
+  {
+   "q": "In the denoising model $\\min_x\\|x-b\\|^2+\\lambda\\sum_i(x_i-x_{i+1})^2$, what does the solution approach as $\\lambda\\to0$?",
+   "o": [
+    "The raw measurement $x=b$",
+    "A constant signal",
+    "$x=0$",
+    "The problem becomes infeasible"
+   ],
+   "a": 0,
+   "e": "With no jump penalty only $\\|x-b\\|^2$ remains, minimized at $x=b$. A constant signal is the opposite limit, $\\lambda\\to\\infty$, where any jump is prohibitively costly.",
+   "d": "medium",
+   "t": 0,
+   "src": "Lecture 17.pdf p.9"
+  },
+  {
+   "q": "Which part of the mean-variance portfolio model is non-linear?",
+   "o": [
+    "The objective (portfolio variance)",
+    "The budget constraint",
+    "The expected-return constraint",
+    "The no-short-sales constraint"
+   ],
+   "a": 0,
+   "e": "The variance $x^\\top\\Sigma x$ is quadratic in $x$. Budget $\\sum_ix_i\\le B$ and return $\\sum_i\\mu_ix_i\\ge\\beta$ are linear even though $\\mu_i$ are estimated.",
+   "d": "easy",
+   "t": 1,
+   "src": "Lecture 17.pdf p.15"
+  },
+  {
+   "q": "Two stocks have $\\mathrm{Var}(r_1)=4$, $\\mathrm{Var}(r_2)=9$, $\\mathrm{Cov}(r_1,r_2)=-2$. What is the variance of the portfolio $x=(1,1)$?",
+   "o": [
+    "9",
+    "13",
+    "11",
+    "17"
+   ],
+   "a": 0,
+   "e": "$x^\\top\\Sigma x=x_1^2\\sigma_{11}+x_2^2\\sigma_{22}+2x_1x_2\\sigma_{12}=4+9-4=9$. 13 ignores the covariance; 11 counts the cross term only once.",
+   "d": "medium",
+   "t": 1,
+   "src": "Lecture 17.pdf p.15"
+  },
+  {
+   "q": "How does the ball circumscription model express 'minimize the maximum distance to the demand nodes'?",
+   "o": [
+    "Add $\\Delta$, minimize $\\Delta$ s.t. $\\|x-c_i\\|\\le\\Delta$ for every $i$",
+    "Minimize $\\sum_iw_i\\|x-c_i\\|$",
+    "Minimize $\\sum_i\\|x-c_i\\|^2$, which equals the maximum distance",
+    "Fix $x$ at the weighted centroid of the $c_i$"
+   ],
+   "a": 0,
+   "e": "$\\Delta$ upper-bounds every distance, so minimizing it minimizes the maximum (epigraph form). The weighted sum is the Fermat-Weber objective, which optimizes total rather than worst-case distance.",
+   "d": "medium",
+   "t": 1,
+   "src": "Lecture 17.pdf p.17"
+  },
+  {
+   "q": "In the vehicle-customer coordination model, what does $v_i\\ge\\|M_i-H_i\\|/S_i$ enforce?",
+   "o": [
+    "The vehicle reaches stop $i$ no earlier than customer $i$ can walk there",
+    "Customer $i$ walks at most $W_i$",
+    "The vehicle drives at speed $S$ between stops",
+    "Stops are visited in index order"
+   ],
+   "a": 0,
+   "e": "$\\|M_i-H_i\\|/S_i$ is customer $i$'s walking time to the pickup point, so the pickup time must be at least that. The walking limit is the separate constraint $\\|M_i-H_i\\|\\le W_i$.",
+   "d": "medium",
+   "t": 1,
+   "src": "Lecture 17.pdf p.21"
+  },
+  {
+   "q": "In the floor-planning model, which constraint stays non-linear in $(x_i,y_i,w_i,h_i,W,H)$ even after algebraic rearrangement?",
+   "o": [
+    "$w_ih_i\\ge A_i$",
+    "$l_i\\le h_i/w_i\\le u_i$ with $w_i>0$",
+    "$x_i+w_i+\\rho\\le x_j$",
+    "$x_i+w_i\\le W$"
+   ],
+   "a": 0,
+   "e": "The area constraint multiplies two decisions (bilinear). The tempting aspect-ratio bound becomes linear, $l_iw_i\\le h_i\\le u_iw_i$, after multiplying through by $w_i>0$.",
+   "d": "hard",
+   "t": 1,
+   "src": "Lecture 17.pdf p.19"
+  },
+  {
+   "q": "Which class has a linear objective, linear equalities and constraints $\\|Q_ix+p_i\\|_2\\le s_i^\\top x+r_i$?",
+   "o": [
+    "SOCP",
+    "QP",
+    "SDP",
+    "QCQP"
+   ],
+   "a": 0,
+   "e": "Norm $\\le$ affine is a second-order cone constraint. SDP constrains a matrix variable $X\\succeq0$; QCQP has quadratic forms, not norms.",
+   "d": "easy",
+   "t": 2,
+   "src": "Lecture 17.pdf p.24"
+  },
+  {
+   "q": "Which statement about minima of a general NLO is always true?",
+   "o": [
+    "Every global minimum is a local minimum",
+    "Every local minimum is a global minimum",
+    "There is at most one local minimum",
+    "Local minima only exist for unconstrained problems"
+   ],
+   "a": 0,
+   "e": "A global minimum beats all feasible points, hence those in any ball. The converse requires convexity (the lecture's theorem), so it fails for general NLOs.",
+   "d": "easy",
+   "t": 2,
+   "src": "Lecture 17.pdf p.25"
+  },
+  {
+   "q": "Given convex $f_1,f_2$, which function is NOT guaranteed convex by the lecture's propositions?",
+   "o": [
+    "$f_1(x)-f_2(x)$",
+    "$3f_1(x)+2f_2(x)$",
+    "$\\max\\{f_1(x),f_2(x)\\}$",
+    "$f_1(Ax+b)$"
+   ],
+   "a": 0,
+   "e": "Only non-negative combinations preserve convexity; a difference has coefficient $-1$ (e.g. $0-x^2$ is concave). Max and affine pre-composition are both on the list.",
+   "d": "medium",
+   "t": 3,
+   "src": "Lecture 17.pdf p.29"
+  },
+  {
+   "q": "Using the composition rule, which function is convex on $\\mathbb R^n$?",
+   "o": [
+    "$e^{\\|x\\|_2}$",
+    "$-\\|x\\|_2$",
+    "$\\log(1+\\|x\\|_2)$",
+    "$\\sqrt{\\|x\\|_2}$"
+   ],
+   "a": 0,
+   "e": "$h=\\exp$ is convex and non-decreasing and $g=\\|x\\|_2$ is convex, so $h(g(x))$ is convex. $\\log(1+\\cdot)$ and $\\sqrt{\\cdot}$ are non-decreasing but concave, so the rule does not apply (in 1D, $\\sqrt{|x|}$ violates the chord inequality).",
+   "d": "hard",
+   "t": 3,
+   "src": "Lecture 17.pdf p.29"
+  },
+  {
+   "q": "A differentiable $f$ satisfies $f(y)\\ge f(x)+\\nabla f(x)^\\top(y-x)$ for all $x,y$. What follows?",
+   "o": [
+    "$f$ is convex",
+    "$f$ is concave",
+    "$f$ is linear",
+    "$f$ has a unique minimizer"
+   ],
+   "a": 0,
+   "e": "This is the first-order characterization of convexity (an iff). It does not give uniqueness: a constant function satisfies it and every point minimizes it.",
+   "d": "medium",
+   "t": 4,
+   "src": "Lecture 17.pdf p.32"
+  },
+  {
+   "q": "Is $f(x)=\\tfrac12x^\\top Px+q^\\top x+r$ convex for $P=\\begin{pmatrix}2&3\\\\3&2\\end{pmatrix}$?",
+   "o": [
+    "No: $P$ has eigenvalue $-1$, so it is not PSD",
+    "Yes: all entries of $P$ are positive",
+    "Yes: the diagonal of $P$ is positive",
+    "No: $P$ is not symmetric"
+   ],
+   "a": 0,
+   "e": "$H=P$ with eigenvalues $2\\pm3=5,-1$. Positive entries do not imply PSD: $u=(1,-1)$ gives $u^\\top Pu=2-6+2=-2<0$.",
+   "d": "hard",
+   "t": 4,
+   "src": "Lecture 17.pdf p.35"
+  },
+  {
+   "q": "What is the Hessian of $f(x_1,x_2)=x_1^2+x_1x_2+x_2^2$, and is $f$ convex?",
+   "o": [
+    "$\\begin{pmatrix}2&1\\\\1&2\\end{pmatrix}$; convex (eigenvalues 3 and 1)",
+    "$\\begin{pmatrix}2&1\\\\1&2\\end{pmatrix}$; not convex (non-zero off-diagonal)",
+    "$\\begin{pmatrix}1&1\\\\1&1\\end{pmatrix}$; convex",
+    "$\\begin{pmatrix}2&2\\\\2&2\\end{pmatrix}$; not convex"
+   ],
+   "a": 0,
+   "e": "$\\partial^2f/\\partial x_1^2=2$, $\\partial^2f/\\partial x_1\\partial x_2=1$, $\\partial^2f/\\partial x_2^2=2$; eigenvalues $2\\pm1$ are positive, so $H\\succeq0$ everywhere. Off-diagonal entries alone say nothing about PSD.",
+   "d": "medium",
+   "t": 4,
+   "src": "Lecture 17.pdf p.30"
+  },
+  {
+   "q": "Which is one of the three defining features of a convex optimization problem?",
+   "o": [
+    "Equality constraints are linear",
+    "The objective is concave and minimized",
+    "All constraints are equalities",
+    "The variables are integer"
+   ],
+   "a": 0,
+   "e": "Convex objective (minimized), convex $g_i(x)\\le0$, and linear $Ax=b$. A concave objective is convex only when maximized.",
+   "d": "easy",
+   "t": 5,
+   "src": "Lecture 17.pdf p.38"
+  },
+  {
+   "q": "Which problem is NOT a convex optimization problem in the lecture's sense?",
+   "o": [
+    "$\\min x_1+x_2$ s.t. $x_1^2+x_2^2=1$",
+    "$\\min\\sum_iw_i\\|x-c_i\\|$ s.t. $Ax\\le b$",
+    "$\\min x^\\top\\Sigma x$ s.t. $\\mathbf 1^\\top x\\le B$, $\\mu^\\top x\\ge\\beta$, $x\\ge0$, with $\\Sigma\\succeq0$",
+    "$\\min\\Delta$ s.t. $\\|x-c_i\\|\\le\\Delta\\ \\forall i$"
+   ],
+   "a": 0,
+   "e": "Equalities must be linear; the circle $x_1^2+x_2^2=1$ is not convex (the midpoint of $(1,0)$ and $(-1,0)$ is the origin, off the circle). The other three are the lecture's convex examples.",
+   "d": "hard",
+   "t": 5,
+   "src": "Lecture 17.pdf p.39"
+  },
+  {
+   "q": "In the proof that local minima of convex problems are global, what is the convexity of $F$ used for?",
+   "o": [
+    "To guarantee $\\theta x^*+(1-\\theta)y$ is feasible, giving better feasible points arbitrarily close to $x^*$",
+    "To make $f$ differentiable at $x^*$",
+    "To make the Hessian at $x^*$ PSD",
+    "To make the optimal solution unique"
+   ],
+   "a": 0,
+   "e": "Convexity of $f$ gives the strictly lower value on the segment; convexity of $F$ makes those points feasible. Differentiability is never used in the argument.",
+   "d": "hard",
+   "t": 5,
+   "src": "Lecture 17.pdf p.40"
+  }
+ ],
+ "written": [
+  {
+   "q": "A utility must site one facility $x\\in\\mathbb R^n$ to serve $m$ demand nodes at $c_i$ with demands $w_i\\ge0$; feasible sites are $Ax\\le b$. (a) Formulate the Fermat-Weber and ball-circumscription problems and explain what each optimizes. (b) Using the lecture's convexity rules, prove that both are convex optimization problems. (c) What does convexity buy you when you solve them?",
+   "m": "(a) Fermat-Weber: $\\min_x\\sum_iw_i\\|x-c_i\\|$ s.t. $Ax\\le b$, minimizing total weighted distance. Ball circumscription: $\\min_{x,\\Delta}\\Delta$ s.t. $\\|x-c_i\\|\\le\\Delta$ for all $i$, $Ax\\le b$, minimizing the maximum distance to any node (epigraph form of $\\min\\max_i\\|x-c_i\\|$). (b) A norm is convex and composing with the affine map $x\\mapsto x-c_i$ preserves convexity, so each $\\|x-c_i\\|$ is convex; a non-negative weighted sum of convex functions is convex, so the Fermat-Weber objective is convex, and $Ax\\le b$ is linear. For ball circumscription the objective $\\Delta$ is linear, each constraint $\\|x-c_i\\|-\\Delta\\le0$ is a convex function $\\le0$, and $Ax\\le b$ is linear. Both have convex objective (minimized), convex inequalities and no non-linear equalities. (c) The feasible region is convex and every local minimum is global, so a local method that stops at a local optimum has found the best site.",
+   "k": [
+    "Correct Fermat-Weber formulation (weighted sum of norms)",
+    "Correct ball-circumscription formulation with epigraph variable $\\Delta$",
+    "Interprets sum vs max of distances",
+    "Norm convex + affine composition",
+    "Non-negative weighted sum preserves convexity",
+    "Constraint $\\|x-c_i\\|-\\Delta\\le0$ is convex, $Ax\\le b$ linear",
+    "Local optimum = global optimum"
+   ],
+   "t": 1
+  },
+  {
+   "q": "Let $f(x)=\\tfrac12x^\\top Px+q^\\top x+r$ with $P$ symmetric. (a) Give $\\nabla f$ and the Hessian. (b) State the first- and second-order characterizations of convexity and derive the condition on $P$. (c) Decide convexity for $P_1=\\begin{pmatrix}4&2\\\\2&1\\end{pmatrix}$ and $P_2=\\begin{pmatrix}1&2\\\\2&1\\end{pmatrix}$. (d) Show that, when $f$ is convex, any $x^*$ with $\\nabla f(x^*)=0$ is a global minimizer.",
+   "m": "(a) $\\nabla f(x)=Px+q$, $H(x)=P$. (b) First-order: differentiable $f$ is convex iff $f(y)\\ge f(x)+\\nabla f(x)^\\top(y-x)$ for all $x,y$. Second-order: $C^2$ $f$ is convex iff $H(x)\\succeq0$ for all $x$; here $H=P$ is constant, so $f$ is convex iff $P\\succeq0$ ($u^\\top Pu\\ge0$ for all $u$, equivalently all eigenvalues $\\ge0$). (c) $P_1$: trace 5, determinant $4-4=0$, eigenvalues 5 and 0, so PSD and $f$ is convex (not strictly). $P_2$: trace 2, determinant $1-4=-3$, eigenvalues 3 and $-1$, not PSD; $u=(1,-1)$ gives $u^\\top P_2u=1-4+1=-2<0$, so $f$ is not convex. (d) Plug $x=x^*$ into the first-order condition: $f(y)\\ge f(x^*)+0^\\top(y-x^*)=f(x^*)$ for every $y$, so $x^*$ is a global minimizer.",
+   "k": [
+    "$\\nabla f=Px+q$ and $H=P$",
+    "States the first-order condition correctly",
+    "States the second-order condition and concludes $P\\succeq0$",
+    "$P_1$ PSD (eigenvalues 5, 0) so convex",
+    "$P_2$ not PSD (eigenvalue $-1$ or counterexample $u$)",
+    "Uses the first-order condition with zero gradient for global optimality"
+   ],
+   "t": 4
+  }
+ ]
+}

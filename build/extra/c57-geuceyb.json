@@ -1,0 +1,435 @@
+{
+ "id": "geuceyb",
+ "label": "L19",
+ "title": "Stochastic Gradient Descent",
+ "short": "SGD",
+ "src": "Lecture 19 Stochastic Grad Descent.pdf",
+ "brief": "This lecture motivates stochastic gradient descent (SGD) through the challenge of fitting neural networks, where full-gradient computation via backpropagation is expensive and the optimization is non-convex. It develops SGD as an algorithm that approximates the true gradient with a single (or mini-batch) component gradient, trading weaker theoretical guarantees for much faster iterations and better practical escape from poor local solutions. Convergence theorems are given for both strongly convex/smooth objectives (linear convergence to a noise ball) and general smooth objectives (gradient norm bound depending on step-size schedule). The lecture works through a linear regression example and a full forward/backward pass on a small neural network, then covers mini-batching and practical implementation choices (initialization, batching, step size, early stopping) illustrated on a heart disease classification case study.",
+ "kp": [
+  "SGD replaces $\\nabla f(x)=\\frac1n\\sum_i\\nabla f_i(x)$ with a single-sample estimate $\\nabla f_{i_k}(x)$, cutting per-iteration cost from $O(nm^2)$ to $O(m^2)$ for neural networks",
+  "Uniform random index selection gives an unbiased gradient estimator: $E(\\nabla f_{i_k}(x))=\\nabla f(x)$",
+  "The stochastic direction $d_k=-\\nabla f_{i_k}(x^k)$ is not guaranteed to be a descent direction at every step",
+  "Under $M$-smoothness, $m$-strong convexity, and bounded gradient variance $\\sigma^2$, constant-step SGD converges linearly to a neighborhood (noise ball) of size $O(\\alpha)$, not to the exact optimum",
+  "For general smooth (possibly non-convex) $f$, constant step size gives gradient-norm error $O(1/k)+O(\\alpha)$; diminishing step sizes (e.g., $\\alpha/k$, $\\alpha/\\sqrt{k}$) allow exact convergence but more slowly",
+  "Mini-batch SGD averages gradients over a batch of size $B$, interpolating between SGD ($B=1$, fast noisy iterations) and full GD ($B=n$, slow stable iterations)",
+  "Backpropagation computes $\\nabla f(W^k)$ via the chain rule layer by layer, after a forward pass evaluates $f(W^k)$",
+  "In practice, return the best solution visited across SGD iterations, not the last one, since SGD fluctuates near the optimum",
+  "Practical SGD tuning involves initialization (possibly multiple restarts), batch size, step-size schedule, and early stopping (which also regularizes)"
+ ],
+ "topics": [
+  {
+   "n": "Motivation: fitting neural networks",
+   "x": "Neural networks are trained by minimizing an average loss over data via non-convex optimization, using gradient descent with forward propagation (evaluate $f$) and backward propagation (compute $\\nabla f$ via chain rule). Full-gradient computation is expensive at scale, motivating a stochastic alternative."
+  },
+  {
+   "n": "SGD setup and algorithm",
+   "x": "For objectives of the form $f(x)=\\frac1n\\sum_i f_i(x)$, SGD replaces the full gradient with $\\nabla f_{i_k}(x)$ for a randomly (or cyclically) chosen index $i_k$, drastically reducing per-iteration cost. The resulting direction is an unbiased estimate of the true gradient in expectation but is not guaranteed to be a descent direction at any single step."
+  },
+  {
+   "n": "Worked illustrations: regression and neural net",
+   "x": "A linear regression example shows the SGD update rule explicitly and illustrates 'lucky' vs 'unlucky' single-point updates. A small 2-input, 1-hidden-layer ReLU network example works through forward pass, loss, backpropagation (chain rule) layer by layer, and the resulting weight update."
+  },
+  {
+   "n": "Convergence theory",
+   "x": "Under smoothness, strong convexity, and bounded-variance stochastic gradients, constant-step SGD converges linearly to a noise ball around the optimum whose size scales with $\\alpha\\sigma^2$. Under only smoothness (possibly non-convex), the minimum gradient norm over iterations is bounded by a term shrinking as $O(1/k)$ plus an irreducible $O(\\alpha)$ term; diminishing step sizes remove the irreducible term at the cost of slower convergence."
+  },
+  {
+   "n": "Mini-batch SGD and implementation",
+   "x": "Mini-batches average gradients over $B>1$ samples, reducing variance and interpolating between pure SGD and full gradient descent; this is illustrated on linear regression and on a heart-disease neural-network case study, showing effects of step size (constant vs. diminishing) and batch size on convergence stability and solution quality."
+  },
+  {
+   "n": "Practical guidelines and summary",
+   "x": "Effective SGD implementation requires attention to initialization (warm starts, multiple restarts), batch size selection, step-size magnitude/schedule, and early stopping (useful for both speed and regularization). The overall takeaway: SGD trades theoretical guarantees for speed and practical robustness to poor local solutions."
+  }
+ ],
+ "cards": [
+  {
+   "f": "What is the per-iteration cost of full gradient descent vs. SGD for a neural network with $n$ data points and $m$ nodes?",
+   "b": "GD: $O(nm^2)$ per iteration. SGD: $O(m^2)$ per iteration (drop the factor of $n$ by using one data point).",
+   "x": "SGD removes the $n$ factor by approximating the sum with one term.",
+   "t": 1,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.11"
+  },
+  {
+   "f": "Why is $E(\\nabla f_{i_k}(x))=\\nabla f(x)$ under uniform random sampling?",
+   "b": "Because $E(\\nabla f_{i_k}(x))=\\sum_{i=1}^n \\nabla f_i(x)P(i_k=i)=\\frac1n\\sum_i\\nabla f_i(x)=\\nabla f(x)$.",
+   "x": "Unbiasedness holds only in expectation, not for any single draw.",
+   "t": 1,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.15"
+  },
+  {
+   "f": "Is $d_k=-\\nabla f_{i_k}(x^k)$ guaranteed to be a descent direction?",
+   "b": "No. We may have $\\nabla f(x)^\\top \\nabla f_{i_k}(x)<0$'s negative being false, i.e., the stochastic direction can fail to decrease $f$ at a given iteration even though it's unbiased on average.",
+   "x": "Unbiased in expectation ≠ descent direction every step.",
+   "t": 1,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.15"
+  },
+  {
+   "f": "State the SGD update for linear regression $f_i(\\beta)=\\frac12(y_i-x_i^\\top\\beta)^2$.",
+   "b": "$\\beta_j^{k+1}\\leftarrow \\beta_j^k + \\alpha\\, x_{i_k,j}\\left(y_{i_k}-\\sum_\\ell x_{i_k,\\ell}\\beta_\\ell^k\\right)$",
+   "x": "Residual times feature value times step size; sign of update depends on residual sign and feature sign.",
+   "t": 2,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.17"
+  },
+  {
+   "f": "In the linear regression SGD update, what happens to $\\beta_j$ if $x_{i_k}^\\top\\beta < y_{i_k}$ and $x_{i_k,j}>0$?",
+   "b": "$\\beta_j$ increases, to increase the fitted value $x_{i_k}^\\top\\beta$ toward $y_{i_k}$.",
+   "x": "Four sign-combination cases on the slide; memorize the logic, not just this case.",
+   "t": 2,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.20"
+  },
+  {
+   "f": "In the worked neural-network example, what is the forward-pass output $\\hat y_5$ and the loss?",
+   "b": "$\\hat y_5 = \\max(w_{35}\\hat h_3 + w_{45}\\hat h_4 + b_5, 0) = 0.646$; loss $= \\frac12(y-\\hat y_5)^2 = 0.063$ with $y=1$.",
+   "x": "ReLU clips negative pre-activations to 0; here it's inactive since 0.646>0.",
+   "t": 2,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.22"
+  },
+  {
+   "f": "What is $\\partial L/\\partial w_{35}$ in the worked neural-net example, and what does its sign imply?",
+   "b": "$\\partial L/\\partial w_{35} = -\\hat h_3(y-\\hat y_5) = -0.184$. Since it's negative, SGD (gradient descent step) increases $w_{35}$.",
+   "x": "Negative gradient ⇒ weight update moves up, since update is $w \\leftarrow w-\\alpha\\nabla L$.",
+   "t": 2,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.23"
+  },
+  {
+   "f": "How does backpropagation compute gradients for earlier layers (e.g., $\\partial L/\\partial w_{13}$)?",
+   "b": "Via the chain rule: $\\partial L/\\partial w_{13} = \\partial L/\\partial \\hat y_5 \\cdot \\partial\\hat y_5/\\partial\\hat h_3\\cdot \\partial\\hat h_3/\\partial w_{13} = -(y-\\hat y_5)w_{35}x_1$.",
+   "x": "Each earlier-layer gradient reuses the later-layer's computed gradient — this reuse is what makes backprop efficient.",
+   "t": 2,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.24"
+  },
+  {
+   "f": "State the convergence bound for constant-step SGD under $M$-smoothness, $m$-strong convexity, bounded variance $\\sigma^2$.",
+   "b": "$E(f(x^k))-z^* \\le (1-\\alpha m)^k (f(x^0)-z^*) + \\dfrac{M\\alpha\\sigma^2}{2m}$, for $0<\\alpha\\le 1/M$.",
+   "x": "First term shrinks geometrically (fast convergence); second term is a fixed 'noise ball' that doesn't vanish with constant $\\alpha$.",
+   "t": 3,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.27"
+  },
+  {
+   "f": "What are the two phases of SGD convergence under constant step size?",
+   "b": "1) Linear convergence toward a neighborhood of the stationary point. 2) Persistent stochastic fluctuations ('noise ball') that remain and don't vanish.",
+   "x": "Unlike GD, SGD with constant step size never fully settles at the optimum.",
+   "t": 3,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.27"
+  },
+  {
+   "f": "State the general (possibly non-convex) smooth-$f$ SGD gradient-norm bound.",
+   "b": "$\\min_{\\ell=0,\\dots,k-1} E(\\|\\nabla f(x^\\ell)\\|^2) \\le \\dfrac{f(x^0)-z^* + \\frac{MG^2}{2}\\sum_{\\ell=0}^{k-1}\\alpha_\\ell^2}{\\sum_{\\ell=0}^{k-1}\\alpha_\\ell}$",
+   "x": "With $\\alpha_\\ell=\\alpha$ constant, bound is $O(1/k)+O(\\alpha)$ — residual error doesn't vanish; need diminishing $\\alpha_k$ for exact convergence.",
+   "t": 3,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.30"
+  },
+  {
+   "f": "Name two examples of diminishing step-size schedules mentioned in the lecture.",
+   "b": "$\\alpha_k=\\alpha/k$ and $\\alpha_k=\\alpha/\\sqrt{k}$.",
+   "x": "These let SGD converge exactly but more slowly than with a well-tuned constant step.",
+   "t": 3,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.30"
+  },
+  {
+   "f": "When returning a final solution from SGD, which iterate should you report?",
+   "b": "The best solution visited across all iterations — not the last iterate — because SGD fluctuates noisily near the optimum.",
+   "x": "Common trap: treating SGD like GD and just returning $x^k$ at termination.",
+   "t": 3,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.29"
+  },
+  {
+   "f": "Write the mini-batch SGD update rule.",
+   "b": "$x^{k+1} = x^k - \\alpha_k \\cdot \\frac{1}{B}\\sum_{i\\in I_k}\\nabla f_i(x^k)$, with batch $I_k\\subseteq\\{1,\\dots,n\\}$, $|I_k|=B$.",
+   "x": "$B=1$ recovers pure SGD; $B=n$ recovers full gradient descent.",
+   "t": 4,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.34"
+  },
+  {
+   "f": "What is the main benefit of mini-batching, and what's the tradeoff?",
+   "b": "Benefit: variance reduction in the gradient estimator, stabilizing convergence. Tradeoff: larger $B$ means fewer, more stable iterations but each iteration is more costly (slower, like GD).",
+   "x": "Mini-batches trade iteration speed for stability — a continuum, not a free lunch.",
+   "t": 4,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.34"
+  },
+  {
+   "f": "In the heart disease case study, how many parameters does the neural network have, and why?",
+   "b": "497 parameters: $29\\times16$ input-to-hidden weights + 16 hidden biases + 16 hidden-to-output weights + 1 output bias.",
+   "x": "Parameter count scales with (input dim × hidden nodes) + biases, not just hidden nodes.",
+   "t": 4,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.37"
+  },
+  {
+   "f": "List the four practical implementation levers for SGD highlighted in the conclusion.",
+   "b": "1) Initialization (warm starts, multiple restarts). 2) Batching (size tradeoff, possibly increasing over iterations). 3) Step size (magnitude, possibly decreasing). 4) Termination (early stopping, which can also regularize).",
+   "x": "Early stopping does double duty: faster training AND implicit regularization.",
+   "t": 5,
+   "ref": "Lecture 19 Stochastic Grad Descent.pdf p.42"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "For a neural network with $n=10{,}000{,}000$ data points and $m=1{,}000$ nodes, what is the approximate per-iteration cost of SGD versus full gradient descent?",
+   "o": [
+    "SGD: $O(10^6)$; GD: $O(10^{13})$",
+    "SGD: $O(10^{13})$; GD: $O(10^6)$",
+    "Both $O(10^6)$, since SGD still touches every data point eventually",
+    "SGD: $O(10^3)$; GD: $O(10^6)$"
+   ],
+   "a": 0,
+   "e": "The slides state GD costs $O(nm^2)=O(10^7\\times10^6)=O(10^{13})$ while SGD costs $O(m^2)=O(10^6)$ per iteration, since SGD uses one data point per step. The second option swaps the two; the third ignores that SGD only processes one point per iteration (the per-iteration cost, not cumulative, is asked); the fourth has the wrong exponent for SGD ($m^2=10^6$, not $m=10^3$).",
+   "d": "easy",
+   "t": 1,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.11"
+  },
+  {
+   "q": "Why is the stochastic gradient estimator $\\nabla f_{i_k}(x)$ called 'unbiased'?",
+   "o": [
+    "Because its expectation over the random index equals the true gradient $\\nabla f(x)$",
+    "Because it always points in a descent direction",
+    "Because it has zero variance across iterations",
+    "Because it equals $\\nabla f(x)$ exactly whenever $i_k$ is chosen cyclically"
+   ],
+   "a": 0,
+   "e": "Unbiasedness is an expectation statement: $E(\\nabla f_{i_k}(x))=\\nabla f(x)$ under uniform random sampling. It says nothing about variance (which is generally nonzero) or about being a descent direction at any one step (the slides explicitly note it may not be). Cyclic sampling is a separate, non-random rule and isn't what makes the estimator unbiased.",
+   "d": "easy",
+   "t": 1,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.15"
+  },
+  {
+   "q": "In the SGD algorithm, what could go wrong at a particular iteration $k$ even though the estimator is unbiased?",
+   "o": [
+    "$\\nabla f(x^k)^\\top \\nabla f_{i_k}(x^k)$ could be negative, so $d_k=-\\nabla f_{i_k}(x^k)$ is not a descent direction",
+    "The step size $\\alpha_k$ must always be negative",
+    "The algorithm is guaranteed to converge to a global minimum regardless of convexity",
+    "Backpropagation cannot be used with a single data point"
+   ],
+   "a": 0,
+   "e": "The slides explicitly flag that $\\nabla f(x)^\\top\\nabla f_i(x)$ can be negative, meaning a single stochastic step may not decrease $f$. Step sizes are positive by definition; SGD has no global-optimality guarantee in non-convex problems; and backprop works fine on a single point (that's exactly how the SGD neural-net example is computed).",
+   "d": "medium",
+   "t": 1,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.15"
+  },
+  {
+   "q": "Given $y_{i_k}=1$, $x_{i_k}^\\top\\beta^k = 0.7$, $x_{i_k,j}=-2$, and learning rate $\\alpha=0.1$, what happens to $\\beta_j$ in the SGD update?",
+   "o": [
+    "$\\beta_j$ decreases, since $\\beta_j^{k+1}=\\beta_j^k + 0.1\\cdot(-2)\\cdot(1-0.7)=\\beta_j^k - 0.06$",
+    "$\\beta_j$ increases by $0.06$",
+    "$\\beta_j$ stays unchanged since the residual is positive",
+    "$\\beta_j$ decreases because the feature value is negative, regardless of the residual sign"
+   ],
+   "a": 0,
+   "e": "Plugging into $\\beta_j^{k+1}\\leftarrow\\beta_j^k+\\alpha x_{i_k,j}(y_{i_k}-x_{i_k}^\\top\\beta^k)$ gives $\\beta_j^k+0.1\\times(-2)\\times0.3=\\beta_j^k-0.06$, a decrease. This matches the slide's case 'if $x^\\top\\beta<y$ and $x_{i_k,j}<0$, $\\beta_j$ decreases to increase $x^\\top\\beta$' (since $x_{i_k,j}<0$, decreasing $\\beta_j$ increases the product). The last option ignores that the sign of the update depends jointly on residual sign and feature sign, not feature sign alone.",
+   "d": "hard",
+   "t": 2,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.20"
+  },
+  {
+   "q": "In the worked neural-network example, $\\partial L/\\partial w_{13} = -(y-\\hat y_5)w_{35}x_1$. With $y=1$, $\\hat y_5=0.646$, $w_{35}=0.5$, $x_1=0.5$, what is this value?",
+   "o": [
+    "$-0.089$",
+    "$0.089$",
+    "$-0.177$",
+    "$-0.354$"
+   ],
+   "a": 0,
+   "e": "$-(1-0.646)(0.5)(0.5) = -(0.354)(0.25) = -0.0885 \\approx -0.089$, matching the slide. The second option flips the sign; the third value corresponds to $\\partial L/\\partial b_3$ (which omits the $x_1$ factor); the fourth is $\\partial L/\\partial b_5=-(y-\\hat y_5)$, a different partial derivative entirely.",
+   "d": "hard",
+   "t": 2,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.24"
+  },
+  {
+   "q": "What does the chain rule relation $\\partial L/\\partial w_{13} = \\frac{\\partial L}{\\partial \\hat y_5}\\cdot\\frac{\\partial \\hat y_5}{\\partial \\hat h_3}\\cdot\\frac{\\partial \\hat h_3}{\\partial w_{13}}$ illustrate about backpropagation?",
+   "o": [
+    "Gradients for earlier layers are computed by reusing the gradient signal propagated backward from later layers",
+    "Each layer's gradient must be computed independently from scratch without reference to other layers",
+    "Only the last layer's weights receive nonzero gradients",
+    "The forward pass and backward pass use the same formula"
+   ],
+   "a": 0,
+   "e": "This is exactly the chain-rule decomposition shown on the slide: the earlier-layer gradient reuses $\\partial L/\\partial\\hat y_5$, already computed for the last layer. The second option contradicts the whole point of backprop's efficiency; the third is false (all layers get nonzero gradients here); forward pass computes $f$, backward computes $\\nabla f$ — different formulas.",
+   "d": "medium",
+   "t": 2,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.24"
+  },
+  {
+   "q": "According to the convergence theorem for $M$-smooth, $m$-strongly convex $f$ with bounded gradient variance $\\sigma^2$, what happens as $k\\to\\infty$ with a fixed constant step size $\\alpha$?",
+   "o": [
+    "$E(f(x^k))-z^*$ converges to approximately $M\\alpha\\sigma^2/(2m)$, not zero",
+    "$E(f(x^k))-z^*$ converges exactly to zero",
+    "$E(f(x^k))-z^*$ diverges to infinity",
+    "$E(f(x^k))-z^*$ oscillates without any bound"
+   ],
+   "a": 0,
+   "e": "As $k\\to\\infty$, $(1-\\alpha m)^k\\to0$ (since $0<\\alpha\\le1/M$ ensures $0<1-\\alpha m<1$), leaving the residual term $M\\alpha\\sigma^2/(2m)$ — the noise-ball floor. It does not converge exactly to zero (that requires diminishing step sizes), does not diverge (the bound is finite), and is bounded, not unboundedly oscillating.",
+   "d": "medium",
+   "t": 3,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.27"
+  },
+  {
+   "q": "How can you make $E(f(x^k))-z^*$ converge exactly to zero in SGD, per the lecture?",
+   "o": [
+    "Use a diminishing step size schedule, e.g., $\\alpha_k=\\alpha/k$",
+    "Always use the largest possible constant step size $\\alpha=1/M$",
+    "Increase the batch size to $B=n$ on the very first iteration only",
+    "Switch the loss function to cross-entropy"
+   ],
+   "a": 0,
+   "e": "The slides state diminishing step sizes (e.g., $\\alpha/k$, $\\alpha/\\sqrt k$) allow exact convergence, at the cost of slower convergence, since the noise-ball term shrinks to zero as $\\alpha_k\\to0$. A large constant step size still leaves a nonzero noise ball; using $B=n$ only on the first iteration doesn't change the sampling for later steps; the loss function choice is unrelated to this guarantee.",
+   "d": "medium",
+   "t": 3,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.30"
+  },
+  {
+   "q": "For the general smooth (not necessarily convex) convergence bound with constant step size $\\alpha_k=\\alpha$, how does the error scale with the number of iterations $k$ and step size $\\alpha$?",
+   "o": [
+    "$O(1/k) + O(\\alpha)$",
+    "$O(1/k)$ only, same as gradient descent",
+    "$O(\\alpha)$ only, independent of $k$",
+    "$O(1/k^2)$, faster than gradient descent"
+   ],
+   "a": 0,
+   "e": "The slide explicitly states SGD's error is $O(1/k)+O(\\alpha)$, versus GD's $O(1/k)$ alone — SGD has an extra irreducible term from gradient noise. It is not purely $O(1/k)$ (that's GD), not purely $O(\\alpha)$ (there's still a $k$-dependent term), and not $O(1/k^2)$ (SGD is slower, not faster, than GD in this bound).",
+   "d": "medium",
+   "t": 3,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.30"
+  },
+  {
+   "q": "Why can SGD outperform full gradient descent in non-convex problems like neural network training, despite weaker theoretical guarantees?",
+   "o": [
+    "Its randomization helps it escape shallow local minima and saddle points",
+    "It always finds the global minimum due to randomization",
+    "It computes the exact gradient more accurately than GD",
+    "It requires no step size tuning, unlike GD"
+   ],
+   "a": 0,
+   "e": "The slides state SGD 'can more easily escape shallow local minima and saddle points via randomization,' while still not guaranteeing global optimality. Randomization does not guarantee the global minimum; SGD approximates (not exactifies) the gradient, so it's less accurate per step, not more; and SGD explicitly requires experimentation/tuning of step sizes, often more so than GD.",
+   "d": "easy",
+   "t": 0,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.9"
+  },
+  {
+   "q": "A practitioner runs SGD and after many iterations $x^k$ looks noisy/unstable. What does the lecture recommend for reporting a final solution?",
+   "o": [
+    "Track and return the best objective value observed across all iterations",
+    "Return the solution at the very last iteration, as in gradient descent",
+    "Restart SGD from scratch with a smaller learning rate and discard all prior iterations",
+    "Average only the last two iterates and report that"
+   ],
+   "a": 0,
+   "e": "Slide 29 explicitly instructs: 'Return best solution visited across iterations (not last visited solution!)' because of persistent noise. Returning the last iterate is explicitly warned against; restarting isn't the stated remedy; averaging the last two iterates isn't a method discussed in these slides.",
+   "d": "easy",
+   "t": 3,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.29"
+  },
+  {
+   "q": "In mini-batch SGD, what is the effect of increasing batch size $B$ from 2 to 10, based on the linear regression illustration?",
+   "o": [
+    "Convergence becomes more stable, but each iteration becomes computationally slower",
+    "Convergence becomes less stable and more erratic",
+    "The algorithm becomes mathematically equivalent to full gradient descent for any $B<n$",
+    "There is no observable difference in convergence behavior"
+   ],
+   "a": 0,
+   "e": "The slides show batches of 10 give 'further improves stability, at the cost of slower iterations (as in gradient descent)' compared to batches of 2. It's the opposite of 'less stable'; mini-batch SGD only becomes exactly GD when $B=n$, not for any $B<n$; and the slides explicitly show a visible stability difference between batch sizes.",
+   "d": "medium",
+   "t": 4,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.35"
+  },
+  {
+   "q": "In the heart disease case study, what pattern is observed in how practitioners choose step sizes?",
+   "o": [
+    "Diminishing step sizes work well: large initial steps to escape poor regions, smaller steps later to refine the solution",
+    "Step size should always be set as large as possible to guarantee the fastest convergence",
+    "Step size has no meaningful impact on convergence in this case study",
+    "Only a single fixed step size was tested across all experiments"
+   ],
+   "a": 0,
+   "e": "Slide 39 states SGD 'oftentimes relies on diminishing step sizes... Initially: large steps... Later on: small steps.' Overly large step sizes are shown to cause divergence/instability, not guaranteed fast convergence; slide 38 explicitly shows step size is critical to convergence quality; and multiple step-size regimes (small, large, diminishing) were compared.",
+   "d": "medium",
+   "t": 4,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.38"
+  },
+  {
+   "q": "Why does mini-batch averaging reduce variance compared to single-sample SGD, in terms of the gradient estimator?",
+   "o": [
+    "Averaging $B$ independent unbiased noisy gradient estimates reduces the variance of the mean estimator relative to a single sample",
+    "Mini-batching changes the expectation of the gradient estimator, making it biased toward the true optimum",
+    "Mini-batching eliminates randomness entirely regardless of batch size",
+    "Larger batches make each individual gradient computation faster"
+   ],
+   "a": 0,
+   "e": "This is a standard variance-reduction argument implied by the slides' statement of 'variance reduction in the gradient estimator' for mini-batches — averaging independent noisy unbiased estimates reduces variance of the average. Mini-batching doesn't change the mean (both are unbiased); randomness is only eliminated at $B=n$; and larger batches make each iteration slower, not individual gradient evaluations faster.",
+   "d": "hard",
+   "t": 4,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.34"
+  },
+  {
+   "q": "What is the role of early stopping as described in the conclusion slide?",
+   "o": [
+    "It avoids a long convergence tail and can also serve as a regularizer in machine learning",
+    "It guarantees convergence to the global optimum in non-convex problems",
+    "It is only relevant for gradient descent, not stochastic gradient descent",
+    "It eliminates the need to choose a step size"
+   ],
+   "a": 0,
+   "e": "Slide 42 states 'early stopping can avoid long tail in convergence' and 'can also act as regularization' in ML. It doesn't guarantee global optimality (no SGD/GD guarantee does so for non-convex $f$); it's discussed as a general SGD implementation lever, not GD-specific; and it's independent of step-size choice, not a substitute for it.",
+   "d": "easy",
+   "t": 5,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.42"
+  },
+  {
+   "q": "For the heart disease neural network (29 features, 16 hidden nodes, 1 output), how many weights connect the input layer to the hidden layer?",
+   "o": [
+    "$29\\times16=464$",
+    "$29+16=45$",
+    "$16\\times1=16$",
+    "$29\\times16\\times1=464$ plus an extra bias per input"
+   ],
+   "a": 0,
+   "e": "The slide states '29×16 weights from input layer to hidden layer' = 464. Adding instead of multiplying (second option) misunderstands that every input connects to every hidden node; 16 is just the hidden-to-output weight count; the fourth option double-counts/misattributes bias terms, which are counted separately (16 hidden biases + 1 output bias).",
+   "d": "medium",
+   "t": 4,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.37"
+  },
+  {
+   "q": "Which statement best distinguishes the cyclic index-selection rule from the randomized rule in SGD?",
+   "o": [
+    "Cyclic selection cycles through indices in fixed order $1,2,\\dots,n,1,2,\\dots$; randomized selection draws $i_k$ uniformly at random each iteration, which the slides show gives an unbiased estimator",
+    "Cyclic selection is always unbiased in the same formal sense as randomized selection, per the slide's proof",
+    "Randomized selection requires replacement-free sampling across all epochs",
+    "Cyclic selection cannot be used in practice for SGD"
+   ],
+   "a": 0,
+   "e": "Slide 15 presents both rules side by side; the unbiasedness proof ($E(\\nabla f_{i_k}(x))=\\nabla f(x)$) is given specifically for the randomized rule, not claimed for cyclic. The slides don't specify a replacement-free constraint for the randomized rule beyond uniform sampling, and cyclic selection is explicitly presented as a valid, usable alternative rule.",
+   "d": "hard",
+   "t": 1,
+   "src": "Lecture 19 Stochastic Grad Descent.pdf p.15"
+  }
+ ],
+ "written": [
+  {
+   "q": "Explain why stochastic gradient descent is preferred over full gradient descent for training large neural networks, and describe the fundamental tradeoff it introduces. Support your answer with the complexity figures and convergence behavior given in the lecture.",
+   "m": "Full gradient descent requires evaluating $\\nabla f(x) = \\frac1n\\sum_i \\nabla f_i(x)$ at every iteration, which for a neural network with $n$ data points and $m$ nodes costs $O(nm^2)$ operations via backpropagation — e.g., $O(10^{13})$ operations for 10 million points and 1,000 nodes. SGD instead approximates the gradient using a single randomly chosen data point, $\\nabla f_{i_k}(x)$, reducing the per-iteration cost to $O(m^2)$ (e.g., $O(10^6)$), since this estimator is unbiased in expectation: $E(\\nabla f_{i_k}(x)) = \\nabla f(x)$. This computational speedup comes with a fundamental tradeoff: the stochastic direction is not guaranteed to be a descent direction at any given iteration (we can have $\\nabla f(x)^\\top\\nabla f_i(x)<0$), so convergence guarantees weaken. Under strong convexity and smoothness with bounded gradient variance $\\sigma^2$, constant-step SGD converges linearly only to a neighborhood ('noise ball') of the optimum of size $O(M\\alpha\\sigma^2/2m)$, rather than to the exact optimum as GD does. Exact convergence is recoverable with diminishing step sizes (e.g., $\\alpha/k$), but at the cost of slower convergence. In exchange, the added randomness helps SGD escape shallow local minima and saddle points in the non-convex neural network landscape, which is why it shows strong practical performance despite weaker theory — the right solution-selection protocol is to track the best iterate seen, not the last one.",
+   "k": [
+    "Quantifies per-iteration cost difference: $O(nm^2)$ for GD vs. $O(m^2)$ for SGD",
+    "States unbiasedness of the SGD gradient estimator",
+    "Notes stochastic direction is not guaranteed to be a descent direction",
+    "Describes noise-ball convergence under constant step size (linear convergence term + irreducible $M\\alpha\\sigma^2/2m$ term)",
+    "Mentions diminishing step sizes trade speed for exact convergence",
+    "Connects randomness to escaping local minima/saddle points, and notes to return best iterate, not last"
+   ],
+   "t": 3,
+   "ref": ""
+  },
+  {
+   "q": "Using the heart disease case study and the linear regression mini-batch illustrations, discuss how batch size and step size jointly affect the convergence behavior of SGD in practice, and what implementation strategy you would recommend.",
+   "m": "Batch size and step size both control the bias-variance/speed-stability tradeoff in SGD. With $B=1$ (pure SGD), iterations are very cheap and the noisy direction can help escape poor local optima (as seen avoiding local minima in the heart disease case study), but convergence is erratic. Increasing the batch size toward $B=n$ (full GD) averages over more component gradients, reducing variance in the gradient estimator and stabilizing convergence (shown in the linear regression example: batches of 10 are smoother than batches of 2), but each iteration becomes more expensive, so progress per unit of computation can be slower. Step size compounds this: small step sizes give limited, slow progress regardless of batch size; large step sizes can cause divergence or instability, especially when gradient noise from small batches is also large; the heart disease case study shows that only an intermediate step size achieves strong convergence with constant step sizes, while diminishing step sizes (large steps early to explore, small steps later to refine) achieve good practical performance without requiring a single perfectly-tuned constant value. A recommended strategy is to use moderate mini-batches (not $B=1$, not $B=n$) combined with a diminishing or carefully tuned step size: start with a larger step to escape poor regions, shrink it over iterations for local refinement, and use early stopping to avoid a long convergence tail. This combination—as the lecture notes—can achieve the strongest overall convergence by accelerating GD and stabilizing SGD simultaneously.",
+   "k": [
+    "Explains $B=1$ vs. $B=n$ tradeoff: iteration speed/noise vs. stability/cost",
+    "References that mini-batches reduce variance of the gradient estimator",
+    "Connects step size regimes (small/large/diminishing) to convergence behavior described for the heart disease case study",
+    "Notes combination of moderate batch + diminishing step size gives best of both worlds",
+    "Mentions early stopping/termination as part of a full practical strategy"
+   ],
+   "t": 4,
+   "ref": ""
+  }
+ ]
+}

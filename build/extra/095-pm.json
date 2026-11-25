@@ -1,0 +1,469 @@
+{
+ "id": "xpm",
+ "label": "PM",
+ "title": "Practice midterm (Lectures 1 to 14)",
+ "short": "Practice midterm",
+ "src": "Lec01_2026.pdf, Lecture14_MLopt_26.pdf",
+ "brief": "A full practice midterm for 15.095 covering Lectures 1–14 and Recitations 1–6, weighted toward the core methods: robust, sparse, stable, convex and median regression; robust and sparse classification and holistic regression; CART versus OCT and OCT-H; prescriptive analytics and Optimal Policy Trees; kernel methods; optimal design of experiments; and the R.O.A.D. precision-medicine lectures. Part A is 24 multiple-choice questions; Part B is six written problems worth 108 points (derive a robust counterpart, formulate an MIO, interpret a policy tree, compare CART and OCT, choose a kernel and bandwidth, design an experiment). Take it timed and closed notes, about 30 minutes for Part A and two hours for Part B. Then check Part A against the explanations and grade Part B with Claude against the rubric.",
+ "kp": [],
+ "topics": [
+  {
+   "n": "Robust and sparse regression",
+   "x": "Lec 1–3, Rec 1–2: uncertainty sets and dual norms, robustness as regularization, best subset as an MIO, the first-order method and the binary convex reformulation."
+  },
+  {
+   "n": "Stable, convex and median regression",
+   "x": "Lec 4–5, Rec 3–4: training on the hardest $k$ points via LP duality, convex regression as a max of planes, and LQAD as subset selection over samples."
+  },
+  {
+   "n": "Classification and holistic regression",
+   "x": "Lec 6–7, Rec 4: logistic regression and its metrics, robust and sparse classification, and holistic regression's structural MIO constraints."
+  },
+  {
+   "n": "Trees: CART, OCT and OCT-H",
+   "x": "Lec 8–9, Rec 5: greedy growth and pruning versus the global OCT MIO, hyperplane splits, formulation size, local search and the PECARN case."
+  },
+  {
+   "n": "Prescriptive analytics and policy trees",
+   "x": "Lec 10–11: weighted-SAA predictive prescriptions, the coefficient of prescriptiveness, reward estimation (DM, IPW, DR) and Optimal Policy Trees."
+  },
+  {
+   "n": "Kernels and optimal experimental design",
+   "x": "Lec 12, Lec 12a, Rec 6: RKHS and the representer theorem, kerobj and keropt, kernel and width choice, and optimized versus randomized groups."
+  },
+  {
+   "n": "Precision medicine: R.O.A.D. I and II",
+   "x": "Lec 13–14: prognostic matching, the weighted counterfactual loss and $\\rho$, IPW and entropy balancing, and the unobserved-confounding proxy $U$."
+  }
+ ],
+ "cards": [],
+ "quiz": [
+  {
+   "q": "An analyst fits LAD regression and believes each feature column was corrupted by at most $\\rho$ in total absolute value: $\\mathcal U=\\{\\Delta:\\sum_i|\\Delta_{ij}|\\le\\rho\\ \\forall j\\}$. Which problem is $\\min_\\beta\\max_{\\Delta\\in\\mathcal U}\\|y-(X+\\Delta)\\beta\\|_1$ equivalent to?",
+   "o": [
+    "$\\min_\\beta\\|y-X\\beta\\|_1+\\rho\\|\\beta\\|_1$",
+    "$\\min_\\beta\\|y-X\\beta\\|_1+\\rho\\|\\beta\\|_\\infty$",
+    "$\\min_\\beta\\|y-X\\beta\\|_1+n\\rho\\|\\beta\\|_1$",
+    "$\\min_\\beta\\|y-X\\beta\\|_1+\\rho\\|\\beta\\|_2$"
+   ],
+   "a": 0,
+   "e": "A column bound is the induced set $\\mathcal U_{(1,1)}$: $\\max_{x\\ne0}\\|\\Delta x\\|_1/\\|x\\|_1$ is attained at a vertex $\\pm e_j$ of the $\\ell_1$ ball, so it equals $\\max_j\\|\\Delta_j\\|_1$ (the same argument gives Lec 2's column-wise $\\mathcal U_{(1,2)}$). The theorem for $\\mathcal U_{(r,q)}$ then gives the penalty $\\rho\\|\\beta\\|_r$ with $r=1$. The $\\ell_\\infty$ option is the dual-norm reflex: for induced sets the penalty uses $r$ itself, not $r^*$, and the dual appears only when you identify the set. There is no factor $n$ because the budget is per column, not per row.",
+   "d": "hard",
+   "t": 0,
+   "ref": "Lec02_2026.pdf p.28"
+  },
+  {
+   "q": "Now each observation's feature row may move within its own $\\ell_2$ ball: $\\mathcal U=\\{\\Delta:\\|\\delta_i\\|_2\\le\\rho,\\ i=1,\\dots,n\\}$, with the LAD loss. The robust problem $\\min_\\beta\\max_{\\Delta\\in\\mathcal U}\\|y-(X+\\Delta)\\beta\\|_1$ equals:",
+   "o": [
+    "$\\min_\\beta\\|y-X\\beta\\|_1+n\\rho\\|\\beta\\|_2$",
+    "$\\min_\\beta\\|y-X\\beta\\|_1+\\rho\\|\\beta\\|_2$",
+    "$\\min_\\beta\\|y-X\\beta\\|_1+\\sqrt n\\,\\rho\\|\\beta\\|_2$",
+    "$\\min_\\beta\\|y-X\\beta\\|_1+n\\rho\\|\\beta\\|_1$"
+   ],
+   "a": 0,
+   "e": "The $\\ell_1$ loss is a sum over rows and each row has its own budget, so the adversary attacks row by row: $\\max_{\\|\\delta_i\\|_2\\le\\rho}|r_i-\\delta_i^\\top\\beta|=|r_i|+\\rho\\|\\beta\\|_2$ (Cauchy–Schwarz; $\\ell_2$ is its own dual, and $\\delta_i=-\\rho\\,\\mathrm{sign}(r_i)\\beta/\\|\\beta\\|_2$ attains it). Summing over $n$ rows gives $n\\rho\\|\\beta\\|_2$. Dropping the $n$ would fit one total budget shared by all rows; $\\|\\beta\\|_1$ would come from a per-row box $\\|\\delta_i\\|_\\infty\\le\\rho$.",
+   "d": "hard",
+   "t": 0,
+   "ref": "Lec02_2026.pdf p.18"
+  },
+  {
+   "q": "The true model has sparsity $k=5$ with support $\\{1,2,3,4,5\\}$. A Lasso fit has support $\\{1,2,3,6,7,8\\}$. Using Lec 3's definitions, what are the accuracy $A\\%$ and the false alarm rate $F\\%$?",
+   "o": [
+    "$A=60\\%$, $F=50\\%$",
+    "$A=60\\%$, $F=60\\%$",
+    "$A=50\\%$, $F=60\\%$",
+    "$A=100\\%$, $F=50\\%$"
+   ],
+   "a": 0,
+   "e": "$A\\%=100\\,|\\mathrm{supp}(\\beta_{true})\\cap\\mathrm{supp}(\\beta^\\star)|/k=100\\cdot3/5=60\\%$ and $F\\%=100\\,|\\mathrm{supp}(\\beta^\\star)\\setminus\\mathrm{supp}(\\beta_{true})|/|\\mathrm{supp}(\\beta^\\star)|=100\\cdot3/6=50\\%$. The 60/60 option divides the false alarms by $k$ instead of by the size of the fitted support. Perfect support recovery needs $A=100$ and $F=0$.",
+   "d": "easy",
+   "t": 0,
+   "ref": "Lec03_2026.pdf p.23"
+  },
+  {
+   "q": "In the binary convex reformulation $c(s)=\\tfrac12y^\\top\\big(I_n+\\gamma\\sum_js_jK_j\\big)^{-1}y$ of $\\min\\tfrac12\\|y-X\\beta\\|_2^2+\\tfrac1{2\\gamma}\\|\\beta\\|_2^2$ s.t. $\\|\\beta\\|_0\\le k$, what happens as $\\gamma\\to0$?",
+   "o": [
+    "$c(s)\\to\\tfrac12\\|y\\|_2^2$ for every support $s$: the ridge term forces $\\beta\\to0$, so the choice of features stops mattering",
+    "$c(s)$ tends to the unregularized best-subset objective, because the ridge term disappears",
+    "The problem becomes the Lasso, since a vanishing ridge term behaves like an $\\ell_1$ penalty",
+    "$c(s)$ stops being convex, so the outer-approximation cuts are no longer valid"
+   ],
+   "a": 0,
+   "e": "The penalty is $\\tfrac1{2\\gamma}\\|\\beta\\|_2^2$, so a small $\\gamma$ means a huge penalty. In $c(s)$, $\\gamma\\sum_js_jK_j\\to0$, the inverse tends to $I_n$, and $c(s)\\to\\tfrac12\\|y\\|^2$ for all $s$: every support looks equally (and uselessly) good. Large $\\gamma$ is the limit that approaches plain best subset. $c$ stays convex for every $\\gamma>0$.",
+   "d": "hard",
+   "t": 0,
+   "ref": "Lec03_2026.pdf p.16"
+  },
+  {
+   "q": "Convex regression on $x=(0,1,2)$ returns $\\theta=(1,0,1)$ and subgradients $\\xi=(-1.5,\\,0,\\,1.5)$. Using the recovered function $f(x)=\\max_i\\{\\theta_i+\\xi_i(x-x_i)\\}$, what is the prediction at $x=3$?",
+   "o": [
+    "2.5",
+    "2.0",
+    "1.0",
+    "4.0"
+   ],
+   "a": 0,
+   "e": "At $x=3$ the three planes give $1-1.5\\cdot3=-3.5$, $0$, and $1+1.5\\cdot1=2.5$; the max is 2.5. (The fit is feasible: e.g. $\\theta_3+\\xi_3(x_1-x_3)=1-3=-2\\le\\theta_1$.) 2.0 extends the chord from $x=1$ to $x=2$, which is not how a max of planes extrapolates; 4.0 runs the third plane from $x_2=1$ instead of $x_3=2$ ($1+1.5\\cdot2$). Beyond the data, $f$ continues along the outermost supporting plane.",
+   "d": "hard",
+   "t": 1,
+   "ref": "Lecture05.pdf p.5"
+  },
+  {
+   "q": "LQAD with only an intercept ($y_i\\approx\\beta$), data $y=(1,\\,2,\\,2.5,\\,9,\\,10)$ and $q=3$. Using $\\min_\\beta|r_{(q)}|=\\min_{|I|=q}\\min_\\beta\\|y_I-\\beta\\|_\\infty$, what are $\\beta^\\star$ and the optimal $|r_{(3)}|$?",
+   "o": [
+    "$\\beta^\\star=1.75$, $|r_{(3)}|=0.75$",
+    "$\\beta^\\star=2$ (the median), $|r_{(3)}|=1$",
+    "$\\beta^\\star=4.9$ (the mean), $|r_{(3)}|=3.9$",
+    "$\\beta^\\star=5.5$ (the midrange), $|r_{(3)}|=3.5$"
+   ],
+   "a": 0,
+   "e": "LQAD picks the $q$ points that a Chebyshev ($\\ell_\\infty$) fit covers most tightly. For an intercept, the best $\\ell_\\infty$ fit to a subset is its midrange, with error half its range. The tightest three points are $\\{1,2,2.5\\}$ (range 1.5), so $\\beta^\\star=1.75$ and $|r_{(3)}|=0.75$. The median leaves residuals $(1,0,0.5,7,8)$, whose third smallest is 1. The two large values never affect the answer: this is subset selection in the samples.",
+   "d": "medium",
+   "t": 1,
+   "ref": "Lecture05.pdf p.17"
+  },
+  {
+   "q": "Stable regression with $n=100$ training points and $k=70$: $\\min_\\beta\\max_{z\\in\\mathcal Z}\\sum_iz_i|y_i-x_i^\\top\\beta|$, $\\mathcal Z=\\{z\\in\\{0,1\\}^n:\\sum_iz_i=k\\}$. After dualizing the inner problem, what replaces the max over $\\binom{100}{70}$ subsets?",
+   "o": [
+    "One free $\\theta$ and $u_1,\\dots,u_{100}\\ge0$ (101 continuous variables) with $\\theta+u_i\\ge\\pm(y_i-x_i^\\top\\beta)$ and objective $70\\theta+\\sum_iu_i$",
+    "100 binary variables $z_i$ with a big-M constraint per point",
+    "One constraint per subset, generated lazily by cutting planes",
+    "70 variables $u_i$, one per point in the hardest subset"
+   ],
+   "a": 0,
+   "e": "The constraint matrix of $\\mathcal Z$ is totally unimodular, so the max over $\\mathcal Z$ equals the LP over $\\{\\sum z_i=k,\\ 0\\le z_i\\le1\\}$. Its dual is $\\min k\\theta+\\sum_iu_i$ s.t. $\\theta+u_i\\ge|r_i|$, $u_i\\ge0$: $n+1$ continuous variables and $3n$ linear constraints, with no binaries and no enumeration. You do not know in advance which 70 points are hardest, so every point gets its own $u_i$.",
+   "d": "medium",
+   "t": 1,
+   "ref": "Lecture-04.pdf p.19"
+  },
+  {
+   "q": "Which MIO fits logistic regression with at most $k$ features (exact sparsity, labels $y_i\\in\\{-1,+1\\}$)?",
+   "o": [
+    "$\\max_{\\beta,\\beta_0,z}\\ -\\sum_i\\log(1+e^{-y_i(\\beta^\\top x_i+\\beta_0)})$ s.t. $-Mz_j\\le\\beta_j\\le Mz_j$, $\\sum_jz_j\\le k$, $z\\in\\{0,1\\}^p$",
+    "The same objective s.t. $-Mz_j\\le\\beta_j\\le Mz_j$ for $j=0,\\dots,p$ (intercept included), $\\sum_{j=0}^pz_j\\le k$, $z$ binary",
+    "$\\max_{\\beta,\\beta_0}\\ -\\sum_i\\log(1+e^{-y_i(\\beta^\\top x_i+\\beta_0)})-\\lambda\\|\\beta\\|_1$ with $\\lambda$ tuned until $k$ coefficients are nonzero",
+    "The same objective s.t. $-Mz_j\\le\\beta_j\\le Mz_j$, $\\sum_jz_j\\le k$, $0\\le z_j\\le1$"
+   ],
+   "a": 0,
+   "e": "Lec 3's sparsity pattern (binary $z_j$, big-M link, cardinality bound) carries over unchanged; only the loss becomes the concave log-likelihood, giving a mixed-integer convex problem. Sparsity limits features, and the intercept is not a feature, so it stays free. The $\\ell_1$ version is a convex surrogate that need not find the best $k$-subset, and with continuous $z_j$ the bound $\\sum z_j\\le k$ no longer limits the number of nonzeros.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Lec03_2026.pdf p.5"
+  },
+  {
+   "q": "In holistic regression the pairwise-collinearity set HC holds every pair whose correlation exceeds the threshold $\\rho$. Raising $\\rho$ from 0.8 to 0.95, with everything else fixed:",
+   "o": [
+    "Shrinks HC, so $k_{\\max}$ can only stay the same or rise and more supports are feasible; the model may now contain more correlated pairs",
+    "Grows HC, so $k_{\\max}$ falls and the model must be sparser",
+    "Changes nothing structural: $k_{\\max}$ depends only on $p$ and the group-sparsity sets",
+    "Tightens the robustness term, because $\\rho$ and $\\Gamma$ enter the same constraint"
+   ],
+   "a": 0,
+   "e": "$k_{\\max}=\\max\\sum_iz_i$ s.t. $z_i+z_j\\le1$ for $(i,j)\\in$ HC. A higher threshold flags fewer pairs and removes constraints, so the largest feasible support and the feasible region can only grow. The cost is that pairs correlated up to 0.95 may now enter together, inflating coefficient variance. $\\Gamma$ (robustness) is a separate parameter.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Lecture07.pdf p.26"
+  },
+  {
+   "q": "A logistic model scores two positive cases at 0.9 and 0.4 and three negative cases at 0.7, 0.3 and 0.2. Using Lec 6's interpretation of AUC, what is the AUC?",
+   "o": [
+    "5/6, about 0.83",
+    "3/5 = 0.60",
+    "4/6, about 0.67",
+    "1/2 = 0.50"
+   ],
+   "a": 0,
+   "e": "AUC is the share of (positive, negative) pairs the model orders correctly. There are $2\\times3=6$ pairs: 0.9 beats all three negatives, and 0.4 beats 0.3 and 0.2 but not 0.7, so 5 of 6. 0.60 is the accuracy at threshold $t=0.5$ (one TP and two TN out of five), which depends on $t$; AUC summarizes all thresholds at once.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Lecture06.pdf p.21"
+  },
+  {
+   "q": "Holistic regression with sparsity $k=5$. A categorical variable, region, is coded as 4 dummies forming one group-sparsity set ($z_i=z_l$ within the group); the other candidates are A–F. Which support is feasible?",
+   "o": [
+    "The 4 region dummies and A",
+    "3 region dummies, A and B",
+    "The 4 region dummies, A and B",
+    "A, B, C, D, E and F"
+   ],
+   "a": 0,
+   "e": "Group sparsity forces all four dummies in or out together, and each still counts toward $\\sum_lz_l\\le k$. Four dummies plus A uses exactly 5. Three dummies break $z_i=z_l$; four dummies plus two features, or six single features, exceed $k=5$. Including region costs four slots of the budget, which is how the MIO prices a multi-level categorical.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Lecture07.pdf p.27"
+  },
+  {
+   "q": "Across the 60 real-world datasets, what average out-of-sample accuracy gain over CART does Lec 9 report?",
+   "o": [
+    "About 1.3% for OCT and 3.9% for OCT-H",
+    "About 3.9% for OCT and 1.3% for OCT-H",
+    "About 13% for OCT and 39% for OCT-H",
+    "No average gain; OCT wins only on interpretability"
+   ],
+   "a": 0,
+   "e": "The 'optimization edge' is about 1.3% from finding globally better axis-parallel trees, rising to about 3.9% once hyperplane splits are allowed. The lecture's claim is state-of-the-art accuracy from a single interpretable tree. The small headline number understates the impact, as the PECARN case shows.",
+   "d": "easy",
+   "t": 3,
+   "ref": "Lecture09.pdf p.86"
+  },
+  {
+   "q": "In the OCT MIO, the minimum leaf size constraint is $\\sum_iz_{it}\\ge N_{\\min}l_t$. If you raise $N_{\\min}$ from 5 to 50, the optimal training error:",
+   "o": [
+    "Can only stay the same or rise, because fewer trees are feasible",
+    "Can only fall, because larger leaves estimate the majority class better",
+    "Is unchanged; $N_{\\min}$ only affects solve time",
+    "Is unchanged, because $N_{\\min}$ only limits the depth $D$"
+   ],
+   "a": 0,
+   "e": "Raising $N_{\\min}$ removes every tree with a used leaf of fewer than 50 points, and a minimum over a smaller set cannot be lower. That is the purpose: like CART's minbucket, it regularizes, trading training error for less overfitting. It does not fix the depth: a deep tree remains feasible if its leaves are large enough.",
+   "d": "easy",
+   "t": 3,
+   "ref": "Recitation5_student.pdf p.27"
+  },
+  {
+   "q": "Features are scaled to $[0,1]$ and the ideal split is $3x_1+x_2<2$. How does OCT-H represent it (split $a_t^\\top x<b_t$ with $\\|a_t\\|_1\\le1$), and what does it add to the complexity term $\\alpha\\sum_t\\sum_js_{jt}$?",
+   "o": [
+    "$a_t=(0.75,0.25)$, $b_t=0.5$; it adds $2\\alpha$",
+    "$a_t=(3,1)$, $b_t=2$; it adds $\\alpha$",
+    "$a_t=(0.75,0.25)$, $b_t=0.5$; it adds $\\alpha$",
+    "$a_t=(1,\\tfrac13)$, $b_t=\\tfrac23$; it adds $2\\alpha$"
+   ],
+   "a": 0,
+   "e": "Dividing by $\\|(3,1)\\|_1=4$ gives the same half-plane with $\\|a_t\\|_1=1$: $0.75x_1+0.25x_2<0.5$. OCT-H charges each feature used in a split ($s_{jt}=1$ when $a_{jt}\\ne0$), so a two-feature hyperplane costs $2\\alpha$ where an axis-parallel split costs $\\alpha$. $(3,1)$ violates the norm bound, and $(1,\\tfrac13)$ normalizes by the largest entry, leaving $\\|a\\|_1=\\tfrac43>1$.",
+   "d": "hard",
+   "t": 3,
+   "ref": "Lecture09.pdf p.36"
+  },
+  {
+   "q": "OCT minimizes $\\frac1{\\hat L}\\sum_tL_t+\\alpha\\sum_td_t$, where $\\hat L$ is the baseline error of predicting the majority class. Here $\\hat L=40$, and a single root split would cut training errors from 40 to 34. For which $\\alpha$ does the one-split tree beat the root-only tree?",
+   "o": [
+    "$\\alpha<0.15$",
+    "$\\alpha<6$",
+    "$\\alpha<0.85$",
+    "$\\alpha>0.15$"
+   ],
+   "a": 0,
+   "e": "Root only: $40/40=1$. One split: $34/40+\\alpha=0.85+\\alpha$. The split wins when $0.85+\\alpha<1$, i.e. $\\alpha<0.15$. Normalizing by $\\hat L$ makes $\\alpha$ comparable across datasets: it is the fraction of the baseline error a split must remove to pay for itself. $\\alpha<6$ forgets the normalization.",
+   "d": "medium",
+   "t": 3,
+   "ref": "Lecture09.pdf p.34"
+  },
+  {
+   "q": "Out of sample: SAA costs 2,400, perfect foresight 1,400, and a point-prediction policy (plug in the forecast, then optimize) 2,600. What is its coefficient of prescriptiveness $P=1-\\frac{R(\\hat z)-R^*}{R(\\hat z^{SAA})-R^*}$?",
+   "o": [
+    "$-0.20$: it does worse than ignoring the covariates",
+    "$0.20$",
+    "$0.46$",
+    "$1.20$"
+   ],
+   "a": 0,
+   "e": "$P=1-\\frac{2600-1400}{2400-1400}=1-1.2=-0.2$. $P$ is the fraction of the gap between SAA and perfect foresight that a policy closes, so a negative value means it widened the gap. The point prediction uses $x$ but ignores the uncertainty that SAA accounts for. Equivalently $P=\\frac{2400-2600}{1000}$; 0.20 flips the sign to $\\frac{2600-2400}{1000}$, 0.46 is $1-\\frac{1400}{2600}$, and 1.20 is the ratio itself.",
+   "d": "medium",
+   "t": 4,
+   "ref": "Recitation5-1.pdf p.24"
+  },
+  {
+   "q": "Order cost $c(z;y)=z+5\\max(y-z,0)$. For a new $x_0$, the two nearest neighbors (weight $\\tfrac12$ each) had demands 10 and 30. Compare the weighted-SAA order $\\arg\\min_z\\sum_iw_i(x_0)c(z;y_i)$ with ordering the point prediction $\\hat y=20$, both evaluated under these weights.",
+   "o": [
+    "Weighted SAA orders 30 at expected cost 30; ordering 20 costs 45",
+    "Both order 20, at expected cost 45",
+    "Weighted SAA orders 20 at cost 45; ordering 30 costs 55",
+    "Weighted SAA orders 10 at cost 60; ordering 20 costs 45"
+   ],
+   "a": 0,
+   "e": "On $[10,30]$ the weighted cost is $z+\\tfrac52(30-z)=75-1.5z$, which decreases, so $z^\\star=30$ with cost 30 (below 10 it is $100-4z$). Ordering 20 costs $\\tfrac12\\cdot20+\\tfrac12(20+50)=45$. A shortage costs 5 per unit against 1 for overage, so the right order sits at a high quantile of the conditional distribution, not at its mean. The point forecast uses $x$ but discards that spread.",
+   "d": "hard",
+   "t": 4,
+   "ref": "Lecture12.pdf p.4"
+  },
+  {
+   "q": "Observational data: $n=4$ patients and $m=3$ treatment options, each patient observed under the one treatment received. How many entries of the $4\\times3$ outcome matrix must reward estimation fill in?",
+   "o": [
+    "8",
+    "4",
+    "12",
+    "3"
+   ],
+   "a": 0,
+   "e": "Each row has one observed outcome and $m-1=2$ counterfactuals: $4\\times2=8$. Reward estimation (DM, IPW or DR) completes the matrix $\\Gamma_{it}$ so that a policy can be scored under every treatment. 12 counts all entries, including the four observed ones.",
+   "d": "easy",
+   "t": 4,
+   "ref": "Lecture11 (1).pdf p.7"
+  },
+  {
+   "q": "Kernel ridge regression with a Matérn kernel of width $h$ and a fixed $\\lambda>0$ maps a pollutant from 30 sensors. What happens at the two extremes of $h$?",
+   "o": [
+    "Very small $h$: a spike at each sensor and $\\bar y$ in between (overfit). Very large $h$: hills wider than the area and an over-smoothed map that misses local peaks. Choose $h$ and $\\lambda$ on held-out sensors",
+    "Very small $h$ always lowers held-out error, because the fit follows every sensor",
+    "$h$ only changes run time; the representer theorem fixes the fitted function",
+    "Very large $h$ makes $\\hat K$ the identity, so the fit interpolates every sensor"
+   ],
+   "a": 0,
+   "e": "$h$ sets how far likeness reaches. As $h\\to0$, $K(p,p')\\to0$ for distinct points and $\\hat K\\to I$: each sensor gets its own narrow hill, and away from the sensors the map falls back to $\\bar y$. As $h$ grows, all hills overlap and the map flattens. In Rec 6, 0.3 km gave error 1.47, the cross-validated 2.5 km gave 0.65, and 40 km gave 1.17. The identity matrix belongs to the narrow extreme, not the wide one.",
+   "d": "medium",
+   "t": 5,
+   "ref": "15_095_rec6_student.pdf p.17"
+  },
+  {
+   "q": "Two groups, $\\rho=0$, a normal covariate. The expected mean discrepancy is $\\frac{2\\sigma}{\\sqrt{\\pi k}}$ under randomization and $\\frac{2\\pi\\sigma}{2^{2k}}$ under optimization. How many subjects per group does each need to get below $0.02\\sigma$?",
+   "o": [
+    "Optimization 5; randomization 3,184",
+    "Optimization 9; randomization 3,184",
+    "Optimization 5; randomization 57",
+    "Optimization 3; randomization 128"
+   ],
+   "a": 0,
+   "e": "Randomization: $\\frac{2}{\\sqrt{\\pi k}}\\le0.02\\Rightarrow k\\ge\\frac{4}{\\pi(0.02)^2}=3183.1$, so 3,184. Optimization: $4^k\\ge2\\pi/0.02=314.2\\Rightarrow k\\ge\\log_4314.2=4.15$, so 5. The rate is $2^{-2k}$: Lec 12a's median bound is $C/2^{2k}$, and its table (3 at $\\epsilon=0.1$, 5 at $\\epsilon=0.01$) is reproduced only by $\\log_4$. Caution: pp. 20–21 print $2\\pi\\sigma/2^k$ and $k^{Opt}=\\lceil\\log_2(2\\pi/\\epsilon)\\rceil$, which give 9 here (and 6 at $\\epsilon=0.1$, contradicting the slide's own table); on the exam, use the formula the question states. 3 and 128 are the $\\epsilon=0.1$ values.",
+   "d": "hard",
+   "t": 5,
+   "ref": "Lecture12a.pdf p.21"
+  },
+  {
+   "q": "keropt for a decision $z\\in\\mathbb R^3$ (three order quantities), trained on $n=400$ samples, with $c(z;y)$ convex in $z$. The finite problem $\\min_{a^1,a^2,a^3}\\frac1n\\sum_ic\\big((\\hat Ka^1)_i,(\\hat Ka^2)_i,(\\hat Ka^3)_i;y_i\\big)+\\lambda\\sum_t(a^t)^\\top\\hat Ka^t$ has:",
+   "o": [
+    "1,200 variables, and it is convex",
+    "400 variables, and it is convex",
+    "1,200 variables, and it is nonconvex because the kernel is nonlinear in $x$",
+    "160,000 variables, one per entry of $\\hat K$"
+   ],
+   "a": 0,
+   "e": "There is one coefficient vector $a^t\\in\\mathbb R^n$ per decision coordinate: $nd=400\\cdot3=1{,}200$ variables. Each $(\\hat Ka^t)_i$ is linear in $a$, a convex $c$ composed with a linear map is convex, and $\\hat K$ is PSD, so the penalty is convex too. The nonlinearity in $x$ lives inside $\\hat K$, which is fixed data.",
+   "d": "medium",
+   "t": 5,
+   "ref": "Lecture12.pdf p.19"
+  },
+  {
+   "q": "Entropy balancing with two untreated patients, $Z=1$ and $Z=3$, and a treated-group mean of 2.5. The constraints are $\\sum_iw_i=1$, $\\sum_iw_iZ_i=2.5$ and $w\\ge0$. What are the weights?",
+   "o": [
+    "$(0.25,\\,0.75)$",
+    "$(0.5,\\,0.5)$",
+    "$(0.75,\\,0.25)$",
+    "$(0.4,\\,0.6)$"
+   ],
+   "a": 0,
+   "e": "$w_1+w_2=1$ and $w_1+3w_2=2.5$ give $w_2=0.75$ and $w_1=0.25$. With two controls and two constraints the weights are pinned down; the entropy objective $\\sum w_i\\log w_i$ matters only when there are more controls than constraints, where it picks the most even weights that match the moments. Equal weights give a mean of 2.0, which does not match the treated group.",
+   "d": "easy",
+   "t": 6,
+   "ref": "Lecture14_MLopt_26.pdf p.17"
+  },
+  {
+   "q": "One R.O.A.D. risk bucket has 12 treated and 30 untreated patients. The matching MIO requires $\\sum_{j\\in S_0^k}z_{ij}=1$ for each treated $i$ and $\\sum_{i\\in S_1^k}z_{ij}\\le1$ for each untreated $j$. What does the solution contain?",
+   "o": [
+    "12 treated–untreated pairs; 18 untreated patients are left out",
+    "30 pairs, with some treated patients reused",
+    "12 pairs, but one untreated patient may serve several treated ones",
+    "Nothing: the bucket is infeasible because the arms differ in size"
+   ],
+   "a": 0,
+   "e": "Each treated patient gets exactly one control and each control is used at most once, so there are 12 disjoint pairs chosen to minimize total covariate distance, and the other 18 controls are dropped. This equalizes $n_1^k=n_0^k$ in the bucket. The formulation would be infeasible only if treated patients outnumbered untreated ones; Lec 14 states the general rule as matching the minority arm into the majority.",
+   "d": "easy",
+   "t": 6,
+   "ref": "Lecture13.pdf p.10"
+  },
+  {
+   "q": "ROAD II. John (treated) had a recurrence after 14 months. His nearest treated neighbors with better outcomes, $\\mathcal N_{John}$, had recurrence-free times of 30, 36 and 42 months. Compute $U_{John}=Y_{John}-\\frac1{|\\mathcal N_{John}|}\\sum_{j\\in\\mathcal N_{John}}Y_j$ and interpret it.",
+   "o": [
+    "$U=-22$: John did worse than comparable treated patients, a proxy for unusual frailty due to unobserved factors",
+    "$U=+22$: unusual robustness",
+    "$U=-22$: the estimated treatment effect of the drug for John",
+    "$U=-22$: a direct measurement of John's unrecorded mutation status"
+   ],
+   "a": 0,
+   "e": "$U=14-36=-22<0$, so after normalization $\\tilde U\\in[-1,0]$: John fared worse than similar patients in the same arm. Comparing within one arm holds the treatment fixed, so $U$ is not a treatment effect. It stands in for the combined influence of unobserved prognostic factors and is then balanced alongside $X$ (matching, entropy balancing or IPTW). It does not measure any single factor.",
+   "d": "medium",
+   "t": 6,
+   "ref": "Lecture14_MLopt_26.pdf p.31"
+  }
+ ],
+ "written": [
+  {
+   "q": "Robust LAD regression with sensor errors. A utility predicts daily load $y_i$ from $p$ sensor readings $x_i\\in\\mathbb R^p$, $i=1,\\dots,n$, with the LAD loss $\\|y-X\\beta\\|_1$. (a) Each reading may be off by at most $\\rho$, independently: $\\mathcal A=\\{\\Delta:|\\Delta_{ij}|\\le\\rho\\ \\forall i,j\\}$. Show that $\\max_{\\Delta\\in\\mathcal A}\\|y-(X+\\Delta)\\beta\\|_1=\\|y-X\\beta\\|_1+n\\rho\\|\\beta\\|_1$: prove both inequalities and give the worst-case $\\Delta$. (b) Instead, each day's record has a total distortion budget: $\\mathcal B=\\{\\Delta:\\|\\delta_i\\|_1\\le\\rho\\ \\forall i\\}$, where $\\delta_i^\\top$ is the $i$-th row. What is the robust counterpart? (c) Add $\\|\\beta\\|_0\\le k$ and write each robust problem as a MILP. How many auxiliary continuous variables does each need, and why? (d) Without solving, predict how the fitted coefficients differ under (a) and (b) as $\\rho$ grows, using the marginal saving from shrinking one coefficient. (e) Why does Lec 2's theorem for $\\mathcal U_{F(q)}$ not give (a) directly?",
+   "m": "(a) Let $r=y-X\\beta$. The loss is a sum over rows and $\\mathcal A$ restricts each row separately ($\\|\\delta_i\\|_\\infty\\le\\rho$), so the max splits into $n$ row problems. Upper bound, for every $\\Delta\\in\\mathcal A$: $|r_i-\\delta_i^\\top\\beta|\\le|r_i|+|\\delta_i^\\top\\beta|\\le|r_i|+\\|\\delta_i\\|_\\infty\\|\\beta\\|_1\\le|r_i|+\\rho\\|\\beta\\|_1$ by Hölder ($\\ell_1$ is the dual of $\\ell_\\infty$); summing gives $\\le\\|r\\|_1+n\\rho\\|\\beta\\|_1$. Lower bound, with one witness: let $s_i=\\mathrm{sign}(r_i)$ ($+1$ if $r_i=0$) and $\\delta_i=-\\rho\\,s_i\\,\\mathrm{sign}(\\beta)$, which lies in $\\mathcal A$. Then $\\delta_i^\\top\\beta=-\\rho s_i\\|\\beta\\|_1$ and $|r_i-\\delta_i^\\top\\beta|=|r_i+\\rho s_i\\|\\beta\\|_1|=|r_i|+\\rho\\|\\beta\\|_1$, so the bound is attained. The adversary pushes every entry against $\\mathrm{sign}(\\beta_j)$, in whichever direction enlarges each residual. (b) Per row, $\\max_{\\|\\delta_i\\|_1\\le\\rho}\\delta_i^\\top\\beta=\\rho\\|\\beta\\|_\\infty$ (the dual of $\\ell_1$ is $\\ell_\\infty$: spend the whole budget on the feature with the largest $|\\beta_j|$). The counterpart is $\\min_\\beta\\|y-X\\beta\\|_1+n\\rho\\|\\beta\\|_\\infty$. (c) For (a): $\\min\\sum_it_i+n\\rho\\sum_ja_j$ s.t. $t_i\\ge y_i-x_i^\\top\\beta$, $t_i\\ge-(y_i-x_i^\\top\\beta)$, $a_j\\ge\\beta_j$, $a_j\\ge-\\beta_j$, $-Mz_j\\le\\beta_j\\le Mz_j$, $\\sum_jz_j\\le k$, $z\\in\\{0,1\\}^p$. That uses $n$ auxiliaries for the loss and $p$ for the $\\ell_1$ penalty, since a sum of absolute values needs one per term. For (b): replace $\\sum_ja_j$ by a single $w$ with $w\\ge\\beta_j$ and $w\\ge-\\beta_j$ for all $j$, objective $\\sum_it_i+n\\rho w$: $n+1$ auxiliaries, since a max needs only one scalar. (d) Under (a), shrinking any $\\beta_j$ by one unit saves $n\\rho$, the same for every coefficient. All coefficients are shrunk, and those whose contribution to the fit is worth less than $n\\rho$ per unit go to exactly zero, so zeros appear as $\\rho$ grows, even below the cardinality $k$. Under (b), only the largest $|\\beta_j|$ is priced. Shrinking a non-maximal coefficient saves nothing, and shrinking the peak pays only until it meets the runner-up, after which both must move together. Coefficients therefore pile up at a common ceiling $w$ (ties), the ceiling falls as $\\rho$ grows, and nothing pushes coefficients to zero, so sparsity comes only from $k$. (e) The theorem pairs the set index with the loss: $\\mathcal U_{F(q)}$ with $\\ell_q$ loss. Here the set is an $F(\\infty)$ ball (an entrywise box) but the loss is $\\ell_1$. Because the box decouples across rows, the direct per-row argument works instead, and the penalty picks up the factor $n$: every row can be attacked at full strength.",
+   "k": [
+    "Row-wise separation of the max, explained (2 pts)",
+    "Upper bound via Hölder with the $\\ell_\\infty/\\ell_1$ dual pair (3 pts)",
+    "Explicit witness $\\delta_i=-\\rho\\,\\mathrm{sign}(r_i)\\,\\mathrm{sign}(\\beta)$ shown to attain the bound (3 pts)",
+    "(b) counterpart $\\|y-X\\beta\\|_1+n\\rho\\|\\beta\\|_\\infty$ with the reason (3 pts)",
+    "(c) both MILPs correct, with $n+p$ versus $n+1$ auxiliaries and the sum-versus-max reason (4 pts)",
+    "(d) zeros under (a) versus ties at a common ceiling under (b), argued by marginal saving (4 pts)",
+    "(e) the loss index differs from the set index; the factor $n$ explained (1 pt)"
+   ],
+   "pts": 20,
+   "t": 0
+  },
+  {
+   "q": "Formulate an MIO. A hospital wants a linear model of length of stay from $n=600$ past admissions. Candidates: lab values $x_1,\\dots,x_{12}$; an interaction column $x_{13}=x_1x_2$; age in three forms (age, age$^2$, $\\log$ age) as $x_{14},x_{15},x_{16}$; and admission type coded as dummies $x_{17},x_{18},x_{19}$. Requirements: (i) at most $k$ features; (ii) the admission-type dummies enter together or not at all; (iii) the interaction may enter only if both $x_1$ and $x_2$ do; (iv) at most one form of age; (v) no two features from the set HC of highly correlated pairs; (vi) lab $j$ costs $c_j$ and the total measurement cost per patient is at most $C$; (vii) robustness through an $\\ell_1$ penalty $\\Gamma\\|\\beta\\|_1$; (viii) instead of fitting all 600 points, train against the hardest $m=450$ of them, as in stable regression, with absolute-error loss. (a) Write the min–max problem. (b) Remove the inner maximization and write a single MIO, justifying each step. (c) Explain what every constraint enforces. (d) How would you choose $k$, $\\Gamma$ and $M$ in practice, and what goes wrong if $M$ is too small or too large?",
+   "m": "(a) $\\min_{\\beta,\\beta_0,z}\\ \\max_{\\pi\\in\\mathcal Z}\\sum_i\\pi_i|y_i-\\beta_0-x_i^\\top\\beta|+\\Gamma\\|\\beta\\|_1$ with $\\mathcal Z=\\{\\pi\\in\\{0,1\\}^{600}:\\sum_i\\pi_i=450\\}$, subject to the structural constraints below. (b) Fix $\\beta$ and let $r_i=|y_i-\\beta_0-x_i^\\top\\beta|$. The inner problem picks the 450 largest residuals. Its constraint matrix is totally unimodular, so it equals the LP over $0\\le\\pi_i\\le1$, $\\sum_i\\pi_i=450$. LP duality gives $\\min_{\\theta,u}450\\,\\theta+\\sum_iu_i$ s.t. $\\theta+u_i\\ge r_i$, $u_i\\ge0$, with $\\theta$ free (at the optimum, $\\theta$ is the 450th largest residual and $u_i$ the excess above it). Both levels now minimize, so merge them and linearize $r_i$ and $|\\beta_j|$: minimize $450\\,\\theta+\\sum_{i=1}^{600}u_i+\\Gamma\\sum_{j=1}^{19}a_j$ s.t. $\\theta+u_i\\ge y_i-\\beta_0-x_i^\\top\\beta$, $\\theta+u_i\\ge-(y_i-\\beta_0-x_i^\\top\\beta)$, $u_i\\ge0$; $a_j\\ge\\beta_j$, $a_j\\ge-\\beta_j$; $-Mz_j\\le\\beta_j\\le Mz_j$; $\\sum_jz_j\\le k$; $z_{17}=z_{18}=z_{19}$; $z_{13}\\le z_1$, $z_{13}\\le z_2$; $z_{14}+z_{15}+z_{16}\\le1$; $z_i+z_j\\le1$ for $(i,j)\\in$ HC; $\\sum_{j=1}^{12}c_jz_j\\le C$; $z\\in\\{0,1\\}^{19}$; $\\beta_0$ free. (c) Big-M: $\\beta_j\\ne0$ only if $z_j=1$. Cardinality: at most $k$ features. Group sparsity: the categorical is all in or all out, and it uses 3 slots of $k$. Interaction-needs-parents: $z_{13}=1$ forces $z_1=z_2=1$, while $z_{13}=0$ leaves them free. Nonlinear transforms: at most one age form. Collinearity: correlated pairs are mutually exclusive. Budget: a lab is paid for when it is used, whatever the size of its coefficient, so the cost sits on $z$, not on $\\beta$. The stable-regression dual replaces an exponential max over subsets with 601 continuous variables and 1,800 linear constraints. The $\\ell_1$ robustness term is linearized with one $a_j$ per coefficient, since it is a sum. (d) Standardize features (zero mean, unit norm) so that one $M$ makes sense. Compute $k_{\\max}$, the largest support that satisfies the structural constraints (a maximum independent set on the HC graph), solve for $k=1,\\dots,k_{\\max}$ over a grid of $\\Gamma$ values, and choose on a validation set (for example a 50/25/25 split). Set $M$ from a warm start, such as a multiple of the largest $|\\beta_j|$ in a heuristic fit, and check after solving that no $|\\beta_j|$ sits at $M$. If $M$ is too small it silently cuts off the true optimum, giving the wrong model; if it is too large the LP relaxation is weak and the solver is slow to prove optimality.",
+   "k": [
+    "Correct min–max statement with the subset set $\\mathcal Z$ (2 pts)",
+    "Total unimodularity / LP relaxation and the dual $m\\theta+\\sum_iu_i$ with $\\theta+u_i\\ge|r_i|$ (4 pts)",
+    "Merged single-level MIO with residuals and $|\\beta_j|$ linearized (3 pts)",
+    "Big-M link and cardinality constraint (2 pts)",
+    "Group, interaction-parent and transform constraints correct (3 pts)",
+    "HC and cost-budget constraints, with the cost on $z$ rather than $\\beta$ (2 pts)",
+    "Clear explanation of what each constraint enforces (2 pts)",
+    "Choosing $k$ via $k_{\\max}$, a $\\Gamma$ grid and validation; the too-small versus too-large $M$ trade-off (2 pts)"
+   ],
+   "pts": 20,
+   "t": 2
+  },
+  {
+   "q": "Interpret a policy tree. A fund manager chooses, for each customer, between an email campaign (E) and a phone call (C); the outcome is next-quarter fund inflow (higher is better). Doubly robust rewards $(\\Gamma_{iE},\\Gamma_{iC})$, estimated with cross-fitting on the training half, are: customer 1 (age 30, balance 20): (5, 2); customer 2 (age 45, balance 35): (4, 3); customer 3 (age 52, balance 80): (3, 9); customer 4 (age 61, balance 120): (6, 10); customer 5 (age 38, balance 60): (7, 4); customer 6 (age 66, balance 150): (2, 8). Balances are in thousands. An analyst proposes the depth-1 tree T: 'balance < 50 → E, otherwise C'. (a) Compute the total estimated reward of T, of 'everyone E' and of 'everyone C'. (b) Find a depth-1 tree that does better on these data and give its value. Should you deploy it on this evidence alone? (c) Customer 7 received C and had $y=12$; the outcome models give $f_C(x_7)=8$ and $f_E(x_7)=5$, and the propensity model gives $p_{7C}=0.25$. Compute $\\Gamma_{7E}$ and $\\Gamma_{7C}$. Recompute $\\Gamma_{7C}$ if the propensity were misestimated as 0.05, and explain what this implies for per-customer argmax decisions versus a tree. (d) Describe how to evaluate the chosen tree honestly, and what a leaf 'balance ≥ 70 → C' does and does not tell the manager.",
+   "m": "(a) T: customers 1 and 2 (balance < 50) get E, $5+4$; customers 3, 4, 5 and 6 get C, $9+10+4+8$. Total 40. Everyone E: $5+4+3+6+7+2=27$. Everyone C: $2+3+9+10+4+8=36$. T beats both uniform policies. (b) Customer 5 (balance 60) does better with E (7 versus 4), so move the threshold: 'balance < 70 → E' gives $5+4+7+9+10+8=43$, and 'age < 50 → E' also gives 43. Both reach the row-by-row maximum on these six customers. That shows in-sample fit, not value: there are six points, two different splits tie, and the rewards are noisy estimates. Optimal Policy Trees choose the tree that maximizes $\\sum_i\\sum_t1\\{\\mathrm{Tree}(x_i)=t\\}\\Gamma_{it}$ minus a complexity penalty over the whole training set, tuned by validation; the tie should be settled by more data, not by these six points. (c) DR: $\\Gamma_{it}=f_t(x_i)+1\\{T_i=t\\}\\frac{y_i-f_t(x_i)}{p_{it}}$. For E, which was not received, only the direct-method term remains: $\\Gamma_{7E}=5$. For C: $\\Gamma_{7C}=8+\\frac{12-8}{0.25}=24$. With $p_{7C}=0.05$: $8+\\frac{4}{0.05}=88$. A small error in a small propensity moves the reward by 64, which is the high variance of the IPW correction. The correction is right on average, so IPW and DR rewards are meaningful only in aggregate. A per-customer argmax (regress-and-compare) would follow this noise one customer at a time, and it makes sense only with direct-method rewards. A tree averages rewards over everyone in a leaf, which regularizes the policy: similar customers get the same action, and noise in individual rewards washes out. (d) Split the data 50/50. Estimate rewards on the training half with cross-fitting and fit the tree there. Then run a separate reward estimation on the test half and score the tree's prescriptions with those test rewards; the test half must be large because its rewards are themselves estimates. Report the estimated lift over the status quo (for example, everyone E). The leaf says that among customers with a balance of at least 70, the estimated average reward of a call exceeds that of an email in these data. It is a prescription for a segment, not a causal explanation of why calls work. It assumes no unobserved confounding and enough overlap (both actions used at high balances), and its real impact can be confirmed only by an experiment.",
+   "k": [
+    "(a) 40, 27 and 36 computed correctly (3 pts)",
+    "(b) an improved split (balance < 70 or age < 50) worth 43 (2 pts)",
+    "(b) caution: the tie, the tiny sample, in-sample fit, and the OPT objective with a complexity penalty (2 pts)",
+    "(c) $\\Gamma_{7E}=5$, $\\Gamma_{7C}=24$, and 88 when $p=0.05$ (3 pts)",
+    "(c) IPW variance; IPW/DR rewards meaningful only in aggregate; regress-and-compare only with DM; the tree as a regularizer (3 pts)",
+    "(d) 50/50 split, cross-fitting, independent reward estimation on the test half (2 pts)",
+    "(d) correct reading of the leaf, with its assumptions and the need for an experiment (1 pt)"
+   ],
+   "pts": 16,
+   "t": 4
+  },
+  {
+   "q": "CART versus OCT on a scenario. A training set has eight points in $[0,1]^2$: class B at (0.2, 0.2), (0.3, 0.3), (0.7, 0.7), (0.8, 0.8) and class R at (0.2, 0.8), (0.3, 0.7), (0.7, 0.2), (0.8, 0.3). (a) Show that no single axis-parallel split reduces the misclassification error or the Gini impurity. What does greedy CART return with a positive complexity parameter, and can growing then pruning recover a perfect tree? (b) OCT minimizes $\\frac1{\\hat L}\\sum_tL_t+\\alpha\\sum_td_t$ with maximum depth 2. Give the objective of the best tree with 0, 1 and 3 splits, and the range of $\\alpha$ for which OCT returns the perfect tree. (c) On another dataset the true boundary is $x_1+x_2<1$. Compare what CART, OCT and OCT-H need to represent it, including the complexity penalty and the normalized split coefficients. (d) For $n=2{,}000$, $p=10$, $K=2$ and depth 3, count the $z_{it}$ variables and the routing constraints of the OCT MIO. What does this imply about how OCT is solved in practice? (e) In PECARN (children under 2), CART ordered 5,132 CT scans and OCT 2,856, each missing one ciTBI. Why is accuracy the wrong lens here?",
+   "m": "(a) The classes form an XOR pattern. Every vertical or horizontal threshold leaves each child with equal numbers of B and R: $x_1<0.5$ gives 2B/2R on each side, $x_1<0.25$ gives 1B/1R and 3B/3R, $x_1<0.75$ gives 3B/3R and 1B/1R, and likewise for $x_2$. The error stays at 4, and every child's Gini is 0.5, the same as the root, so the gain is zero. With a positive complexity parameter, greedy CART stops at the root (4 errors). Growing fully always ends in a tree that is perfect on the training data (the points are distinct), and pruning with a small enough $\\alpha$ keeps a perfect subtree, because pruning compares whole subtrees. But it is the 3-split XOR tree only if the arbitrary tie at the root happens to be broken at 0.5; any other root split needs more splits below it (after $x_1<0.25$, the 3B/3R child alone needs three more), so the result is larger than necessary, and under a depth limit of 2 it is not perfect at all. The greedy criterion gives no reason to choose the right root. (b) $\\hat L=4$. Root only: $4/4=1$. Best one-split tree: $4/4+\\alpha=1+\\alpha$, never optimal. Best two-split tree (one child split, the other still 2B/2R): $2/4+2\\alpha=0.5+2\\alpha$, which would need $\\alpha<0.25$ to beat the root and $\\alpha>0.5$ to beat the XOR tree, so it is never optimal either. XOR tree ($x_1<0.5$, then $x_2<0.5$ in both children): $0+3\\alpha$. OCT returns it if and only if $3\\alpha<1$, i.e. $\\alpha<1/3$; otherwise it returns the root. OCT values the splits jointly, which a one-step criterion cannot do. (c) Axis-parallel trees (CART or OCT) need a staircase whose number of splits grows with the accuracy required near the diagonal, and each split costs $\\alpha$; OCT will usually find a better staircase than CART at a given depth. OCT-H uses one split $a^\\top x<b$ with $\\|a\\|_1\\le1$, namely $a=(0.5,0.5)$ and $b=0.5$, which costs $2\\alpha$ because the penalty counts features used ($s_{jt}$), not splits. It is exact at depth 1, at the price of a less readable split and dependence on feature scaling. (d) $z_{it}$: $n\\cdot2^D=2{,}000\\cdot8=16{,}000$ binaries. Routing: one constraint per point, leaf and ancestor, $n\\cdot2^D\\cdot D=48{,}000$. The split variables $a_{jt}$ number only $p(2^D-1)=70$. The MIO grows linearly in $n$ and doubles with each level, yet once the splits are fixed everything else has a closed form. In practice OCT therefore uses local search with random restarts over the splits (the number of split variables does not grow with $n$), and its solutions can warm-start the MIO. (e) Prevalence is below 1%, so a classifier can be highly accurate while missing injuries, and the two kinds of error have very different costs. The right comparison is specificity at equal sensitivity: both trees miss one ciTBI, and OCT avoids $5{,}132-2{,}856=2{,}276$ scans (about 44% fewer), which matters most for the youngest children, who face the highest radiation risk.",
+   "k": [
+    "(a) zero gain shown for every single split; greedy CART stops at the root (3 pts)",
+    "(a) grow-then-prune caveat: depends on how the tie at the root is broken (1 pt)",
+    "(b) objectives 1, $1+\\alpha$ and $3\\alpha$, and the threshold $\\alpha<1/3$ (4 pts)",
+    "(c) staircase versus a single hyperplane; $a=(0.5,0.5)$, $b=0.5$; penalty $2\\alpha$; interpretability and scaling caveat (4 pts)",
+    "(d) 16,000 $z$ variables and 48,000 routing constraints; local search over the splits (3 pts)",
+    "(e) specificity at equal sensitivity, 2,276 fewer scans, and the class-imbalance argument (3 pts)"
+   ],
+   "pts": 18,
+   "t": 3
+  },
+  {
+   "q": "Choose a kernel and a bandwidth. A city has air-quality sensors along a 10 km road and wants a map of NO$_2$ to decide where to place a purifier. The concentration varies continuously but has sharp local peaks near intersections. You fit $f(x)=\\bar y+\\sum_ja_jK(x_j,x)$ by $\\min_a\\frac1n\\sum_i(y_i-f(x_i))^2+\\lambda a^\\top\\hat Ka$. (a) Which of the linear, polynomial, Gaussian and Matérn kernels would you start from, and why? (b) A toy check with two sensors at $x=0$ and $x=1$ km reading $y=(2,4)$: take a kernel with $K(0,0)=K(1,1)=1$, $K(0,1)=0.5$, and $\\lambda=0.25$. Use $a=(\\hat K+\\lambda nI)^{-1}(y-\\bar y)$ to find $a$ and the fitted values at both sensors. Repeat with $\\lambda=0$ and interpret. (c) Keep $\\lambda=0.25$. What happens to the fit in the limit of a very narrow width ($K(0,1)\\to0$) and of a very wide width ($K(\\cdot,\\cdot)\\to1$)? How should the width and $\\lambda$ be chosen? (d) Give two situations from the course in which you would not use a kernel model.",
+   "m": "(a) The linear kernel gives only planes (lines here), and a polynomial kernel of degree $d$ only polynomials up to degree $d$ (one bump for $d=2$), so neither can produce several local peaks. The Gaussian RKHS can approximate any continuous bounded function, but it assumes a very smooth surface. Matérn assumes a continuous but rough surface with pointed hills, which matches sharp peaks without jumps. Start with Matérn and compare it with the Gaussian by held-out error, after scaling inputs so that one width serves them all. (b) $n=2$, $\\bar y=3$, $y-\\bar y=(-1,1)$, $\\lambda n=0.5$. $\\hat K+0.5I=\\begin{pmatrix}1.5&0.5\\\\0.5&1.5\\end{pmatrix}$, whose inverse is $\\begin{pmatrix}0.75&-0.25\\\\-0.25&0.75\\end{pmatrix}$. So $a=(-1,1)$, $f(0)=3-1+0.5=2.5$ and $f(1)=3-0.5+1=3.5$: both are shrunk toward $\\bar y$. With $\\lambda=0$: $a=\\hat K^{-1}(-1,1)=(-2,2)$, $f(0)=2$ and $f(1)=4$, so the fit interpolates. That is harmless here but chases noise when nearby sensors disagree (in Rec 6, readings of 8.05 and 7.25 taken 10 m apart send an unregularized map from $-19$ to $29$). Keep $\\lambda>0$. (c) Narrow: $\\hat K\\to I$, so $a=(y-\\bar y)/(1+\\lambda n)=(-\\tfrac23,\\tfrac23)$. The fit is 2.33 and 3.67 at the sensors and $f(x)\\to\\bar y=3$ everywhere else: isolated spikes, an overfit map that cannot interpolate between sensors. Wide: $\\hat K\\to\\mathbf 1\\mathbf 1^\\top$. Since $y-\\bar y$ is orthogonal to $\\mathbf 1$, $a=(-2,2)$, but $K(x_j,x)\\approx1$ for every $x$, so $f(x)\\approx3-2+2=3$: a flat map that misses the peaks. Because the true map is unobserved, choose the width and $\\lambda$ by held-out error (leave one sensor out, or $k$-fold). Rec 6 found 0.3 km too narrow, 40 km too wide, and 2.5 km best by cross-validation. (d) Any two of: very large $n$, since $\\hat K$ has $n^2$ entries and the solve costs about $n^3$ (2.5 billion entries for $n=50{,}000$); an outcome with jumps, such as a fault line, because every hill is continuous and blurs the jump, which a tree handles better; a rule that people must read, since $n$ signed weights are not interpretable; a known convex shape, where convex regression uses that structure with nothing to tune.",
+   "k": [
+    "(a) kernel choice argued from the function class of each RKHS (3 pts)",
+    "(b) $a=(-1,1)$ and fitted values 2.5 and 3.5 (3 pts)",
+    "(b) $\\lambda=0$: $a=(-2,2)$, interpolation, and why $\\lambda>0$ is kept (2 pts)",
+    "(c) narrow limit: spikes at the sensors and reversion to $\\bar y$, with numbers (3 pts)",
+    "(c) wide limit: a flat map; width and $\\lambda$ tuned on held-out data (3 pts)",
+    "(d) two valid limitations (2 pts)"
+   ],
+   "pts": 16,
+   "t": 5
+  },
+  {
+   "q": "Design an experiment. A lab will test two doses of a drug against placebo ($m=3$ groups) on $n=24$ mice, $k=8$ per group. Before treatment it measures two covariates for each mouse: tumor volume and body weight ($r=2$). (a) Formulate the MIO that forms the groups by matching first and second moments, including the cross-moment. Define the preprocessing and every variable and constraint. (b) Count the binary and continuous variables. (c) For a simpler two-arm version with $k=12$ per arm and one normal covariate ($\\rho=0$), compute the expected mean discrepancy under randomization and under optimization, and the subjects per group each needs for a discrepancy below $0.05\\sigma$. (d) In the two-arm study, the observed difference is $\\delta$, and 6 of $B=199$ bootstrap re-optimized assignments give $|\\delta_b|\\ge|\\delta|$. Compute the p-value and conclude at $\\alpha=0.05$. Why must each bootstrap sample be re-optimized? (e) A referee writes: 'without randomization your estimate is biased.' Respond, and state the limits of the method.",
+   "m": "(a) Standardize each covariate: $w'_{is}=(w_{is}-\\hat\\mu_s)/\\hat\\sigma_s$, with $\\hat\\mu_s$ and $\\hat\\sigma_s^2$ computed over all $n$ mice (divisor $n$). Variables: $x_{ip}\\in\\{0,1\\}$ (mouse $i$ in group $p$); $M_{pqs}$ bounding the absolute gap in group means of covariate $s$; $V_{pqss'}$ bounding the absolute gap in second moments and the cross-moment for $s\\le s'$; and the objective $d$. Minimize $d$ s.t., for all $p<q$: $d\\ge\\sum_sM_{pqs}+\\rho\\sum_sV_{pqss}+2\\rho\\sum_{s<s'}V_{pqss'}$; $M_{pqs}\\ge\\pm\\frac1k\\sum_iw'_{is}(x_{ip}-x_{iq})$; $V_{pqss'}\\ge\\pm\\frac1k\\sum_iw'_{is}w'_{is'}(x_{ip}-x_{iq})$; and $\\sum_ix_{ip}=k$ (equal group sizes), $\\sum_px_{ip}=1$ (each mouse in one group), $x_{ip}=0$ for $i<p$ (breaks the symmetry between group labels). After solving, randomly assign placebo, low dose and high dose to the three groups. (b) Binaries: $m(1+2n-m)/2=3\\cdot46/2=69$, i.e. $nm=72$ minus the $m(m-1)/2=3$ fixed zeros. Continuous: $1+m(m-1)r(r+3)/4=1+3\\cdot2\\cdot2\\cdot5/4=16$: $d$, plus $M$ with 3 pairs × 2 covariates = 6, plus $V$ with 3 pairs × 3 moment terms = 9. (c) Randomization: $\\frac{2\\sigma}{\\sqrt{\\pi k}}=\\frac{2\\sigma}{\\sqrt{37.7}}\\approx0.33\\sigma$. Optimization: $\\frac{2\\pi\\sigma}{2^{24}}\\approx3.7\\times10^{-7}\\sigma$, an exponential rate against $1/\\sqrt k$. For $\\epsilon=0.05$: $k^{Rand}=\\lceil4/(\\pi\\cdot0.0025)\\rceil=\\lceil509.3\\rceil=510$ and $k^{Opt}=\\lceil\\log_4(2\\pi/0.05)\\rceil=\\lceil3.49\\rceil=4$. (This uses the $2^{-2k}$ rate, which matches Lec 12a's median bound $C/2^{2k}$ and its table: 3 at $\\epsilon=0.1$, 5 at $\\epsilon=0.01$. Slides 20–21 print $2\\pi\\sigma/2^k$ and $\\lceil\\log_2(2\\pi/\\epsilon)\\rceil$, which would give $1.5\\times10^{-3}\\sigma$ and 7; state which convention you use.) (d) $p=\\frac{1+6}{1+199}=0.035\\le0.05$, so reject the null of no effect. Each bootstrap sample must go through the same optimized assignment as the real experiment, so that the reference distribution of $\\delta_b$ reflects the design actually used; a standard randomization test would assume coin-flip groups and misstate the variability. (e) The groups are formed mechanically from pre-treatment covariates, and the treatment labels are then randomized across groups, so the observed difference is still an unbiased estimator of the average effect, and investigator bias in forming the groups is ruled out. Randomization balances hidden factors only in large samples; with 8 or 12 mice it offers no protection that optimization lacks. Limits: only the targeted moments are matched, and gains on untargeted higher moments are modest; $\\rho$ must be chosen; the MIO grows with $n$ and $m$ (although $n=40$, $m=4$ solves in under 20 seconds); and the analysis must use the matching bootstrap test.",
+   "k": [
+    "(a) standardization and binary $x_{ip}$ (2 pts)",
+    "(a) $M$ and $V$ linearization and the $d$ constraint, including the $2\\rho$ cross-moment term (3 pts)",
+    "(a) assignment, size and symmetry-breaking constraints; labels randomized afterward (2 pts)",
+    "(b) 69 binaries and 16 continuous variables, with the breakdown (2 pts)",
+    "(c) about $0.33\\sigma$ versus $3.7\\times10^{-7}\\sigma$; 510 versus 4 subjects; the slide-printed $2^{-k}$ convention ($1.5\\times10^{-3}\\sigma$, 7) also earns full credit if stated (4 pts)",
+    "(d) $p=0.035$, reject; the reason for re-optimizing (2 pts)",
+    "(e) unbiasedness via label randomization, investigator bias, hidden factors, and limits (3 pts)"
+   ],
+   "pts": 18,
+   "t": 5
+  }
+ ]
+}

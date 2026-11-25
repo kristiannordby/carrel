@@ -1,0 +1,442 @@
+{
+ "id": "l20",
+ "label": "L20",
+ "title": "Unconstrained Minimization: Newton's Method",
+ "short": "Newton's method",
+ "src": "Fall_2026_15_C57-L20.pdf",
+ "brief": "Lecture 20 adds second-order information to the descent-method template: the Newton direction $d=-(\\nabla^2 f(x))^{-1}\\nabla f(x)$ minimizes the second-order Taylor model of $f$, or equivalently finds the root of the linearized gradient, and the Newton decrement gives $\\lambda(x)^2/2$ as the improvement still predicted. Pure Newton uses a unit step, costs $O(n^3)$ per iteration and makes far more progress per iteration than gradient descent; applied to logistic regression it becomes iteratively re-weighted least squares. Locally, if $\\nabla^2 f(x^*)$ is well-conditioned and the Hessian is $L$-Lipschitz, the iterates stay in a $\\delta$-ball and converge quadratically, $\\|x^{k+1}-x^*\\|\\le\\frac{3L}{2m}\\|x^k-x^*\\|^2$, reaching $\\varepsilon$-accuracy in $O(\\log\\log(1/\\varepsilon))$ iterations without any convexity assumption. Globally, pure Newton need not decrease $f$ and is attracted to maxima as well as minima, so a step size $\\alpha_k\\le1$ is added. For $M$-smooth, $m$-strongly convex $f$ with Lipschitz Hessian, damped Newton runs a damped phase that cuts $f$ by at least $\\gamma$ per step, then a local phase of quadratic convergence.",
+ "kp": [
+  "Descent template: choose $d^k$ with $\\nabla f(x^k)^\\top d^k<0$, a step $\\alpha_k>0$, update $x^{k+1}=x^k+\\alpha_k d^k$; stop when $\\|\\nabla f(x^k)\\|\\le\\eta$.",
+  "Newton direction $d=-(\\nabla^2 f(x))^{-1}\\nabla f(x)$: the minimizer of the second-order Taylor model, and the root of the first-order model of $\\nabla f$.",
+  "Newton decrement $\\lambda(x)=(\\nabla f(x)^\\top\\nabla^2 f(x)^{-1}\\nabla f(x))^{1/2}$; $\\lambda(x)^2/2=f(x)-\\min_y\\hat f(y)$, and the stopping test is $\\lambda^2/2\\le\\varepsilon$.",
+  "Pure Newton: step size 1, $O(n^3)$ work per iteration, much more progress per iteration than gradient descent.",
+  "Logistic regression: $\\nabla f=X^\\top(y-p)$, $\\nabla^2 f=-X^\\top WX$; each Newton step is a weighted least-squares fit to $z^k=X\\beta^k+W^{-1}(y-p)$ (IRLS).",
+  "Local theorem: with $\\|\\nabla^2 f(x^*)^{-1}\\|\\le1/m$ and an $L$-Lipschitz Hessian on $B(x^*,\\beta)$, iterates starting within $\\delta=\\min(\\beta,2m/(3L))$ stay there and satisfy $\\|x^{k+1}-x^*\\|\\le\\frac{3L}{2m}\\|x^k-x^*\\|^2$.",
+  "Quadratic convergence means $\\varepsilon$-accuracy in $O(\\log\\log(1/\\varepsilon))$ iterations; $\\beta$, $m$, $L$ are never used by the algorithm.",
+  "Local convergence needs no convexity, only a nonsingular, well-behaved Hessian at $x^*$; Newton is attracted to any stationary point, maxima included.",
+  "Far from $x^*$, pure Newton need not decrease $f$; if $\\nabla^2 f(x)\\succ0$ the Newton direction is a descent direction, so add a step size $\\alpha_k\\le1$.",
+  "Global theorem ($M$-smooth, $m$-strongly convex, $L$-Lipschitz Hessian): damped phase $\\alpha_k=m/M$ lowers $f$ by $\\gamma=\\frac{m}{2M^2}\\eta^2$ per step; then unit steps converge quadratically. Total: $\\frac{f(x^0)-z^*}{\\gamma}+\\log_2\\log_2(\\varepsilon_0/\\varepsilon)$."
+ ],
+ "topics": [
+  {
+   "n": "Descent methods recap",
+   "x": "Unconstrained minimization of $f$ over $\\mathbb{R}^n$ iterates $x^{k+1}=x^k+\\alpha_k d^k$ with a descent direction, $\\nabla f(x^k)^\\top d^k<0$. The four design questions are the starting point, the direction, the line search for $\\alpha_k$, and the termination test, typically $\\|\\nabla f(x^k)\\|\\le\\eta$. Newton's method answers the direction question using the Hessian."
+  },
+  {
+   "n": "Newton direction and decrement",
+   "x": "Second-order view: replace $f$ near $x$ by its quadratic Taylor model $\\hat f$ and jump to its minimizer, $y=x-(\\nabla^2 f(x))^{-1}\\nabla f(x)$. First-order view: linearize $\\nabla f$ around $x$ and solve $\\nabla f(x)+\\nabla^2 f(x)(y-x)=0$, i.e. Newton-Raphson root finding applied to $g=\\nabla f$. The Newton decrement measures predicted progress: $f(x)-\\min\\hat f=\\lambda(x)^2/2$."
+  },
+  {
+   "n": "Pure Newton's method",
+   "x": "Iterate $x^{k+1}=x^k+d^k$ with the Newton direction and a unit step, stopping when $\\lambda(x^k)^2/2\\le\\varepsilon$. As a second-order method it makes more progress per iteration than gradient descent, but each iteration solves a linear system in the $n\\times n$ Hessian, $O(n^3)$ operations."
+  },
+  {
+   "n": "Newton for logistic regression (IRLS)",
+   "x": "Maximizing $\\sum_i[y_ix_i^\\top\\beta-\\log(1+e^{x_i^\\top\\beta})]$ is a convex problem (concave objective) with gradient $X^\\top(y-p)$ and Hessian $-X^\\top WX$, $W=\\mathrm{diag}(p_i(1-p_i))$. The Newton step $\\beta^{k+1}=\\beta^k+(X^\\top WX)^{-1}X^\\top(y-p)$ equals $(X^\\top WX)^{-1}X^\\top Wz^k$, a weighted least-squares fit to the working response $z^k=X\\beta^k+W^{-1}(y-p)$, so Newton here is iteratively re-weighted least squares."
+  },
+  {
+   "n": "Local quadratic convergence",
+   "x": "If $\\nabla f(x^*)=0$, $\\|\\nabla^2 f(x^*)^{-1}\\|\\le1/m$ and $\\nabla^2 f$ is $L$-Lipschitz on $B(x^*,\\beta)$, then from within $\\delta=\\min(\\beta,2m/(3L))$ the iterates stay in the ball and $\\|x^{k+1}-x^*\\|\\le\\frac{3L}{2m}\\|x^k-x^*\\|^2$. The proof writes $g(x^k)-g(x^*)=\\int_0^1H(x^*+t(x^k-x^*))(x^k-x^*)dt$ and bounds $\\|H(x)^{-1}\\|\\le1/(m-L\\|x-x^*\\|)$. No convexity is assumed, so Newton converges just as readily to a local maximum."
+  },
+  {
+   "n": "Global convergence: damped Newton",
+   "x": "Quadratic convergence is local: far from $x^*$ pure Newton need not decrease $f$. When $\\nabla^2 f(x)\\succ0$ the Newton direction is a descent direction, so a step size $\\alpha_k\\le1$ restores descent. Under $M$-smoothness, $m$-strong convexity and a Lipschitz Hessian, the method has a damped phase ($\\alpha_k=m/M$, decrease of at least $\\gamma$ while $\\|\\nabla f\\|\\ge\\eta$) followed by a local phase of quadratic convergence with $\\alpha_k=1$."
+  }
+ ],
+ "cards": [
+  {
+   "f": "Generic descent method for $\\min_x f(x)$",
+   "b": "Repeat: pick a descent direction $d^k$ with $\\nabla f(x^k)^\\top d^k<0$, a step size $\\alpha_k>0$, set $x^{k+1}=x^k+\\alpha_kd^k$. Design choices: $x^0$, $d^k$, line search, termination (typically $\\|\\nabla f(x^k)\\|\\le\\eta$).",
+   "x": "Newton's method is one answer to the direction question.",
+   "t": 0,
+   "ref": "Fall_2026_15_C57-L20.pdf p.2"
+  },
+  {
+   "f": "Newton direction: second-order derivation",
+   "b": "Minimize the quadratic model $\\hat f(y)=f(x)+\\nabla f(x)^\\top(y-x)+\\frac12(y-x)^\\top\\nabla^2 f(x)(y-x)$: setting $\\nabla\\hat f(y)=0$ gives $y=x-(\\nabla^2 f(x))^{-1}\\nabla f(x)$, so $d=-(\\nabla^2 f(x))^{-1}\\nabla f(x)$.",
+   "x": "For a quadratic $f$ the model is exact, so one step lands on the minimizer.",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L20.pdf p.4"
+  },
+  {
+   "f": "Newton direction: first-order (root-finding) view",
+   "b": "Seek $\\nabla f(y)=0$; linearize the gradient, $\\nabla f(y)\\approx\\nabla f(x)+\\nabla^2 f(x)(y-x)$, and solve for the root: same $y=x-(\\nabla^2 f(x))^{-1}\\nabla f(x)$. Newton-Raphson (1600s) solved equation systems; Simpson (1700s) applied it with $g=\\nabla f$.",
+   "x": "Root of $\\nabla f$, not minimizer of $f$: this is why Newton is attracted to maxima too.",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L20.pdf p.5"
+  },
+  {
+   "f": "Newton decrement $\\lambda(x)$",
+   "b": "$\\lambda(x)=(\\nabla f(x)^\\top\\nabla^2 f(x)^{-1}\\nabla f(x))^{1/2}$. It satisfies $f(x)-\\min_y\\hat f(y)=f(x)-\\hat f(x+d)=\\frac12\\lambda(x)^2$: the decrease predicted by the quadratic model.",
+   "x": "Stopping rule: $\\lambda(x)^2/2\\le\\varepsilon$.",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L20.pdf p.4"
+  },
+  {
+   "f": "Pure Newton's method: algorithm and cost",
+   "b": "$x^{k+1}=x^k+d^k$ with $d^k=-(\\nabla^2 f(x^k))^{-1}\\nabla f(x^k)$, step size 1; stop when $\\lambda(x^k)^2/2\\le\\varepsilon$. Uses gradient and Hessian; more progress per iteration than GD but $O(n^3)$ operations per iteration.",
+   "x": "'Pure' means no line search: $\\alpha_k=1$ always.",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L20.pdf p.7"
+  },
+  {
+   "f": "Logistic regression: gradient and Hessian of the log-likelihood",
+   "b": "$f(\\beta)=\\sum_i[y_ix_i^\\top\\beta-\\log(1+e^{x_i^\\top\\beta})]$; $\\nabla f=X^\\top(y-p)$ with $p_i=e^{x_i^\\top\\beta}/(1+e^{x_i^\\top\\beta})$; $\\nabla^2 f=-X^\\top WX$, $W=\\mathrm{diag}(p_i(1-p_i))$.",
+   "x": "$\\nabla^2 f\\preceq0$: concave, so the stationary point $X^\\top(y-p)=0$ is the maximum.",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L20.pdf p.8"
+  },
+  {
+   "f": "Newton for logistic regression as IRLS",
+   "b": "$\\beta^{k+1}=\\beta^k+(X^\\top WX)^{-1}X^\\top(y-p)=(X^\\top WX)^{-1}X^\\top Wz^k$, $z^k=X\\beta^k+W^{-1}(y-p)$. Equivalently $\\beta^{k+1}=\\arg\\min_\\beta(z^k-X\\beta)^\\top W(z^k-X\\beta)$.",
+   "x": "Weights $W$ and response $z^k$ are recomputed at every iterate, hence 're-weighted'.",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L20.pdf p.8"
+  },
+  {
+   "f": "Local convergence theorem: assumptions and radius",
+   "b": "$f\\in C^2$, $\\nabla f(x^*)=0$, $\\|\\nabla^2 f(x^*)^{-1}\\|\\le1/m$, Hessian $L$-Lipschitz on $B(x^*,\\beta)$. With $\\delta=\\min(\\beta,\\frac{2m}{3L})$: if $\\|x^0-x^*\\|\\le\\delta$, all iterates stay within $\\delta$ and $\\|x^{k+1}-x^*\\|\\le\\frac{3L}{2m}\\|x^k-x^*\\|^2$.",
+   "x": "Operator norm: $\\|M\\|=\\max\\{\\|Mx\\|:\\|x\\|=1\\}$.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L20.pdf p.10"
+  },
+  {
+   "f": "Corollary: how fast is quadratic convergence?",
+   "b": "With $C=\\frac{3L}{2m}$: $\\|x^k-x^*\\|\\le\\frac1C(C\\|x^0-x^*\\|)^{2^k}$. Solution within $\\varepsilon$ after $O(\\log\\log(1/\\varepsilon))$ iterations.",
+   "x": "The number of correct digits roughly doubles each iteration.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L20.pdf p.11"
+  },
+  {
+   "f": "What local convergence of Newton does NOT need",
+   "b": "Convexity of $f$, and knowledge of $\\beta$, $m$, $L$ (hard to estimate, never used by the algorithm). It needs only $\\nabla f(x^*)=0$ with $H(x^*)$ nonsingular and not badly behaved nearby.",
+   "x": "Trap: it converges to local maxima just as well, since both satisfy $\\nabla f(x^*)=0$.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L20.pdf p.11"
+  },
+  {
+   "f": "Key lemma in the local proof (integral form of the gradient)",
+   "b": "$g(x^k)-g(x^*)=\\int_0^1H(x^*+t(x^k-x^*))(x^k-x^*)dt$, from the fundamental theorem of calculus applied to $\\varphi(t)=g(x^*+t(x^k-x^*))$. Then $x^{k+1}-x^*=H(x^k)^{-1}\\int_0^1[H(x^k)-H(x^*+t(x^k-x^*))](x^k-x^*)dt$.",
+   "x": "Lipschitz Hessian bounds the bracket by $L(1-t)\\|x^k-x^*\\|$.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L20.pdf p.12"
+  },
+  {
+   "f": "Inverse-Hessian bound near $x^*$",
+   "b": "Under the theorem's conditions, $\\|H(x)^{-1}\\|\\le\\frac{1}{m-L\\|x-x^*\\|}$ on $B(x^*,\\beta)$. Combined with the integral, $\\|x^{k+1}-x^*\\|\\le\\frac{L}{2(m-L\\|x^k-x^*\\|)}\\|x^k-x^*\\|^2$; using $L\\|x^k-x^*\\|\\le2m/3$ gives the $\\frac{3L}{2m}$ constant.",
+   "x": "Proof uses: $\\|M^{-1}\\|\\le1/m \\iff \\|Mv\\|\\ge m\\|v\\|$ for symmetric invertible $M$.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L20.pdf p.13"
+  },
+  {
+   "f": "Why pure Newton can fail globally",
+   "b": "Quadratic convergence is only local; there is no guarantee $f(x^{k+1})\\le f(x^k)$, and Newton is attracted to any stationary point. Fix: damped update $x^{k+1}=x^k+\\alpha_kd^k$, $\\alpha_k\\le1$. If $\\nabla^2 f(x)\\succ0$, $d\\ne0$ is a descent direction.",
+   "x": "$\\nabla f^\\top d=-\\lambda^2<0$ needs a positive definite Hessian.",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L20.pdf p.16"
+  },
+  {
+   "f": "Global convergence theorem for damped Newton",
+   "b": "$f$ $M$-smooth, $m$-strongly convex, Hessian $L$-Lipschitz; $0<\\eta\\le m^2/L$. If $\\|\\nabla f(x^k)\\|\\ge\\eta$: $\\alpha_k=m/M$ gives $f(x^{k+1})-f(x^k)\\le-\\gamma$. If $\\|\\nabla f(x^k)\\|<\\eta$: $\\alpha_k=1$ keeps $\\|\\nabla f\\|<\\eta$ and $\\|\\nabla f(x^{k+1})\\|\\le\\frac{L}{2m^2}\\|\\nabla f(x^k)\\|^2$.",
+   "x": "Iterations: $\\frac{f(x^0)-z^*}{\\gamma}+\\log_2\\log_2(\\varepsilon_0/\\varepsilon)$.",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L20.pdf p.17"
+  },
+  {
+   "f": "Damped-phase proof: three facts",
+   "b": "$\\nabla f^\\top d=-\\lambda^2$; $\\lambda^2\\ge\\frac1M\\|\\nabla f\\|^2$ ($M$-smoothness); $\\lambda^2=d^\\top\\nabla^2 f\\,d\\ge m\\|d\\|^2$ (strong convexity). Then $f(x+\\alpha d)\\le f(x)-\\alpha\\lambda^2+\\frac{M\\alpha^2}{2m}\\lambda^2$; at $\\alpha=m/M$ this is $f(x)-\\frac{m}{2M}\\lambda^2$.",
+   "x": "Hence $\\gamma=\\frac{m}{2M^2}\\eta^2$.",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L20.pdf p.18"
+  },
+  {
+   "f": "Lecture 20 takeaways",
+   "b": "Newton was built for root finding, then extended to optimization; it adds Hessian information to descent methods; convergence is very fast (quadratic) locally, so the work splits into getting near a stationary point and then exploiting quadratic convergence; many enhancements address global convergence.",
+   "x": "Main objective globally: get into a good neighborhood quickly.",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L20.pdf p.20"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "What is the Newton direction at $x$?",
+   "o": [
+    "$-(\\nabla^2 f(x))^{-1}\\nabla f(x)$",
+    "$-\\nabla f(x)$",
+    "$-\\nabla^2 f(x)\\,\\nabla f(x)$",
+    "$-\\nabla f(x)/\\|\\nabla f(x)\\|$"
+   ],
+   "a": 0,
+   "e": "Setting the gradient of the quadratic Taylor model to zero gives $y-x=-(\\nabla^2 f(x))^{-1}\\nabla f(x)$. $-\\nabla f(x)$ is the gradient-descent direction; multiplying by the Hessian instead of its inverse is the classic slip.",
+   "d": "easy",
+   "t": 1,
+   "src": "Fall_2026_15_C57-L20.pdf p.4"
+  },
+  {
+   "q": "In the generic descent method, what condition must the direction $d^k$ satisfy?",
+   "o": [
+    "$\\nabla f(x^k)^\\top d^k<0$",
+    "$\\nabla f(x^k)^\\top d^k>0$",
+    "$\\|d^k\\|=1$",
+    "$d^k=-\\nabla f(x^k)$"
+   ],
+   "a": 0,
+   "e": "A negative directional derivative guarantees that small steps along $d^k$ decrease $f$. $d^k=-\\nabla f$ is one valid choice, not a requirement; Newton uses another.",
+   "d": "easy",
+   "t": 0,
+   "src": "Fall_2026_15_C57-L20.pdf p.2"
+  },
+  {
+   "q": "Why is one Newton iteration more expensive than one gradient-descent iteration on $\\mathbb{R}^n$?",
+   "o": [
+    "It must solve a linear system in the $n\\times n$ Hessian, about $O(n^3)$ operations",
+    "It needs a line search at every iteration",
+    "It evaluates $f$ at $n$ trial points",
+    "It requires the Hessian to be recomputed $n$ times"
+   ],
+   "a": 0,
+   "e": "The slide lists $O(n^3)$ work per iteration from the Hessian inverse. Pure Newton uses no line search at all (step size 1), so the line-search option is the tempting but wrong one.",
+   "d": "easy",
+   "t": 2,
+   "src": "Fall_2026_15_C57-L20.pdf p.7"
+  },
+  {
+   "q": "What step size does the 'pure' Newton method use?",
+   "o": [
+    "$\\alpha_k=1$ at every iteration",
+    "$\\alpha_k=m/M$",
+    "$\\alpha_k$ chosen by exact line search",
+    "$\\alpha_k=1/k$"
+   ],
+   "a": 0,
+   "e": "Pure Newton takes the full step $x^{k+1}=x^k+d^k$. $\\alpha_k=m/M$ is the damped-phase choice in the global convergence theorem.",
+   "d": "easy",
+   "t": 2,
+   "src": "Fall_2026_15_C57-L20.pdf p.7"
+  },
+  {
+   "q": "The first-order view of Newton's method interprets each step as:",
+   "o": [
+    "Finding the root of the linear approximation of $\\nabla f$ around $x$",
+    "Minimizing the linear approximation of $f$ around $x$",
+    "Projecting $x$ onto the set $\\{y:\\nabla f(y)=0\\}$",
+    "Moving along $-\\nabla f$ with a Hessian-based step size"
+   ],
+   "a": 0,
+   "e": "Solve $\\nabla f(x)+\\nabla^2 f(x)(y-x)=0$: Newton-Raphson root finding with $g=\\nabla f$, which is how the method was first developed for equation systems. A linear model of $f$ has no minimizer, so that option cannot be right.",
+   "d": "easy",
+   "t": 1,
+   "src": "Fall_2026_15_C57-L20.pdf p.5"
+  },
+  {
+   "q": "At the current point, $\\nabla f(x)=(2,1)^\\top$ and $\\nabla^2 f(x)=\\mathrm{diag}(4,1)$. What improvement $f(x)-\\min_y\\hat f(y)$ does the quadratic model predict?",
+   "o": [
+    "$1$",
+    "$2$",
+    "$\\sqrt2$",
+    "$5/2$"
+   ],
+   "a": 0,
+   "e": "$\\lambda^2=\\nabla f^\\top(\\nabla^2 f)^{-1}\\nabla f=2^2/4+1^2/1=2$, and the predicted improvement is $\\lambda^2/2=1$. Answering 2 forgets the $\\frac12$; $5/2=\\|\\nabla f\\|^2/2$ ignores the Hessian.",
+   "d": "medium",
+   "t": 1,
+   "src": "Fall_2026_15_C57-L20.pdf p.4"
+  },
+  {
+   "q": "Pure Newton is applied to $f(x)=\\frac12x^\\top Qx-b^\\top x$ with $Q\\succ0$, from an arbitrary $x^0$. How many iterations until it reaches the minimizer?",
+   "o": [
+    "One: the quadratic Taylor model equals $f$, so its minimizer $Q^{-1}b$ is reached immediately",
+    "About $\\log\\log(1/\\varepsilon)$, by quadratic convergence",
+    "It depends on the condition number of $Q$",
+    "Two: one to enter the $\\delta$-ball, one to converge"
+   ],
+   "a": 0,
+   "e": "Newton jumps to the minimizer of the second-order Taylor model; for a quadratic that model is exact: $x^1=x^0-Q^{-1}(Qx^0-b)=Q^{-1}b$. The condition-number answer describes gradient descent, not Newton.",
+   "d": "medium",
+   "t": 1,
+   "src": "Fall_2026_15_C57-L20.pdf p.4"
+  },
+  {
+   "q": "For logistic regression, $\\nabla^2 f(\\beta)=-X^\\top WX$ with $W=\\mathrm{diag}(p_i(1-p_i))$. Which statement is correct?",
+   "o": [
+    "$\\nabla^2 f\\preceq0$, so maximizing $f$ is a convex problem and a stationary point $X^\\top(y-p)=0$ is the global maximum",
+    "$\\nabla^2 f\\succ0$, so Newton finds the minimum of the log-likelihood",
+    "$\\nabla^2 f$ does not depend on $\\beta$, so one Newton step suffices",
+    "$W$ depends only on the labels $y$"
+   ],
+   "a": 0,
+   "e": "$p_i(1-p_i)>0$ makes $X^\\top WX\\succeq0$, so $f$ is concave. $W$ depends on $\\beta$ through $p_i$, which is why Newton needs several (re-weighted) iterations rather than one.",
+   "d": "medium",
+   "t": 3,
+   "src": "Fall_2026_15_C57-L20.pdf p.8"
+  },
+  {
+   "q": "Running IRLS for logistic regression from $\\beta^0=0$, what is the working response $z_i^0$ for an observation with $y_i=1$?",
+   "o": [
+    "$2$",
+    "$0.5$",
+    "$0.125$",
+    "$4$"
+   ],
+   "a": 0,
+   "e": "At $\\beta=0$: $p_i=1/2$, $W_{ii}=1/4$, so $z_i=x_i^\\top\\beta^0+(y_i-p_i)/W_{ii}=0+0.5/0.25=2$. $0.5$ forgets the $W^{-1}$ scaling; $0.125$ multiplies by $W$ instead.",
+   "d": "medium",
+   "t": 3,
+   "src": "Fall_2026_15_C57-L20.pdf p.8"
+  },
+  {
+   "q": "Local convergence theorem with $m=3$, $L=2$ (and $\\beta$ large). If $\\|x^k-x^*\\|=0.1$, what bound holds for $\\|x^{k+2}-x^*\\|$?",
+   "o": [
+    "$10^{-4}$",
+    "$10^{-2}$",
+    "$10^{-3}$",
+    "$0.025$"
+   ],
+   "a": 0,
+   "e": "$C=\\frac{3L}{2m}=1$ and $\\delta=\\min(\\beta,\\frac{2m}{3L})=1$, so $0.1$ is inside the ball. One step: $\\le1\\cdot0.1^2=0.01$; two steps: $\\le0.01^2=10^{-4}$. $10^{-2}$ is only one step.",
+   "d": "medium",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L20.pdf p.10"
+  },
+  {
+   "q": "In the local convergence theorem, $m=1$, $L=4$, $\\beta=0.5$. What is the radius $\\delta$ within which quadratic convergence is guaranteed?",
+   "o": [
+    "$1/6$",
+    "$1/2$",
+    "$6$",
+    "$2/3$"
+   ],
+   "a": 0,
+   "e": "$\\delta=\\min(\\beta,\\frac{2m}{3L})=\\min(0.5,\\frac{2}{12})=1/6$. $6=\\frac{3L}{2m}$ is the rate constant $C$, not the radius; $1/2$ is $\\beta$, which is not the binding term here.",
+   "d": "medium",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L20.pdf p.10"
+  },
+  {
+   "q": "Which of the following is NOT an assumption of the local convergence theorem for Newton's method?",
+   "o": [
+    "$f$ is convex",
+    "$\\nabla f(x^*)=0$",
+    "$\\|(\\nabla^2 f(x^*))^{-1}\\|\\le1/m$",
+    "$\\nabla^2 f$ is $L$-Lipschitz on a ball around $x^*$"
+   ],
+   "a": 0,
+   "e": "The slide stresses that neither the algorithm nor local convergence needs convexity, only a nonsingular, well-behaved Hessian at $x^*$. That is also why Newton converges to local maxima.",
+   "d": "medium",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L20.pdf p.11"
+  },
+  {
+   "q": "Started far from $x^*$, what can go wrong with pure Newton, and what fix does the lecture use?",
+   "o": [
+    "$f(x^{k+1})>f(x^k)$ is possible; add a step size $\\alpha_k\\le1$",
+    "The direction cannot be computed; switch to gradient descent",
+    "Convergence becomes linear; use $\\alpha_k>1$ to speed it up",
+    "The Hessian becomes singular at every iterate; add $\\lambda I$"
+   ],
+   "a": 0,
+   "e": "The global-convergence slide: no guarantee of $f(x^{k+1})\\le f(x^k)$ and attraction to any stationary point, fixed by $x^{k+1}=x^k+\\alpha_kd^k$ with $\\alpha_k\\le1$. Step sizes above 1 make overshooting worse.",
+   "d": "medium",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L20.pdf p.16"
+  },
+  {
+   "q": "Suppose $\\nabla^2 f(x^k)$ is indefinite. What can you say about the Newton direction $d^k$?",
+   "o": [
+    "It may not be a descent direction, since $\\nabla f^\\top d^k=-\\nabla f^\\top(\\nabla^2 f)^{-1}\\nabla f$ can be positive",
+    "It is still a descent direction because it solves the Newton system",
+    "It is always an ascent direction",
+    "It equals $-\\nabla f(x^k)$ up to scaling"
+   ],
+   "a": 0,
+   "e": "The descent property $\\nabla f^\\top d=-\\lambda^2<0$ relies on $\\nabla^2 f\\succ0$ (the proposition's hypothesis). With an indefinite Hessian the quadratic form can take either sign, so neither 'always descent' nor 'always ascent' holds.",
+   "d": "hard",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L20.pdf p.16"
+  },
+  {
+   "q": "$f(x_1,x_2)=-\\log(1-x_1-x_2)-\\log x_1-\\log x_2$. Starting at $x^0=(1/4,1/4)$, where does one pure Newton step land?",
+   "o": [
+    "$(1/3,1/3)$",
+    "$(0.35,0.35)$",
+    "$(5/12,5/12)$",
+    "$(9/4,9/4)$"
+   ],
+   "a": 0,
+   "e": "$1-x_1-x_2=1/2$, so $\\nabla f=(2-4,2-4)=(-2,-2)$ and $\\nabla^2 f=\\begin{pmatrix}20&4\\\\4&20\\end{pmatrix}$. By symmetry $d=(t,t)$ with $24t=2$, $t=1/12$, giving $(1/3,1/3)$, which is the minimizer ($\\nabla f=3-3=0$). $(0.35,0.35)$ drops the off-diagonal Hessian terms.",
+   "d": "hard",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L20.pdf p.14"
+  },
+  {
+   "q": "Assume $\\|x^0-x^*\\|$ is within $\\delta$ and $C=\\frac{3L}{2m}=2$, $\\|x^0-x^*\\|=0.25$. What bound does the corollary give on $\\|x^3-x^*\\|$?",
+   "o": [
+    "$1/512$",
+    "$1/256$",
+    "$1/16$",
+    "$1/8$"
+   ],
+   "a": 0,
+   "e": "$\\|x^k-x^*\\|\\le\\frac1C(C\\|x^0-x^*\\|)^{2^k}=\\frac12(0.5)^{8}=1/512$. $1/256$ forgets the $1/C$ factor; $1/16$ uses exponent $k$ instead of $2^k$.",
+   "d": "hard",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L20.pdf p.11"
+  },
+  {
+   "q": "In the global convergence theorem, $m=1$, $M=4$, $\\eta=0.5$. In the damped phase, what step size is used and what guaranteed decrease $\\gamma$ per iteration results?",
+   "o": [
+    "$\\alpha_k=1/4$, $\\gamma=1/128$",
+    "$\\alpha_k=1/4$, $\\gamma=1/32$",
+    "$\\alpha_k=1$, $\\gamma=1/128$",
+    "$\\alpha_k=4$, $\\gamma=1/8$"
+   ],
+   "a": 0,
+   "e": "$\\alpha_k=m/M=1/4$ and $\\gamma=\\frac{m}{2M^2}\\eta^2=\\frac{1}{32}\\cdot\\frac14=1/128$. $1/32$ stops at $\\frac{m}{2M}\\eta^2$, skipping the $\\lambda^2\\ge\\|\\nabla f\\|^2/M$ step; $\\alpha_k=1$ belongs to the local phase.",
+   "d": "hard",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L20.pdf p.18"
+  },
+  {
+   "q": "Damped Newton with $f(x^0)-z^*=10$, $\\gamma=0.5$ and $\\varepsilon_0/\\varepsilon=2^{32}$. What iteration bound does the theorem give?",
+   "o": [
+    "$25$",
+    "$52$",
+    "$20$",
+    "$5$"
+   ],
+   "a": 0,
+   "e": "Damped phase $\\le(f(x^0)-z^*)/\\gamma=20$ iterations; local phase $\\log_2\\log_2(2^{32})=\\log_2 32=5$. Total 25. $52$ takes only one logarithm; $20$ ignores the local phase.",
+   "d": "hard",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L20.pdf p.17"
+  }
+ ],
+ "written": [
+  {
+   "q": "Fitting logistic regression by Newton's method. The log-likelihood is $f(\\beta)=\\sum_{i=1}^n[y_ix_i^\\top\\beta-\\log(1+e^{x_i^\\top\\beta})]$. (a) Derive $\\nabla f(\\beta)$ and $\\nabla^2 f(\\beta)$. (b) Explain why maximizing $f$ is a convex optimization problem and state the optimality condition. (c) Write the Newton update and show it is the solution of a weighted least-squares problem. (d) At $\\beta^0=0$, compute $p$, $W$ and the working response $z^0_i$ for an observation with $y_i=1$ and one with $y_i=0$.",
+   "m": "(a) $\\nabla_\\beta[y_ix_i^\\top\\beta]=y_ix_i$ and $\\nabla_\\beta\\log(1+e^{x_i^\\top\\beta})=p_ix_i$ with $p_i=\\frac{e^{x_i^\\top\\beta}}{1+e^{x_i^\\top\\beta}}$, so $\\nabla f=X^\\top(y-p(X,\\beta))$. Since $\\nabla_\\beta p_i=p_i(1-p_i)x_i$, $\\nabla^2 f=-X^\\top WX$ with $W=\\mathrm{diag}(p_i(1-p_i))$. (b) $W$ has positive diagonal, so $X^\\top WX\\succeq0$ and $\\nabla^2 f\\preceq0$: $f$ is concave, maximizing it is a convex problem, and the maximum is attained at a stationary point $X^\\top(y-p(X,\\beta^*))=0$. (c) $\\beta^{k+1}=\\beta^k-(\\nabla^2 f)^{-1}\\nabla f=\\beta^k+(X^\\top WX)^{-1}X^\\top(y-p)$. Write $\\beta^k=(X^\\top WX)^{-1}X^\\top WX\\beta^k$ and $X^\\top(y-p)=X^\\top W\\,W^{-1}(y-p)$ to get $\\beta^{k+1}=(X^\\top WX)^{-1}X^\\top Wz^k$ with $z^k=X\\beta^k+W^{-1}(y-p)$. These are the normal equations of $\\min_\\beta(z^k-X\\beta)^\\top W(z^k-X\\beta)$; $W$ and $z^k$ change with $\\beta^k$, so Newton is iteratively re-weighted least squares. (d) At $\\beta^0=0$: $p_i=1/2$, $W=\\frac14I$, $z_i^0=0+(y_i-\\frac12)/\\frac14$, i.e. $z_i^0=2$ for $y_i=1$ and $z_i^0=-2$ for $y_i=0$.",
+   "k": [
+    "Correct gradient $X^\\top(y-p)$ with $p_i$ defined",
+    "Correct Hessian $-X^\\top WX$ with $W=\\mathrm{diag}(p_i(1-p_i))$",
+    "Concavity argument and stationarity condition $X^\\top(y-p)=0$",
+    "Newton update $\\beta^k+(X^\\top WX)^{-1}X^\\top(y-p)$ and algebra to $(X^\\top WX)^{-1}X^\\top Wz^k$",
+    "Identifies the weighted least-squares problem and why it is 're-weighted'",
+    "Numerics at $\\beta^0=0$: $p=1/2$, $W=I/4$, $z=\\pm2$"
+   ],
+   "t": 3
+  },
+  {
+   "q": "Damped Newton. Let $f$ be twice continuously differentiable, $M$-smooth, $m$-strongly convex, with $L$-Lipschitz Hessian. (a) Why must pure Newton be modified when started far from $x^*$? (b) Show that $\\nabla f(x^k)^\\top d^k=-\\lambda(x^k)^2$, $\\lambda(x^k)^2\\ge\\frac1M\\|\\nabla f(x^k)\\|^2$ and $\\lambda(x^k)^2\\ge m\\|d^k\\|^2$. (c) Using $M$-smoothness with $\\alpha_k=m/M$, prove $f(x^{k+1})-f(x^k)\\le-\\frac{m}{2M^2}\\|\\nabla f(x^k)\\|^2$. (d) Describe the two phases of the method and the total iteration bound. For $m=1$, $M=4$, $\\eta=0.5$, compute $\\alpha_k$ and $\\gamma$.",
+   "m": "(a) Quadratic convergence is local only. Far from $x^*$ there is no guarantee that $f(x^{k+1})\\le f(x^k)$, and Newton is attracted to any stationary point. Fix: $x^{k+1}=x^k+\\alpha_kd^k$ with $\\alpha_k\\le1$; if $\\nabla^2 f\\succ0$, $d^k$ is a descent direction, so a small enough step decreases $f$. (b) $\\nabla f^\\top d=-\\nabla f^\\top(\\nabla^2 f)^{-1}\\nabla f=-\\lambda^2$. By $M$-smoothness the Hessian's eigenvalues are at most $M$, so those of its inverse are at least $1/M$, giving $\\lambda^2\\ge\\frac1M\\|\\nabla f\\|^2$. Since $\\nabla f=-\\nabla^2 f\\,d$, $\\lambda^2=d^\\top\\nabla^2 f\\,d\\ge m\\|d\\|^2$ by strong convexity. (c) $f(x^k+\\alpha d)\\le f(x^k)+\\alpha\\nabla f^\\top d+\\frac{M\\alpha^2}{2}\\|d\\|^2\\le f(x^k)-\\alpha\\lambda^2+\\frac{M\\alpha^2}{2m}\\lambda^2$. With $\\alpha=m/M$: $-\\frac mM\\lambda^2+\\frac{m}{2M}\\lambda^2=-\\frac{m}{2M}\\lambda^2\\le-\\frac{m}{2M^2}\\|\\nabla f\\|^2$. (d) Damped phase: while $\\|\\nabla f(x^k)\\|\\ge\\eta$, each step lowers $f$ by at least $\\gamma=\\frac{m}{2M^2}\\eta^2$, so at most $(f(x^0)-z^*)/\\gamma$ such steps. Local phase: once $\\|\\nabla f\\|<\\eta$ (with $\\eta\\le m^2/L$), use $\\alpha_k=1$; the gradient stays below $\\eta$ and $\\|\\nabla f(x^{k+1})\\|\\le\\frac{L}{2m^2}\\|\\nabla f(x^k)\\|^2$, adding about $\\log_2\\log_2(\\varepsilon_0/\\varepsilon)$ iterations. Numbers: $\\alpha_k=1/4$, $\\gamma=\\frac{1}{2\\cdot16}\\cdot\\frac14=\\frac1{128}$.",
+   "k": [
+    "Explains lack of monotone decrease and attraction to any stationary point; damped step as fix",
+    "Derives $\\nabla f^\\top d=-\\lambda^2$",
+    "Derives both bounds on $\\lambda^2$ from smoothness and strong convexity",
+    "Smoothness upper bound and substitution $\\alpha=m/M$ giving $-\\frac{m}{2M}\\lambda^2$, then $-\\frac{m}{2M^2}\\|\\nabla f\\|^2$",
+    "States both phases, the switch at $\\eta$, and the bound $\\frac{f(x^0)-z^*}{\\gamma}+\\log_2\\log_2(\\varepsilon_0/\\varepsilon)$",
+    "Numerics: $\\alpha_k=1/4$, $\\gamma=1/128$"
+   ],
+   "t": 5
+  }
+ ]
+}

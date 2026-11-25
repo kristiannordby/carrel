@@ -1,0 +1,402 @@
+{
+ "id": "g8phnth",
+ "label": "L15",
+ "title": "Adaptive Optimization: Stochastic Programming and Benders Decomposition",
+ "short": "Benders Decomposition",
+ "src": "Fall_2026_15_C57-L15.pdf",
+ "brief": "This lecture extends the deterministic facility location problem to settings with uncertain demand, introducing two-stage adaptive stochastic optimization with here-and-now first-stage decisions and wait-and-see second-stage decisions. It develops Benders decomposition as an exact method exploiting the block-angular structure of the problem, using dual information to generate optimality cuts that build a piecewise-linear approximation of the recourse function. The method is applied to adaptive facility location, decomposing scenario subproblems for parallelization. Computational results show Benders outperforming direct solution as the number of scenarios grows. The lecture closes by comparing adaptive optimization against deterministic and wait-and-see benchmarks via VSS and EVPI.",
+ "kp": [
+  "Two-stage stochastic programs separate here-and-now (first-stage, scenario-agnostic) decisions from wait-and-see (second-stage, scenario-dependent) decisions",
+  "Adaptive facility location adds scenario index s to demand, second-stage flow, and unmet demand variables, with capacity/demand constraints holding per scenario",
+  "The problem has block-angular structure: complicating first-stage variables x couple otherwise-independent per-scenario second-stage blocks",
+  "The recourse function $Q(x)$ is the expected second-stage cost as a function of x; the first-stage problem minimizes $c^Tx+Q(x)$",
+  "Benders reformulation replaces $Q(x)$ with an epigraph variable $\\theta$ and exponentially many linear cuts derived from dual extreme points of the second-stage dual polyhedron",
+  "Benders decomposition iterates: solve relaxed master problem (LB), solve subproblem for given x (UB, dual price), add optimality cut if gap remains",
+  "The algorithm converges in finitely many iterations because there are finitely many dual extreme points",
+  "Scenario subproblems decompose and can be solved in parallel, each contributing one optimality cut term summed with its probability",
+  "Benders decomposition scales better than direct MIO solution as scenario count S grows (computational results table)",
+  "VSS = gap between deterministic and adaptive solution cost (value of flexibility); EVPI = gap between adaptive and wait-and-see cost (cost of commitment)"
+ ],
+ "topics": [
+  {
+   "n": "Adaptive facility location motivation and formulation",
+   "x": "Facility construction is a here-and-now decision made before demand uncertainty resolves, while transportation/unmet-demand decisions can wait until a scenario is realized. The deterministic model is extended by indexing demand, flow, and unmet demand by scenario s, with capacity and demand constraints required to hold in every scenario."
+  },
+  {
+   "n": "Adaptive stochastic optimization framework",
+   "x": "General two-stage formulation with first-stage variables x (integer/continuous, scenario-agnostic) and second-stage variables $y_s$ (scenario-dependent), minimizing $c^Tx + E[f_s^Ty_s]$ subject to coupling constraints $U_sx+Vy_s=w_s$ per scenario. The constraint matrix is block-angular, motivating decomposition into a first-stage problem plus a recourse function $Q(x)=\\sum_s \\pi_s Q_s(x)$."
+  },
+  {
+   "n": "Benders reformulation and duality",
+   "x": "The recourse function $Q(x)$ is rewritten via LP duality as a max over the dual polyhedron $P=\\{p:V^Tp\\le f\\}$; since the optimum occurs at an extreme point $q_v$, $Q(x)=\\max_v (w-Ux)^Tq_v$, giving a family of linear lower-bound cuts $\\theta \\ge (w-Ux)^Tq_v$ for all extreme points v, under boundedness and relatively complete recourse assumptions."
+  },
+  {
+   "n": "Benders decomposition algorithm",
+   "x": "Iterates between a master problem (first-stage x, θ, with a growing subset of cuts, giving a lower bound) and a subproblem (second-stage LP for fixed x, giving an upper bound and a dual extreme point). If the subproblem's optimal value equals θ, the solution is optimal; otherwise a new optimality cut is added and the loop repeats, converging finitely since there are finitely many dual extreme points."
+  },
+  {
+   "n": "Scenario decomposition and computational results",
+   "x": "In the stochastic setting, the subproblem splits into independent per-scenario LPs that can be solved in parallel, each returning its own dual extreme point and probability-weighted cut term in the master problem. Computational results show Benders matching direct MIO at small S but substantially outperforming it in solution quality and/or CPU time as S grows to 500 and 1,000 scenarios."
+  },
+  {
+   "n": "Benchmarking adaptive optimization: VSS and EVPI",
+   "x": "Deterministic optimization uses expected-value inputs and re-evaluates second-stage costs per scenario after the fact; wait-and-see optimizes first- and second-stage jointly per scenario as if the scenario were known in advance; adaptive optimization sits between them, jointly optimizing one first-stage decision against all scenarios' second-stage costs. VSS measures the value of adaptive flexibility over deterministic planning; EVPI measures the remaining gap to the idealized wait-and-see solution, i.e., the cost of having to commit before uncertainty resolves."
+  }
+ ],
+ "cards": [
+  {
+   "f": "What distinguishes first-stage from second-stage decisions in adaptive optimization?",
+   "b": "First-stage ('here and now') decisions are scenario-agnostic and must be made before uncertainty resolves (e.g., $x_j$, build facility). Second-stage ('wait and see') decisions are scenario-dependent and can be postponed (e.g., $y_{ijs}$, flow in scenario s).",
+   "x": "Non-anticipativity: x cannot depend on which scenario occurs.",
+   "t": 0,
+   "ref": "Fall_2026_15_C57-L15.pdf p.9"
+  },
+  {
+   "f": "In the adaptive facility location formulation, why are the capacity and demand constraints indexed by s?",
+   "b": "Because demand $d_{is}$ and hence feasible flows/unmet demand vary by scenario; both constraints $\\sum_i y_{ijs}\\le C_jx_j$ and $\\sum_j y_{ijs}+z_{is}\\ge d_{is}$ must hold for every scenario s separately, since $y,z$ are scenario-specific.",
+   "x": "x stays un-indexed by s — that's the whole point of first-stage decisions.",
+   "t": 0,
+   "ref": "Fall_2026_15_C57-L15.pdf p.7"
+  },
+  {
+   "f": "Write the compact form of the adaptive stochastic optimization problem.",
+   "b": "$\\min c^Tx + E(f_s^Ty_s)$ s.t. $Ax=b$, $U_sx+Vy_s=w_s\\ \\forall s\\in S$, $x\\in\\mathbb{Z}_+^r\\times\\mathbb{R}_+^{n_1-r}$, $y\\in\\mathbb{R}_+^{S\\times n_2}$.",
+   "x": "V (recourse matrix) is the same across scenarios; $U_s$ and $w_s$ vary.",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L15.pdf p.10"
+  },
+  {
+   "f": "What is block-angular structure and why does it matter here?",
+   "b": "The constraint matrix has 'nice' scenario-based blocks ($V$ repeated per scenario) coupled only through the first-stage variables x via $U_s$. This structure enables decomposition: fix x, and the second-stage problem separates into independent per-scenario LPs.",
+   "x": "Without x coupling, scenarios would be fully independent LPs.",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L15.pdf p.11"
+  },
+  {
+   "f": "Define the recourse function $Q(x)$.",
+   "b": "$Q(x)=\\sum_{s\\in S}\\pi_s Q_s(x)$ where $Q_s(x)=\\min\\{f_s^Ty_s : Vy_s=w_s-U_sx,\\ y_s\\ge 0\\}$ — the expected optimal second-stage cost given first-stage decision x.",
+   "x": "Q(x) is the price of the future given today's commitment x.",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L15.pdf p.12"
+  },
+  {
+   "f": "How is $Q(x)$ rewritten using LP duality?",
+   "b": "$Q(x)=\\max\\{(w-Ux)^Tp : V^Tp\\le f\\}$, the dual of the second-stage LP. The optimum occurs at a dual extreme point $q_v$, so $Q(x)=\\max_{v\\in V}(w-Ux)^Tq_v \\ge (w-Ux)^Tq_v$ for all v.",
+   "x": "Strong duality converts an inner min over y into a max over dual prices p.",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L15.pdf p.27"
+  },
+  {
+   "f": "State the two assumptions needed for the Benders reformulation theorem.",
+   "b": "(1) First- and second-stage feasible regions are bounded; (2) relatively complete recourse — for every feasible x, the second-stage problem $Vy=w-Ux,\\ y\\ge 0$ is feasible.",
+   "x": "Without relatively complete recourse you'd also need feasibility cuts, not covered here.",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L15.pdf p.30"
+  },
+  {
+   "f": "Write the Benders master problem reformulation of the MIO.",
+   "b": "$\\min_{x,\\theta} c^Tx+\\theta$ s.t. $Ax=b$, $\\theta\\ge (w-Ux)^Tq_v\\ \\forall v\\in V$, $x\\in\\mathbb{Z}_+^r\\times\\mathbb{R}_+^{n_1-r}$ — fewer variables but exponentially many constraints (one per dual extreme point).",
+   "x": "θ is an epigraph variable approximating Q(x) from below.",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L15.pdf p.30"
+  },
+  {
+   "f": "Describe the Benders decomposition algorithm's main loop.",
+   "b": "1) Solve master problem with current cut set → $(x_t,\\theta_t)$, lower bound. 2) Solve subproblem at $x_t$ → primal $y_t$, dual $p_t=q_{v_t}$, upper bound. 3) If $f^Ty_t=\\theta_t$, stop (optimal); else add cut $\\theta\\ge(w-Ux)^Tq_{v_t}$ and repeat.",
+   "x": "Master gives LB, subproblem gives UB; convergence is when LB=UB.",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L15.pdf p.32"
+  },
+  {
+   "f": "Why does Benders decomposition converge in finitely many iterations?",
+   "b": "Because the dual polyhedron P has finitely many extreme points, and each iteration adds a previously-unused cut (extreme point); the algorithm cannot cycle and must terminate once all 'active' cuts needed for optimality are added.",
+   "x": "Finite extreme points ⇒ finite cuts ⇒ finite convergence, like simplex/cutting-plane methods generally.",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L15.pdf p.32"
+  },
+  {
+   "f": "How does the master problem change in the scenario-decomposed version for stochastic facility location?",
+   "b": "θ is bounded by a single cut that sums probability-weighted contributions from each scenario's chosen dual extreme point: $\\theta\\ge \\sum_s \\pi_s(w_s-U_sx)^Tq_{v_s}^s$, over combinations of extreme points $v_1,\\dots,v_S$.",
+   "x": "One scenario can contribute its own extreme point without forcing others to match.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L15.pdf p.34"
+  },
+  {
+   "f": "In the facility location dual subproblem, what do the dual variables λ and μ represent?",
+   "b": "$\\lambda_{js}$ is the dual price on the capacity constraint for facility j in scenario s; $\\mu_{is}$ is the dual price on the demand-satisfaction constraint for customer i in scenario s, bounded above by $u_i$ (unmet-demand cost).",
+   "x": "These dual values are exactly what get plugged into the optimality cut.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L15.pdf p.36"
+  },
+  {
+   "f": "What did the computational results (S=100/500/1000) show about Benders vs. direct solution?",
+   "b": "At S=100 both found the same optimal solution, Benders faster (152s vs 204s). At S=500 and S=1000, Benders achieved tighter bounds (solution = lower bound, i.e., proven optimal) within the time limit while direct solve left an optimality gap.",
+   "x": "The benefit of decomposition grows with scenario count — direct MIO scales poorly.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L15.pdf p.37"
+  },
+  {
+   "f": "Define Value of Stochastic Solution (VSS) and what it measures.",
+   "b": "VSS = cost(deterministic solution) − cost(adaptive solution); in the example, $1528M-1083M=\\$444M$ (29.1%), measuring the value of flexibility from adjusting second-stage decisions per scenario rather than committing to expected-value-based first-stage decisions alone.",
+   "x": "VSS answers: 'how much do we gain from modeling uncertainty at all?'",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L15.pdf p.42"
+  },
+  {
+   "f": "Define Expected Value of Perfect Information (EVPI) and what it measures.",
+   "b": "EVPI = cost(adaptive solution) − cost(wait-and-see solution); in the example $1083M-722M=\\$361M$ (33.4%), measuring the cost of having to commit to first-stage decisions before uncertainty resolves (vs. an idealized world with perfect foresight).",
+   "x": "EVPI answers: 'how much would knowing the future be worth?'",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L15.pdf p.42"
+  },
+  {
+   "f": "How does the wait-and-see formulation differ from adaptive optimization mathematically?",
+   "b": "Wait-and-see: $E[\\min_{x_s,y_s} c^Tx_s+f_s^Ty_s \\text{ s.t. } Ax_s=b, U_sx_s+Vy_s=w_s]$ — x is also indexed by s (optimized per scenario independently). Adaptive: single x shared across all scenarios, jointly optimized with all $y_s$.",
+   "x": "Wait-and-see cheats by letting x 'see the future' per scenario — hence it's a lower bound (upper bound on savings), not implementable.",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L15.pdf p.39"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "In the adaptive facility location model, which variable must remain scenario-agnostic due to non-anticipativity?",
+   "o": [
+    "$x_j$, the facility construction decision",
+    "$y_{ijs}$, the flow from facility j to customer i",
+    "$z_{is}$, the unmet demand at customer i",
+    "$d_{is}$, the demand parameter"
+   ],
+   "a": 0,
+   "e": "$x_j$ is the here-and-now decision made before demand uncertainty is observed, so it cannot depend on s. $y_{ijs}$ and $z_{is}$ are second-stage, correctly scenario-indexed. $d_{is}$ is an input parameter, not a decision variable.",
+   "d": "easy",
+   "t": 0,
+   "src": "Fall_2026_15_C57-L15.pdf p.6"
+  },
+  {
+   "q": "What is the key structural property of the adaptive stochastic optimization constraint matrix that enables decomposition?",
+   "o": [
+    "Block-angular structure with x as the only coupling variable across scenario blocks",
+    "Totally unimodular constraint matrix",
+    "Diagonal dominance in the second-stage matrix V",
+    "Symmetric positive semi-definite objective Hessian"
+   ],
+   "a": 0,
+   "e": "The slides explicitly describe 'nice' scenario-based second-stage blocks coupled only via the complicating first-stage variable x — this is block-angular structure. TU and diagonal dominance aren't mentioned; the problem is an MIO with a linear (not quadratic) objective, so Hessian properties are irrelevant.",
+   "d": "medium",
+   "t": 1,
+   "src": "Fall_2026_15_C57-L15.pdf p.11"
+  },
+  {
+   "q": "The recourse function $Q(x)$ is defined as which of the following?",
+   "o": [
+    "$\\sum_{s\\in S}\\pi_s Q_s(x)$, the expected optimal second-stage cost given x",
+    "$\\max_{s\\in S} Q_s(x)$, the worst-case second-stage cost",
+    "$c^Tx$, the first-stage cost alone",
+    "$\\sum_{s\\in S} Q_s(x)$ without probability weighting"
+   ],
+   "a": 0,
+   "e": "Q(x) is explicitly the probability-weighted expectation across scenarios of each scenario's optimal second-stage LP value. A max would be a robust (not stochastic) formulation; dropping weights ignores the $\\pi_s$; $c^Tx$ is just the first-stage term, not recourse.",
+   "d": "medium",
+   "t": 1,
+   "src": "Fall_2026_15_C57-L15.pdf p.12"
+  },
+  {
+   "q": "Why is the dual of the second-stage LP used to build Benders cuts instead of the primal?",
+   "o": [
+    "Because the dual objective $(w-Ux)^Tp$ is linear in x for any fixed feasible dual point p, yielding valid cuts for all x",
+    "Because duals are always easier to compute than primals",
+    "Because the primal problem is non-convex and has no dual",
+    "Because only dual variables are non-negative, which Benders requires"
+   ],
+   "a": 0,
+   "e": "Strong LP duality gives $Q(x)=\\max_p\\{(w-Ux)^Tp : V^Tp\\le f\\}$, which is linear in x for any fixed feasible dual point p — exactly the form needed for a valid linear lower-bound cut on θ. The primal optimal $y^*$ is scenario/x-specific and doesn't directly give a cut valid for other x. Dual feasibility doesn't depend on x, since the dual feasible region $P=\\{p:V^Tp\\le f\\}$ doesn't involve x at all — only the dual objective does.",
+   "d": "hard",
+   "t": 2,
+   "src": "Fall_2026_15_C57-L15.pdf p.27"
+  },
+  {
+   "q": "What does the assumption of 'relatively complete recourse' guarantee?",
+   "o": [
+    "For every feasible first-stage x, the second-stage problem is always feasible",
+    "The second-stage problem has a unique optimal solution for every x",
+    "The dual polyhedron has a finite number of extreme points",
+    "The recourse function Q(x) is convex in x"
+   ],
+   "a": 0,
+   "e": "The slide states relatively complete recourse explicitly as: for every feasible x, there exists feasible y with $Vy=w-Ux$. Uniqueness is not required (LPs may have multiple optima). Finiteness of extreme points follows from boundedness, a separate assumption. Q(x) convexity, while true for LP recourse, is not what this particular assumption guarantees.",
+   "d": "medium",
+   "t": 2,
+   "src": "Fall_2026_15_C57-L15.pdf p.30"
+  },
+  {
+   "q": "In the Benders master problem $\\min c^Tx+\\theta$ s.t. $\\theta\\ge(w-Ux)^Tq_v\\ \\forall v\\in V$, why are there exponentially many constraints?",
+   "o": [
+    "Because V indexes all extreme points of the dual polyhedron, which can be exponential in number",
+    "Because there is one constraint per scenario and scenarios grow exponentially",
+    "Because x is integer, requiring exponentially many branch-and-bound nodes",
+    "Because the objective function is nonlinear"
+   ],
+   "a": 0,
+   "e": "Each cut corresponds to one dual extreme point $q_v$; polyhedra can have exponentially many extreme points in the dimension of the problem. Scenario count S is separate from extreme-point count V (and S is typically polynomial, e.g., 100–1000). Branch-and-bound nodes relate to solving the MIO, not to the number of Benders cuts. The objective is linear ($c^Tx+\\theta$).",
+   "d": "hard",
+   "t": 2,
+   "src": "Fall_2026_15_C57-L15.pdf p.30"
+  },
+  {
+   "q": "In the Benders algorithm, what triggers termination with an optimal solution?",
+   "o": [
+    "$f^Ty_t=\\theta_t$, i.e., the subproblem's optimal value matches the master's θ estimate",
+    "The master problem becomes infeasible",
+    "$\\theta_t$ exceeds $c^Tx_t$",
+    "A fixed maximum number of iterations is reached"
+   ],
+   "a": 0,
+   "e": "Equality between the actual recourse cost $f^Ty_t$ and the master's lower-bound estimate θ means the current approximation is tight at $x_t$, so (xt, yt) is optimal — this is when LB=UB. Master infeasibility means the original MIO is infeasible, not that you've found the optimum. $\\theta_t$ vs $c^Tx_t$ comparison isn't the stopping rule. The algorithm is exact and finite by construction, not iteration-capped.",
+   "d": "medium",
+   "t": 3,
+   "src": "Fall_2026_15_C57-L15.pdf p.32"
+  },
+  {
+   "q": "At each Benders iteration, what does the subproblem provide to the master problem?",
+   "o": [
+    "A dual extreme point $q_{v_t}$ used to construct a new optimality cut",
+    "A new value of c used to update the objective",
+    "A revised set A, b for the first-stage constraints",
+    "A new scenario probability $\\pi_s$"
+   ],
+   "a": 0,
+   "e": "The subproblem solves the second-stage LP at fixed $x_t$ and returns dual solution $p_t=q_{v_t}$, which defines the new cut $\\theta\\ge(w-Ux)^Tq_{v_t}$ added to the master. The first-stage data (c, A, b) and scenario probabilities are fixed problem inputs, not outputs of the subproblem.",
+   "d": "easy",
+   "t": 3,
+   "src": "Fall_2026_15_C57-L15.pdf p.32"
+  },
+  {
+   "q": "Why can the subproblem in adaptive facility location be solved in parallel across scenarios?",
+   "o": [
+    "Because for fixed x, each scenario's second-stage LP is independent, sharing no decision variables with other scenarios",
+    "Because all scenarios have identical demand values",
+    "Because the master problem is solved separately for each scenario",
+    "Because x is scenario-indexed in this formulation"
+   ],
+   "a": 0,
+   "e": "Once x is fixed, the block-angular structure means each scenario's $y_s$ only interacts with x, not with other scenarios' $y_{s'}$ — so each $Q_s(x)$ is an independent LP. Demands $d_{is}$ differ by scenario by construction. There is one master problem shared across all scenarios (that's the coupling point), and x is explicitly NOT scenario-indexed (that's the non-anticipativity constraint).",
+   "d": "medium",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L15.pdf p.34"
+  },
+  {
+   "q": "At S=1000 scenarios, the direct method reported Sol.=1,326 and LB=1,257. What does this gap indicate?",
+   "o": [
+    "The direct method did not prove optimality within the time limit — an optimality gap of 69 remains",
+    "The direct method found an infeasible solution",
+    "The scenario probabilities were misspecified",
+    "Benders decomposition also had the same gap at S=1000"
+   ],
+   "a": 0,
+   "e": "Sol. (best found incumbent) exceeds LB (best proven lower bound), so a nonzero optimality gap remains — the direct solver hit the 1,800s time limit before closing it. A feasible 'Sol.' value rules out infeasibility. Probabilities aren't implicated by a solve-time gap. Benders at S=1000 reported Sol.=LB=1,265, i.e., it closed the gap and proved optimality.",
+   "d": "medium",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L15.pdf p.37"
+  },
+  {
+   "q": "Given Deterministic total cost $1,528M and Adaptive total cost $1,083M, what is the VSS and what does it represent?",
+   "o": [
+    "$444M (29.1%); the value of adjusting second-stage decisions to realized scenarios rather than relying on expected-value planning",
+    "$722M; the cost of imperfect information",
+    "$361M; the expected value of perfect information",
+    "$1,528M; the total cost of the deterministic solution"
+   ],
+   "a": 0,
+   "e": "VSS = Deterministic − Adaptive = $1528M−$1083M=$444M, a 29.1% reduction, representing the value of flexibility/adaptivity. $361M is the EVPI (Adaptive − Wait-and-see), a different quantity. $722M is simply the wait-and-see total cost, not a gap. $1,528M is just the deterministic cost restated, not a gap measure.",
+   "d": "medium",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L15.pdf p.42"
+  },
+  {
+   "q": "What distinguishes the wait-and-see formulation from the adaptive optimization formulation?",
+   "o": [
+    "Wait-and-see optimizes a separate $x_s$ per scenario, as if the scenario were known in advance; adaptive optimization uses one shared x across all scenarios",
+    "Wait-and-see ignores second-stage costs entirely",
+    "Wait-and-see uses a max-cost objective instead of expected cost",
+    "Wait-and-see and adaptive optimization are mathematically identical"
+   ],
+   "a": 0,
+   "e": "The slide shows wait-and-see as $E[\\min_{x_s,y_s}\\dots]$ with x indexed by s, i.e., first-stage decisions are also allowed to vary by (known) scenario — an idealization. Adaptive optimization enforces one shared x (non-anticipativity). Wait-and-see still includes $f_s^Ty_s$ second-stage costs. Both use expectation, not a max/worst-case objective, and the formulations clearly differ in whether x is indexed by s.",
+   "d": "hard",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L15.pdf p.39"
+  },
+  {
+   "q": "Which of these best describes the 'conservative vs. aggressive' strategy trade-off mentioned for facility location?",
+   "o": [
+    "Conservative: few facilities, low investment, harder/costlier operations later; Aggressive: many facilities, high investment, easier operations later",
+    "Conservative: many facilities, low investment; Aggressive: few facilities, high investment",
+    "Conservative strategies always dominate aggressive ones in expected cost",
+    "Aggressive strategies have zero unmet demand by definition"
+   ],
+   "a": 0,
+   "e": "The slides state conservative = few facilities/low investment/harder operations, aggressive = many facilities/large investment/easier operations — a direct trade-off between first-stage investment and second-stage operating cost (captured by Q(x)). The other options invert or overstate this trade-off; neither strategy is guaranteed to dominate, and 'zero unmet demand' isn't asserted anywhere.",
+   "d": "easy",
+   "t": 0,
+   "src": "Fall_2026_15_C57-L15.pdf p.4"
+  },
+  {
+   "q": "In the dual subproblem for facility location, what does the constraint $\\mu_{is}\\le u_i$ enforce?",
+   "o": [
+    "The shadow price on unmet demand at customer i cannot exceed the actual unit cost of unmet demand",
+    "Unmet demand $z_{is}$ cannot exceed capacity $C_j$",
+    "The dual variable $\\lambda_{js}$ must be nonnegative",
+    "Total demand across scenarios is bounded by $u_i$"
+   ],
+   "a": 0,
+   "e": "This is the dual constraint corresponding to the primal variable $z_{is}$ with cost coefficient $u_i$ in the objective — standard LP duality: dual constraint bound equals primal cost coefficient. Capacity bounds on z aren't modeled this way (that's a different primal constraint on y). $\\lambda_{js}\\ge 0$ is enforced separately as a dual sign constraint, not via this inequality. The constraint is per-customer-per-scenario, not a cross-scenario demand cap.",
+   "d": "hard",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L15.pdf p.36"
+  },
+  {
+   "q": "Why does the master problem give a valid lower bound (LB) at each Benders iteration?",
+   "o": [
+    "Because θ is constrained only by a subset of all possible cuts, so the master problem is a relaxation of the full Benders reformulation",
+    "Because the master problem always solves to global optimality instantly",
+    "Because θ equals Q(x) exactly at every iteration",
+    "Because the subproblem is solved before the master problem each iteration"
+   ],
+   "a": 0,
+   "e": "With only $V^{(t)}\\subseteq V$ cuts included, θ can be set lower than the true $Q(x)$ would allow with all cuts, so the master's optimal objective underestimates the true MIO cost — a valid LB. The master doesn't instantly solve the full problem (that's the point of iterating). θ only equals Q(x) upon convergence, not generally. The master is solved first each iteration (per the algorithm steps), not after the subproblem.",
+   "d": "hard",
+   "t": 3,
+   "src": "Fall_2026_15_C57-L15.pdf p.32"
+  }
+ ],
+ "written": [
+  {
+   "q": "Derive the Benders optimality cut for the adaptive stochastic optimization problem, starting from the recourse function $Q(x)$ and using LP duality. State the two assumptions required and explain the role of each in the derivation.",
+   "m": "Start from $Q(x)=\\min\\{f^Ty : Vy=w-Ux,\\ y\\ge0\\}$. Under boundedness, strong LP duality gives $Q(x)=\\max\\{(w-Ux)^Tp : V^Tp\\le f\\}$. The dual feasible region $P=\\{p:V^Tp\\le f\\}$ does not depend on x, so its extreme points $q_v,\\ v\\in V$, are fixed in advance. Since the maximum of a linear function over a polyhedron is attained at an extreme point, $Q(x)=\\max_{v\\in V}(w-Ux)^Tq_v$. Because the max of several linear functions of x is itself $\\ge$ any one of them, we get the valid inequality $Q(x)\\ge(w-Ux)^Tq_v$ for every $v\\in V$. Substituting $\\theta$ for $Q(x)$ in the first-stage problem gives the Benders master problem $\\min c^Tx+\\theta$ s.t. $Ax=b,\\ \\theta\\ge(w-Ux)^Tq_v\\ \\forall v\\in V,\\ x\\in\\mathbb{Z}_+^r\\times\\mathbb{R}_+^{n_1-r}$. Relatively complete recourse ensures the second-stage LP is feasible for every feasible x, so Q(x) (and hence the dual max) is always well-defined and finite — without it, some x could make the subproblem infeasible and a feasibility (not optimality) cut would be needed instead. Boundedness of the feasible regions ensures the dual polyhedron's extreme points exist and the max is attained (not unbounded), guaranteeing a finite, well-defined set of cuts V.",
+   "k": [
+    "Starts from primal recourse LP and applies strong duality correctly",
+    "States dual feasible region P is independent of x",
+    "Uses extreme-point argument to get $Q(x)=\\max_v(w-Ux)^Tq_v$",
+    "Derives valid inequality $\\theta\\ge(w-Ux)^Tq_v$ for all v",
+    "Explains role of relatively complete recourse (feasibility for all x)",
+    "Explains role of boundedness (existence/finiteness of extreme points, max attained)"
+   ],
+   "t": 0,
+   "ref": ""
+  },
+  {
+   "q": "Using the adaptive facility location case study, explain the difference between the Value of the Stochastic Solution (VSS) and the Expected Value of Perfect Information (EVPI). Using the cost table ($1,528M deterministic, $1,083M adaptive, $722M wait-and-see), compute both and interpret what each number tells a manager about investing in flexibility versus investing in forecasting.",
+   "m": "VSS measures how much is gained by solving the stochastic (adaptive) problem instead of optimizing based on a single expected-value scenario and only adjusting second-stage decisions after the fact. It is computed as VSS = Deterministic cost − Adaptive cost = $1,528M − $1,083M = $445M (≈29.1% reduction). This quantifies the value of building flexibility into the first-stage decision (facility construction) by explicitly accounting for multiple demand scenarios rather than planning around a single average. EVPI measures the remaining gap between the best adaptive solution (which must commit to x before the scenario is known) and the idealized wait-and-see solution (which assumes the scenario is known before any decision, including x, is made). It is computed as EVPI = Adaptive cost − Wait-and-see cost = $1,083M − $722M = $361M (≈33.4%). This quantifies the unavoidable cost of having to commit to first-stage decisions under uncertainty — it is the most a manager could ever save by obtaining perfect information about which scenario will occur, and thus bounds the value of investing in better forecasting/information systems. Practically: VSS tells the manager that solving the stochastic model (vs. deterministic planning) is worth pursuing — it captures value already achievable today through better modeling. EVPI tells the manager the ceiling on returns from investing in forecasting or information-gathering technology, since even perfect foresight cannot eliminate the fact that facilities must be built before demand is observed. Adaptive optimization bridges 55.1% of the total gap between deterministic and wait-and-see costs, showing most — but not all — of the achievable value can be captured by modeling uncertainty well, even without better information.",
+   "k": [
+    "Correctly defines VSS as deterministic minus adaptive cost",
+    "Correctly defines EVPI as adaptive minus wait-and-see cost",
+    "Computes VSS = $445M / 29.1%",
+    "Computes EVPI = $361M / 33.4%",
+    "Interprets VSS as value of flexibility/modeling uncertainty",
+    "Interprets EVPI as ceiling on value of perfect information / cost of commitment"
+   ],
+   "t": 0,
+   "ref": ""
+  }
+ ]
+}

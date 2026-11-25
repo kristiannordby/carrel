@@ -1,0 +1,484 @@
+{
+ "id": "x14",
+ "label": "L14",
+ "title": "Robust optimization algorithms",
+ "short": "Robust opt algorithms",
+ "src": "Fall_2026_15_C57-L14.pdf",
+ "brief": "Lecture 14 shows how to solve a robust LP max cᵀx s.t. aᵢᵀx ≤ bᵢ ∀aᵢ ∈ Uᵢ, which has infinitely many constraints. The direct method computes the worst case max_{aᵢ∈Uᵢ} aᵢᵀx in closed form: for norm sets aᵢ = āᵢ + Δᵢᵀuᵢ, ‖uᵢ‖ ≤ ρ it equals āᵢᵀx + ρ‖Δᵢx‖_*, using the dual norm (ellipsoid → SOCP; box and budget → LP). The duality method turns the inner max into a min for polyhedral sets, giving an LP counterpart with extra variables pᵢ. Cutting planes alternate between a master LP over finite restricted sets and per-row worst-case subproblems until no constraint is violated, illustrated on robust nurse scheduling. Exams ask you to derive a counterpart for a given set, name its class and size, pair norms with dual norms, compute a worst-case left-hand side, and reason about the cutting-plane loop and when each method is faster.",
+ "kp": [
+  "Robust row aᵢᵀx ≤ bᵢ ∀aᵢ ∈ Uᵢ ⇔ max_{aᵢ∈Uᵢ} aᵢᵀx ≤ bᵢ: finitely many but ill-structured constraints.",
+  "Direct method: closed-form inner max g(x), then impose g(x) ≤ bᵢ.",
+  "Norm set Uᵢ = {āᵢ + Δᵢᵀuᵢ : ‖uᵢ‖ ≤ ρ}; ℓ1 budget, ℓ2 ellipsoid, ℓ∞ box.",
+  "Worst case = āᵢᵀx + ρ‖Δᵢx‖_*, with ‖s‖_* = max_{‖x‖≤1}|sᵀx|; a safety buffer.",
+  "Dual pairs: ℓ∞↔ℓ1, ℓ2↔ℓ2, ℓp↔ℓq with q = p/(p−1).",
+  "Ellipsoidal counterpart is an SOCP with the same size as the nominal LP; box and budget stay linear.",
+  "Duality method: max = min via strong duality; min ≤ bᵢ ⇔ ∃pᵢ, so pᵢ become variables.",
+  "Polyhedral counterpart: āᵢᵀx + pᵢᵀdᵢ ≤ bᵢ, pᵢᵀDᵢ = xᵀ, pᵢ ≥ 0; LP with n + Σℓᵢ variables, m + nm constraints.",
+  "Cutting planes: master over Ûᵢ ⊆ Uᵢ, add âᵢᵀx ≤ bᵢ if âᵢᵀx* > bᵢ + ε, stop when no cut; needs no strong duality.",
+  "Benchmark: cutting planes tend to win on polyhedral sets, reformulation on ellipsoidal sets."
+ ],
+ "topics": [
+  {
+   "n": "Robust LP and the inner problem",
+   "x": "The robust LP max cᵀx s.t. aᵢᵀx ≤ bᵢ ∀aᵢ ∈ Uᵢ has infinitely many constraints; equivalently max_{aᵢ∈Uᵢ} aᵢᵀx ≤ bᵢ, finitely many but ill-structured. The direct method solves the inner maximization in closed form, g(x) = max_{aᵢ∈Uᵢ} aᵢᵀx, and replaces the constraint by g(x) ≤ bᵢ."
+  },
+  {
+   "n": "Norm uncertainty sets",
+   "x": "Norm sets capture small deviations around nominal values: Uᵢ = {āᵢ + Δᵢᵀuᵢ : ‖uᵢ‖ ≤ ρ}, with Δᵢ scaling relative uncertainty and ρ the extent. ℓ1 gives budget, ℓ2 ellipsoidal, ℓ∞ box uncertainty. Element-wise deviations (−Γ ≤ uᵢⱼ ≤ Γ) and CLT-style global perturbations (−Γ√n ≤ Σⱼuᵢⱼ ≤ Γ√n) motivate them."
+  },
+  {
+   "n": "Robust counterparts via dual norms",
+   "x": "For a norm set the worst case is āᵢᵀx + ρ‖Δᵢx‖_*, a safety buffer that grows with uncertainty. Ellipsoidal (ℓ2, self-dual) gives a second-order cone problem of the same size as the nominal LP; box (ℓ∞) gives an ℓ1 buffer and budget (ℓ1) an ℓ∞ buffer, both linear. In general ℓp pairs with ℓq, q = p/(p−1)."
+  },
+  {
+   "n": "Reformulation via LP duality",
+   "x": "If the inner max equals a min over pᵢ ∈ Vᵢ, then 'min ≤ bᵢ' holds iff some pᵢ satisfies it, so pᵢ become decision variables. For polyhedral sets Uᵢ = {āᵢ + uᵢ : Dᵢuᵢ ≤ dᵢ}, strong LP duality gives the robust counterpart āᵢᵀx + pᵢᵀdᵢ ≤ bᵢ, pᵢᵀDᵢ = xᵀ, pᵢ ≥ 0: an LP with n + Σℓᵢ variables and m + nm constraints."
+  },
+  {
+   "n": "Cutting-plane algorithm",
+   "x": "Keep finite restricted sets Ûᵢ ⊆ Uᵢ, starting from the nominal rows. Solve the master LP, then for each row find the worst case âᵢ = argmax_{aᵢ∈Uᵢ} aᵢᵀx*; add âᵢᵀx ≤ bᵢ if violated by more than ε and re-solve (dual simplex), stopping when no cut is added. Applied to nurse scheduling, the subproblem finds the demand scenario h that maximizes the nurse-to-patient-ratio insufficiency."
+  },
+  {
+   "n": "Choosing a method",
+   "x": "Cutting planes need only an oracle for the inner max (no strong duality); reformulation gives one tractable robust counterpart for a wide range of sets. Benchmarks (Bertsimas, Dunning, Lubin 2016) find both competitive: cutting planes tend to dominate with polyhedral uncertainty, reformulation with ellipsoidal uncertainty."
+  }
+ ],
+ "cards": [
+  {
+   "f": "Three forms of the robust LP",
+   "b": "Nominal: max cᵀx s.t. aᵢᵀx ≤ bᵢ, x ≥ 0. Robust: aᵢᵀx ≤ bᵢ ∀aᵢ ∈ Uᵢ (infinitely many constraints). Reformulated: max_{aᵢ∈Uᵢ} aᵢᵀx ≤ bᵢ (m constraints, ill-structured).",
+   "x": "Uncertainty is row-wise: each constraint i has its own set Uᵢ, so the worst case is taken row by row.",
+   "t": 0,
+   "ref": "Fall_2026_15_C57-L14.pdf p.2"
+  },
+  {
+   "f": "Direct method principle",
+   "b": "Solve the inner problem analytically, g(x) = max_{aᵢ∈Uᵢ} aᵢᵀx, and replace the robust constraint by g(x) ≤ bᵢ.",
+   "x": "Works for well-structured, norm-based sets where the inner max has a closed form.",
+   "t": 0,
+   "ref": "Fall_2026_15_C57-L14.pdf p.4"
+  },
+  {
+   "f": "Norm uncertainty set",
+   "b": "Uᵢ = {aᵢ = āᵢ + Δᵢᵀuᵢ : ‖uᵢ‖ ≤ ρ, uᵢ ∈ ℝ^{kᵢ}}, Δᵢ ∈ ℝ^{kᵢ×n}, ρ ≥ 0.",
+   "x": "uᵢ is a small-norm perturbation controlling the extent; Δᵢ scales relative uncertainty across components.",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L14.pdf p.5"
+  },
+  {
+   "f": "ℓ1, ℓ2, ℓ∞ norm sets",
+   "b": "ℓ1 ball: budget uncertainty. ℓ2 ball: ellipsoidal uncertainty. ℓ∞ ball: box uncertainty.",
+   "x": "For the same ρ, ℓ1 ball ⊆ ℓ2 ball ⊆ ℓ∞ ball, so box is the most conservative of the three.",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L14.pdf p.6"
+  },
+  {
+   "f": "Ellipsoidal inner max",
+   "b": "max_{‖uᵢ‖₂≤ρ} uᵢᵀ(Δᵢx) = ρ‖Δᵢx‖₂, attained at uᵢ* = ρ Δᵢx/‖Δᵢx‖₂.",
+   "x": "Feasible (‖uᵢ*‖₂ = ρ) and optimal by Cauchy–Schwarz: uᵢᵀ(Δᵢx) ≤ ‖uᵢ‖₂‖Δᵢx‖₂ ≤ ρ‖Δᵢx‖₂.",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L14.pdf p.8"
+  },
+  {
+   "f": "Ellipsoidal robust counterpart",
+   "b": "max cᵀx s.t. āᵢᵀx + ρ‖Δᵢx‖₂ ≤ bᵢ ∀i, x ≥ 0.",
+   "x": "A second-order cone problem with the same size as the nominal (n variables, m constraints): nearly as tractable as the LP. ρ‖Δᵢx‖₂ is the safety buffer.",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L14.pdf p.9"
+  },
+  {
+   "f": "Dual norm",
+   "b": "‖s‖_* = max_{‖x‖≤1} |sᵀx| = max_{x≠0} |sᵀx|/‖x‖.",
+   "x": "Measures how much s can 'stretch' a unit vector. It turns any norm-set inner max into āᵢᵀx + ρ‖Δᵢx‖_*.",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L14.pdf p.10"
+  },
+  {
+   "f": "Norm ↔ dual norm ↔ robust counterpart",
+   "b": "‖uᵢ‖∞ ≤ ρ → āᵢᵀx + ρ‖Δᵢx‖₁ ≤ bᵢ. ‖uᵢ‖₂ ≤ ρ → āᵢᵀx + ρ‖Δᵢx‖₂ ≤ bᵢ. ‖uᵢ‖₁ ≤ ρ → āᵢᵀx + ρ‖Δᵢx‖∞ ≤ bᵢ.",
+   "x": "General rule: ℓp is dual to ℓq with q = p/(p−1). Trap: the buffer uses the dual norm, not the set's own norm.",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L14.pdf p.11"
+  },
+  {
+   "f": "Duality method principle",
+   "b": "If max_{aᵢ∈Uᵢ} aᵢᵀx = min_{pᵢ∈Vᵢ} g(pᵢ), then min_{pᵢ∈Vᵢ} g(pᵢ) ≤ bᵢ ⇔ ∃pᵢ ∈ Vᵢ: g(pᵢ) ≤ bᵢ, so add pᵢ as decision variables.",
+   "x": "A 'max ≤ b' needs every point; a 'min ≤ b' needs only one witness. Strong duality makes the switch exact.",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L14.pdf p.13"
+  },
+  {
+   "f": "Polyhedral uncertainty set",
+   "b": "Uᵢ = {aᵢ = āᵢ + uᵢ : Dᵢuᵢ ≤ dᵢ, uᵢ ∈ ℝⁿ}, Dᵢ ∈ ℝ^{ℓᵢ×n}, dᵢ ∈ ℝ^{ℓᵢ}.",
+   "x": "Example: the CLT set −Γ√n ≤ Σⱼ(aᵢⱼ − āᵢⱼ)/σᵢⱼ ≤ Γ√n is polyhedral.",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L14.pdf p.14"
+  },
+  {
+   "f": "Polyhedral inner problem and its dual",
+   "b": "Primal: max uᵢᵀx s.t. Dᵢuᵢ ≤ dᵢ. Dual: min pᵢᵀdᵢ s.t. pᵢᵀDᵢ = xᵀ, pᵢ ≥ 0. Robust constraint ⇔ ∃pᵢ ≥ 0: pᵢᵀDᵢ = xᵀ, āᵢᵀx + pᵢᵀdᵢ ≤ bᵢ.",
+   "x": "uᵢ free ⇒ dual equality constraints; Dᵢuᵢ ≤ dᵢ in a max ⇒ pᵢ ≥ 0.",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L14.pdf p.15"
+  },
+  {
+   "f": "Size of the polyhedral robust counterpart",
+   "b": "An LP with n + Σᵢℓᵢ variables, m + nm regular constraints and n + Σᵢℓᵢ nonnegativity constraints (nominal: n variables, m constraints).",
+   "x": "Size grows with the uncertainty-set description, unlike the ellipsoidal counterpart, but is generally tractable in practice.",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L14.pdf p.16"
+  },
+  {
+   "f": "Master problem vs subproblem",
+   "b": "Master: max cᵀx s.t. aᵢᵀx ≤ bᵢ ∀aᵢ ∈ Ûᵢ, x ≥ 0, with Ûᵢ ⊆ Uᵢ finite. Subproblem (per row): âᵢ = argmax_{aᵢ∈Uᵢ} aᵢᵀx*; Ûᵢ ← Ûᵢ ∪ {âᵢ}.",
+   "x": "The master is a relaxation of the robust problem; the subproblem either certifies x* robust feasible (hence optimal) or returns a cut.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L14.pdf p.20"
+  },
+  {
+   "f": "Cutting-plane algorithm steps",
+   "b": "1. Ûᵢ = {āᵢ} (nominal). 2. Solve master: infeasible ⇒ robust infeasible; unbounded ⇒ take x* with very large objective. 3. For each i, âᵢ = argmax aᵢᵀx*; if âᵢᵀx* > bᵢ + ε add âᵢᵀx ≤ bᵢ. 4. No cut added ⇒ x* optimal; else go to 2.",
+   "x": "Re-solve with dual simplex: adding a constraint keeps the previous basis dual feasible, so it warm-starts.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L14.pdf p.21"
+  },
+  {
+   "f": "Cutting planes for nurse scheduling",
+   "b": "Start with U⁰ = {h^hist}. Solve master for z^κ; find h^κ = argmax_{h∈U} npr^κ(h, z^κ) (worst insufficiency); U^κ ← {h^hist, h¹, …, h^κ}; stop when the relative change in npr falls below η.",
+   "x": "Uncertainty is demand h; the robust constraint is npr ≥ Σ λ_w(h_{jsw} − Σ σ z) ∀h ∈ U.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L14.pdf p.23"
+  },
+  {
+   "f": "Reformulation vs cutting planes",
+   "b": "Cutting planes: any set whose inner max is solvable, no strong duality needed. Reformulation: one tractable counterpart. Both competitive; cutting planes tend to win on polyhedral sets, reformulation on ellipsoidal sets.",
+   "x": "Bertsimas, Dunning, Lubin (2016), Reformulation versus cutting-planes for robust optimization.",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L14.pdf p.25"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "Why can't the robust LP with constraints aᵢᵀx ≤ bᵢ ∀aᵢ ∈ Uᵢ be passed directly to an LP solver?",
+   "o": [
+    "It has infinitely many constraints when Uᵢ is infinite",
+    "Its objective cᵀx is nonlinear in x",
+    "It has integer variables",
+    "Its feasible set is nonconvex"
+   ],
+   "a": 0,
+   "e": "One linear constraint per aᵢ ∈ Uᵢ. The feasible set is an intersection of half-spaces, hence convex; the obstacle is the number of constraints, not convexity.",
+   "d": "easy",
+   "t": 0,
+   "ref": "Fall_2026_15_C57-L14.pdf p.2"
+  },
+  {
+   "q": "A norm uncertainty set defined with the ℓ2 norm is called:",
+   "o": [
+    "Ellipsoidal uncertainty",
+    "Box uncertainty",
+    "Budget uncertainty",
+    "Polyhedral uncertainty"
+   ],
+   "a": 0,
+   "e": "ℓ2 ↔ ellipsoidal, ℓ∞ ↔ box, ℓ1 ↔ budget.",
+   "d": "easy",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L14.pdf p.6"
+  },
+  {
+   "q": "The dual norm of the ℓ∞ norm is:",
+   "o": [
+    "ℓ1",
+    "ℓ∞",
+    "ℓ2",
+    "ℓ0"
+   ],
+   "a": 0,
+   "e": "q = p/(p−1) → 1 as p → ∞. So a box set ‖uᵢ‖∞ ≤ ρ gives the buffer ρ‖Δᵢx‖₁.",
+   "d": "easy",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L14.pdf p.11"
+  },
+  {
+   "q": "The robust counterpart of an LP with ellipsoidal uncertainty sets is a:",
+   "o": [
+    "Second-order cone problem",
+    "Linear optimization problem",
+    "Mixed-integer linear problem",
+    "Nonconvex quadratic problem"
+   ],
+   "a": 0,
+   "e": "The constraint āᵢᵀx + ρ‖Δᵢx‖₂ ≤ bᵢ is a second-order cone constraint. Box, budget and polyhedral sets keep it linear.",
+   "d": "easy",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L14.pdf p.9"
+  },
+  {
+   "q": "The robust counterpart of an LP with polyhedral uncertainty sets is a:",
+   "o": [
+    "Linear optimization problem",
+    "Second-order cone problem",
+    "Semidefinite problem",
+    "Mixed-integer linear problem"
+   ],
+   "a": 0,
+   "e": "LP duality introduces pᵢ ≥ 0 with linear constraints pᵢᵀDᵢ = xᵀ and āᵢᵀx + pᵢᵀdᵢ ≤ bᵢ, so everything stays linear.",
+   "d": "easy",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L14.pdf p.16"
+  },
+  {
+   "q": "In the cutting-plane algorithm, the master problem is initialized as:",
+   "o": [
+    "The nominal problem, Ûᵢ = {āᵢ}",
+    "The full robust problem, Ûᵢ = Uᵢ",
+    "The problem with no constraints",
+    "The robust counterpart from duality"
+   ],
+   "a": 0,
+   "e": "Start with the nominal rows and add worst-case rows as cuts. Starting from Uᵢ would be the original intractable problem.",
+   "d": "easy",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L14.pdf p.21"
+  },
+  {
+   "q": "Dual norm of the ℓ3 norm?",
+   "o": [
+    "ℓ_{3/2}",
+    "ℓ_3",
+    "ℓ_{2/3}",
+    "ℓ_∞"
+   ],
+   "a": 0,
+   "e": "q = p/(p−1) = 3/2 (equivalently 1/p + 1/q = 1). 2/3 inverts the formula and is not even a norm.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L14.pdf p.11"
+  },
+  {
+   "q": "āᵢ = (2, 3), x = (1, 2), Δᵢ = I, ellipsoidal set with ρ = 0.5. Worst-case value of aᵢᵀx?",
+   "o": [
+    "≈ 9.12",
+    "9.50",
+    "9.00",
+    "8.50"
+   ],
+   "a": 0,
+   "e": "āᵢᵀx = 8; buffer ρ‖x‖₂ = 0.5√5 ≈ 1.12. 9.50 uses ‖x‖₁ = 3 (box set); 9.00 uses ‖x‖∞ = 2 (budget set).",
+   "d": "medium",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L14.pdf p.9"
+  },
+  {
+   "q": "Budget set ‖uᵢ‖₁ ≤ Γ with Γ = 2, Δᵢ = I, āᵢᵀx = 10, x = (3, −1, 2). Robust left-hand side?",
+   "o": [
+    "16",
+    "22",
+    "≈ 17.5",
+    "14"
+   ],
+   "a": 0,
+   "e": "Dual of ℓ1 is ℓ∞: 10 + 2·max(3, 1, 2) = 16. 22 uses ‖x‖₁ = 6 (box); ≈ 17.5 uses ‖x‖₂ = √14.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L14.pdf p.11"
+  },
+  {
+   "q": "LP dual of the inner problem max uᵢᵀx s.t. Dᵢuᵢ ≤ dᵢ (uᵢ free):",
+   "o": [
+    "min pᵢᵀdᵢ s.t. pᵢᵀDᵢ = xᵀ, pᵢ ≥ 0",
+    "min pᵢᵀdᵢ s.t. pᵢᵀDᵢ ≥ xᵀ, pᵢ free",
+    "min pᵢᵀx s.t. Dᵢpᵢ = dᵢ, pᵢ ≥ 0",
+    "min pᵢᵀdᵢ s.t. pᵢᵀDᵢ = xᵀ, pᵢ ≤ 0"
+   ],
+   "a": 0,
+   "e": "Free primal variables ⇒ dual equality constraints; ≤ rows in a max ⇒ nonnegative multipliers. Inequality pᵢᵀDᵢ ≥ xᵀ would require uᵢ ≥ 0.",
+   "d": "medium",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L14.pdf p.15"
+  },
+  {
+   "q": "Polyhedral robust counterpart with n = 10 variables, m = 5 uncertain rows, ℓᵢ = 4 for every row. Variables and regular constraints?",
+   "o": [
+    "30 variables, 55 constraints",
+    "30 variables, 25 constraints",
+    "50 variables, 55 constraints",
+    "10 variables, 5 constraints"
+   ],
+   "a": 0,
+   "e": "Variables n + Σℓᵢ = 10 + 20 = 30. Constraints m + nm = 5 + 50 = 55: each pᵢᵀDᵢ = xᵀ is n equalities. 10/5 is the ellipsoidal (same-size) case.",
+   "d": "medium",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L14.pdf p.16"
+  },
+  {
+   "q": "In the CLT-based set, what does −Γ√n ≤ Σⱼ uᵢⱼ ≤ Γ√n restrict?",
+   "o": [
+    "The total of the scaled deviations across a row",
+    "Each scaled deviation uᵢⱼ separately",
+    "The Euclidean norm of the deviation vector",
+    "The number of coefficients that may deviate"
+   ],
+   "a": 0,
+   "e": "It is a global perturbation: individual uᵢⱼ may be large if they cancel. The element-wise box −Γ ≤ uᵢⱼ ≤ Γ restricts each separately.",
+   "d": "medium",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L14.pdf p.5"
+  },
+  {
+   "q": "The cutting-plane master problem is infeasible. What can you conclude?",
+   "o": [
+    "The robust problem is infeasible",
+    "Too many cuts were added; remove the latest",
+    "The tolerance ε is too small",
+    "The nominal problem is feasible but unbounded"
+   ],
+   "a": 0,
+   "e": "Ûᵢ ⊆ Uᵢ, so the master is a relaxation: if it has no solution, neither does the robust problem. Cuts are valid robust constraints, so removing them is not justified.",
+   "d": "medium",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L14.pdf p.21"
+  },
+  {
+   "q": "At master solution x*, row i's subproblem returns âᵢ. When is the cut âᵢᵀx ≤ bᵢ added?",
+   "o": [
+    "When âᵢᵀx* > bᵢ + ε",
+    "When âᵢᵀx* < bᵢ − ε",
+    "Whenever âᵢ ≠ āᵢ",
+    "Always, at every iteration"
+   ],
+   "a": 0,
+   "e": "Only violated worst cases produce cuts; if no row is violated beyond ε, x* is robust feasible and optimal.",
+   "d": "medium",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L14.pdf p.21"
+  },
+  {
+   "q": "Per the benchmark cited in lecture, which method tends to dominate with polyhedral uncertainty sets?",
+   "o": [
+    "Cutting planes",
+    "Reformulation",
+    "Neither; both always tie",
+    "Direct method via dual norms"
+   ],
+   "a": 0,
+   "e": "Bertsimas–Dunning–Lubin (2016): cutting planes tend to dominate with polyhedral sets, reformulation with ellipsoidal sets.",
+   "d": "medium",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L14.pdf p.25"
+  },
+  {
+   "q": "Same āᵢ, Δᵢ, x and ρ. Rank the robust buffers for box (‖u‖∞ ≤ ρ), ellipsoidal (‖u‖₂ ≤ ρ) and budget (‖u‖₁ ≤ ρ) sets.",
+   "o": [
+    "Box ≥ ellipsoidal ≥ budget",
+    "Budget ≥ ellipsoidal ≥ box",
+    "All equal, since ρ is the same",
+    "Ellipsoidal ≥ box ≥ budget"
+   ],
+   "a": 0,
+   "e": "Buffers are ρ‖Δᵢx‖₁ ≥ ρ‖Δᵢx‖₂ ≥ ρ‖Δᵢx‖∞; equivalently the ℓ∞ ball contains the ℓ2 ball, which contains the ℓ1 ball. The reversed order confuses the set's norm with the buffer's.",
+   "d": "hard",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L14.pdf p.11"
+  },
+  {
+   "q": "Why does the duality method need the inner max rewritten as a min before adding pᵢ as variables?",
+   "o": [
+    "min ≤ bᵢ holds iff some pᵢ satisfies it; max ≤ bᵢ must hold for every point",
+    "Solvers accept only minimization subproblems",
+    "A min problem is always smaller than the max problem",
+    "The max problem is nonconvex in aᵢ"
+   ],
+   "a": 0,
+   "e": "Existential conditions can be enforced by letting the solver choose a witness pᵢ; universal ones cannot. The inner max is an LP, so it is not nonconvex.",
+   "d": "hard",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L14.pdf p.13"
+  },
+  {
+   "q": "For the robust max cᵀx, how does the master objective behave across cutting-plane iterations?",
+   "o": [
+    "An upper bound on the robust optimum, non-increasing as cuts are added",
+    "A lower bound on the robust optimum, non-decreasing",
+    "Equal to the robust optimum from the first iteration",
+    "Unrelated to the robust optimum until termination"
+   ],
+   "a": 0,
+   "e": "The master is a relaxation of a maximization, so its value is ≥ the robust optimum; adding constraints can only lower it. Lower bounds would come from robust-feasible points.",
+   "d": "hard",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L14.pdf p.20"
+  },
+  {
+   "q": "In the robust nurse-scheduling cutting plane, the subproblem at iteration κ:",
+   "o": [
+    "Finds demand h ∈ U maximizing insufficiency for the fixed schedule z^κ",
+    "Finds schedule z minimizing insufficiency for historical demand",
+    "Finds demand h ∈ U minimizing the number of nurse-shifts",
+    "Re-solves the master with all scenarios in U"
+   ],
+   "a": 0,
+   "e": "Like âᵢ = argmax aᵢᵀx*, it finds the worst-case demand for the current schedule and adds it to U^κ. Optimizing z is the master's job.",
+   "d": "hard",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L14.pdf p.23"
+  },
+  {
+   "q": "For which situation does only the cutting-plane method apply, not reformulation?",
+   "o": [
+    "The inner max is solvable but no strong-duality reformulation is available",
+    "The uncertainty set is an ellipsoid",
+    "The uncertainty set is a polyhedron with few facets",
+    "The nominal problem is an LP"
+   ],
+   "a": 0,
+   "e": "Cutting planes need only an oracle for max_{aᵢ∈Uᵢ} aᵢᵀx and can be applied without strong duality. Ellipsoids and polyhedra have tractable counterparts, so both methods apply.",
+   "d": "hard",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L14.pdf p.26"
+  }
+ ],
+ "written": [
+  {
+   "q": "Consider max cᵀx s.t. aᵢᵀx ≤ bᵢ ∀aᵢ ∈ Uᵢ, x ≥ 0, with Uᵢ = {āᵢ + Δᵢᵀuᵢ : ‖uᵢ‖₂ ≤ ρ}. Derive the robust counterpart, prove the inner maximization result, and state its problem class and size. How does the result change for a general norm?",
+   "m": "Rewrite each row as max_{aᵢ∈Uᵢ} aᵢᵀx ≤ bᵢ. Substituting aᵢ = āᵢ + Δᵢᵀuᵢ: max aᵢᵀx = āᵢᵀx + max_{‖uᵢ‖₂≤ρ} uᵢᵀ(Δᵢx). Take uᵢ* = ρΔᵢx/‖Δᵢx‖₂: feasible since ‖uᵢ*‖₂ = ρ, value ρ‖Δᵢx‖₂. Optimal by Cauchy–Schwarz: uᵢᵀ(Δᵢx) ≤ ‖uᵢ‖₂‖Δᵢx‖₂ ≤ ρ‖Δᵢx‖₂. Robust counterpart: max cᵀx s.t. āᵢᵀx + ρ‖Δᵢx‖₂ ≤ bᵢ ∀i, x ≥ 0, a second-order cone problem with n variables and m constraints, as many as the nominal LP; ρ‖Δᵢx‖₂ is a safety buffer growing with uncertainty. For a general norm, scale uᵢ = ρvᵢ with ‖vᵢ‖ ≤ 1 to get āᵢᵀx + ρ‖Δᵢx‖_* ≤ bᵢ, with ‖s‖_* = max_{‖x‖≤1}|sᵀx|: box (ℓ∞) → ℓ1 buffer, budget (ℓ1) → ℓ∞ buffer (both linear), ℓp → ℓq with q = p/(p−1).",
+   "k": [
+    "Rewrites ∀ constraint as inner max",
+    "Splits nominal part and uᵢᵀ(Δᵢx)",
+    "Gives maximizer uᵢ* and checks feasibility",
+    "Cauchy–Schwarz optimality argument",
+    "States SOCP and same size n, m",
+    "Generalizes to dual norm with correct pairs"
+   ],
+   "t": 2
+  },
+  {
+   "q": "Let Uᵢ = {āᵢ + uᵢ : Dᵢuᵢ ≤ dᵢ} with Dᵢ ∈ ℝ^{ℓᵢ×n}. Use LP duality to derive a tractable robust counterpart, explain why the dual variables can become decision variables, and give the counterpart's size.",
+   "m": "Inner problem: max_{aᵢ∈Uᵢ} aᵢᵀx = āᵢᵀx + max{uᵢᵀx : Dᵢuᵢ ≤ dᵢ}. Its LP dual is min{pᵢᵀdᵢ : pᵢᵀDᵢ = xᵀ, pᵢ ≥ 0} (free uᵢ ⇒ equality; ≤ rows ⇒ pᵢ ≥ 0); by strong duality the values match when the inner problem is feasible and bounded. The robust row becomes āᵢᵀx + min_{pᵢ} pᵢᵀdᵢ ≤ bᵢ, and a min is ≤ bᵢ iff some feasible pᵢ achieves it, so: ∃pᵢ ≥ 0 with pᵢᵀDᵢ = xᵀ and āᵢᵀx + pᵢᵀdᵢ ≤ bᵢ. Robust counterpart: max cᵀx s.t. pᵢᵀDᵢ = xᵀ, āᵢᵀx + pᵢᵀdᵢ ≤ bᵢ, pᵢ ≥ 0 ∀i, x ≥ 0, a linear program. Size: n + Σℓᵢ variables, m + nm regular constraints, n + Σℓᵢ nonnegativity constraints; it grows with the set description but is generally tractable.",
+   "k": [
+    "Correct inner primal",
+    "Correct dual with pᵢᵀDᵢ = xᵀ, pᵢ ≥ 0",
+    "Invokes strong duality",
+    "Explains min ≤ b ⇔ ∃ witness",
+    "Full LP counterpart",
+    "Correct size counts"
+   ],
+   "t": 3
+  },
+  {
+   "q": "Describe the cutting-plane algorithm for a robust LP. Justify its infeasibility and optimality stopping rules, and explain when you would prefer it over a reformulation.",
+   "m": "Maintain finite Ûᵢ ⊆ Uᵢ, initially {āᵢ} (the nominal problem). Master: max cᵀx s.t. aᵢᵀx ≤ bᵢ ∀aᵢ ∈ Ûᵢ, x ≥ 0. If infeasible, stop: the master is a relaxation (fewer constraints than the robust problem), so the robust problem is infeasible. If unbounded, take an x* with a very large objective. Otherwise for each row solve âᵢ = argmax_{aᵢ∈Uᵢ} aᵢᵀx*; if âᵢᵀx* > bᵢ + ε, add âᵢᵀx ≤ bᵢ. Re-solve with dual simplex (warm start). If no cut is added, x* satisfies every robust row (up to ε) and is optimal for a relaxation, hence optimal for the robust problem. Prefer cutting planes when the inner max is easy but no strong-duality counterpart is available, and with polyhedral sets, where benchmarks (Bertsimas–Dunning–Lubin 2016) show it tends to dominate; reformulation tends to dominate with ellipsoidal sets. Example: robust nurse scheduling adds the demand scenario h maximizing insufficiency for the current schedule, stopping when npr's relative change falls below η.",
+   "k": [
+    "Master over restricted sets, nominal start",
+    "Per-row worst-case subproblem",
+    "Violation test with tolerance ε",
+    "Infeasible master ⇒ robust infeasible (relaxation)",
+    "No cut ⇒ optimal (feasible + relaxation optimum)",
+    "Dual simplex warm start",
+    "When to prefer: no duality needed, polyhedral sets"
+   ],
+   "t": 4
+  }
+ ]
+}

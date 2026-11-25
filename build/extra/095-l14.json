@@ -1,0 +1,523 @@
+{
+ "id": "x14",
+ "label": "L14",
+ "title": "The ROAD II to Precision Medicine",
+ "short": "ROAD II",
+ "src": "Lecture14_MLopt_26.pdf",
+ "brief": "Lecture 14 starts from potential outcomes: a treatment effect is $Y^1-Y^0$, but only $y=tY^1+(1-t)Y^0$ is observed, and the naive two-model CATE is biased when treated patients are sicker in ways $X$ does not capture. It reviews three balancing methods for observed confounding (prognostic matching, inverse propensity weighting, entropy balancing), all of which rely on no unobserved confounding. ROAD I's weight $\\rho$ can tune a policy's sensitivity/specificity when benefit is established but cannot reveal an unknown effect. ROAD II estimates a proxy $U$ for unobserved prognostic factors as a patient's outcome minus the mean outcome of similar patients in the same arm, normalizes it, and adds it to each balancing method. Evaluation: closer agreement with RCT benchmarks (GIST, RPS, CRLM), negative controls on randomized cohorts, and lower cross-center dispersion. Expect questions on the IPW and entropy-balancing formulas, why ROAD I is limited, how $U$ is computed and interpreted, and how the augmented methods are tested.",
+ "kp": [
+  "Prediction $\\hat Y=f(X)$ answers 'what is my risk'; treatment effect $Y^1-Y^0$ answers 'will treatment lower it' (Maria: $10\\%-18\\%=-8$ pp).",
+  "Fundamental problem: only $y=t\\cdot Y^1+(1-t)\\cdot Y^0$ is observed, never both potential outcomes.",
+  "Two-model approach: $M_0$ on untreated, $M_1$ on treated, $\\mathrm{CATE}(X)=\\mathbb E[Y\\mid X,T=1]-\\mathbb E[Y\\mid X,T=0]$; biased if sicker treated patients differ in ways not in $X$.",
+  "Observed confounding (age, tumor size, sex): matching, entropy balancing, propensity weighting. Unobserved (e.g. mutations): no standard fix.",
+  "Propensity $e(x)=P(T=1\\mid X=x)$; IPW: $w_i=1$ if $T_i=1$; $w_i=\\frac{e(X_i)}{1-e(X_i)}$ if $T_i=0$; propensities near 0 or 1 give unstable weights.",
+  "Entropy balancing: $\\min_w\\sum_{i:T_i=0}w_i\\log w_i$ s.t. $\\sum_{i:T_i=0}w_i=1$, $\\sum_{i:T_i=0}w_iZ_i=\\frac{1}{n_1}\\sum_{j:T_j=1}Z_j$, $w_i\\ge0$; poor overlap gives extreme weights or infeasibility.",
+  "ROAD I $\\rho$ tunes policy sensitivity when clinical benefit is established; it cannot reveal an unknown treatment effect.",
+  "Unobserved proxy: $U_i=Y_i-\\frac{1}{|\\mathcal N_i|}\\sum_{j\\in\\mathcal N_i}Y_j$ over similar same-arm neighbors; $U_i\\approx f_t(X_i,V_i)-\\frac{1}{|\\mathcal N_i|}\\sum_{j\\in\\mathcal N_i}f_t(X_i,V_j)$.",
+  "Normalize: $0\\le\\tilde U_i\\le1$ if $U_i\\ge0$, $-1\\le\\tilde U_i\\le0$ if $U_i\\le0$; $\\tilde U>0$ unusual robustness, $<0$ unusual frailty; a proxy, not a measurement.",
+  "Augment each method with $U$: match on $(X,U)$, balance moments of $(X,U)$, IPTW with $P(T\\mid X,U)$. Adding $U$ cut benchmark log-HR error in 9/9 comparisons and cross-center dispersion for all 3 methods."
+ ],
+ "topics": [
+  {
+   "n": "Potential outcomes and treatment effects",
+   "x": "Standard ML predicts $\\hat Y=f(X)$; precision medicine needs the individual effect $Y^1-Y^0$. Only one potential outcome is observed: $y=tY^1+(1-t)Y^0$."
+  },
+  {
+   "n": "Confounding and the no-unobserved-confounding assumption",
+   "x": "Fitting $M_0$ and $M_1$ on each arm and differencing gives a CATE that is biased when treated patients are sicker in ways not captured by $X$. RCTs make arms similar; observational data need balancing. Observed confounding can be balanced; unobserved confounders (unrecorded severity, mutations, clinician judgment) break all standard methods."
+  },
+  {
+   "n": "Balancing methods: matching, IPW, entropy balancing",
+   "x": "Prognostic matching pairs minority-arm patients with the closest majority-arm patients within risk buckets. IPW weights controls by $e/(1-e)$ to resemble the treated population. Entropy balancing finds max-entropy control weights whose moments of $Z$ match the treated means."
+  },
+  {
+   "n": "ROAD I limitations",
+   "x": "In ROAD I, $\\rho$ trades sensitivity against specificity; with established benefit (imatinib) an operating point can be chosen from clinical priorities. When the effect is unknown, tuning $\\rho$ until the effect looks beneficial or to match an unknown trial HR is circular."
+  },
+  {
+   "n": "Estimating the unobserved factor U",
+   "x": "Compare a patient's outcome with the mean outcome of nearest neighbors in the same arm (similar age, treatment duration, tumor location). Since neighbors share $X$, the gap approximates the contribution of unobserved $V$. $U$ is computed for both arms and normalized so ranks are comparable across arms."
+  },
+  {
+   "n": "Augmented balancing and evaluation",
+   "x": "Each balancing method adds $U$ to $X$. Tested on observational cohorts with RCT benchmarks (GIST, RPS, CRLM), on randomized cohorts as negative controls (STRASS, BRT), and on six-center CRLM for cross-center consistency of OS and RFS effects."
+  }
+ ],
+ "cards": [
+  {
+   "f": "Precision medicine vs standard treatment",
+   "b": "Standard care treats the average patient (some improve, some get no benefit or side effects); precision medicine targets the individual treatment effect.",
+   "x": "The goal shifts from population averages to who benefits.",
+   "t": 0,
+   "ref": "Lecture14_MLopt_26.pdf p.2"
+  },
+  {
+   "f": "Prediction vs treatment-effect question",
+   "b": "Prediction: $\\hat Y=f(X)$, e.g. 5-year stroke risk 18%. Treatment effect: compare risk with ($Y^1$) and without ($Y^0$) treatment.",
+   "x": "Maria: $Y^1-Y^0=10\\%-18\\%=-8$ percentage points.",
+   "t": 0,
+   "ref": "Lecture14_MLopt_26.pdf p.4"
+  },
+  {
+   "f": "Fundamental problem of causal inference",
+   "b": "We never observe both potential outcomes: $y=t\\cdot Y^1+(1-t)\\cdot Y^0$.",
+   "x": "If $t=1$ only $Y^1$ is seen; the other outcome is counterfactual.",
+   "t": 0,
+   "ref": "Lecture14_MLopt_26.pdf p.5"
+  },
+  {
+   "f": "First (two-model) approach to CATE",
+   "b": "Train $M_0$ on untreated and $M_1$ on treated patients; $\\mathrm{CATE}(X)=\\mathbb E[Y\\mid X,T=1]-\\mathbb E[Y\\mid X,T=0]$.",
+   "x": "Simple, but only valid if the two training populations are comparable given $X$.",
+   "t": 1,
+   "ref": "Lecture14_MLopt_26.pdf p.6"
+  },
+  {
+   "f": "Why the two-model approach can mislead",
+   "b": "Treated patients are often sicker; if severity is not in $X$, $M_1$ learns a worse prognosis and can predict $\\hat Y^1>\\hat Y^0$ although treatment is not harmful.",
+   "x": "The bias comes from who got treated, not from the treatment.",
+   "t": 1,
+   "ref": "Lecture14_MLopt_26.pdf p.7"
+  },
+  {
+   "f": "Observed vs unobserved confounding",
+   "b": "Observed: explained by recorded features (age, tumor size, sex), fixed by matching, entropy balancing, propensity weighting. Unobserved: factors we cannot explain (e.g. mutations), no standard fix.",
+   "x": "RCTs balance both; observational methods balance only the observed kind.",
+   "t": 1,
+   "ref": "Lecture14_MLopt_26.pdf p.9"
+  },
+  {
+   "f": "No unobserved confounding assumption",
+   "b": "No factor that affects both treatment and outcome is missing from $X$; all standard balancing methods require it.",
+   "x": "Violations: unrecorded disease severity, unknown mutations, uncaptured clinician judgment.",
+   "t": 1,
+   "ref": "Lecture14_MLopt_26.pdf p.18"
+  },
+  {
+   "f": "Prognostic matching",
+   "b": "Within each risk bucket, match each minority-arm patient to the closest majority-arm patient on risk score and clinical covariates.",
+   "x": "Gives a more balanced cohort, making downstream effect estimation more reliable.",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.10"
+  },
+  {
+   "f": "Propensity score and its intuition",
+   "b": "$e(x)=P(T=1\\mid X=x)$. Patients who could plausibly have received either treatment carry more information than those almost certain to get one.",
+   "x": "Goal: a pseudo-population where assignment is closer to random.",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.13"
+  },
+  {
+   "f": "IPW weights for the treated population",
+   "b": "$w_i=1$ if $T_i=1$; $w_i=\\frac{e(X_i)}{1-e(X_i)}$ if $T_i=0$.",
+   "x": "Controls likely to be treated get larger weights so the weighted control group resembles the treated population; $e$ near 0 or 1 makes weights unstable.",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.14"
+  },
+  {
+   "f": "Entropy balancing formulation",
+   "b": "$\\min_w\\sum_{i:T_i=0}w_i\\log w_i$ s.t. $\\sum_{i:T_i=0}w_i=1$, $\\sum_{i:T_i=0}w_iZ_i=\\frac{1}{n_1}\\sum_{j:T_j=1}Z_j$, $w_i\\ge0$.",
+   "x": "$Z$: observed $X$, possibly with a prognostic score $s(X)$; match means, optionally second moments.",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.17"
+  },
+  {
+   "f": "Entropy balancing failure mode",
+   "b": "With insufficient overlap, weights become extreme or the exact moment constraints are infeasible.",
+   "x": "Same root cause as unstable IPW weights: controls that look like the treated are scarce.",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.17"
+  },
+  {
+   "f": "ROAD I limitation on $\\rho$",
+   "b": "$\\rho$ can tune policy sensitivity when benefit is established; it cannot reveal an unknown effect.",
+   "x": "With unknown effect you cannot tune $\\rho$ until the estimate looks beneficial or to an unknown trial HR.",
+   "t": 3,
+   "ref": "Lecture14_MLopt_26.pdf p.20"
+  },
+  {
+   "f": "Unobserved-factor proxy $U$",
+   "b": "$U_i=Y_i-\\frac{1}{|\\mathcal N_i|}\\sum_{j\\in\\mathcal N_i}Y_j$, with $\\mathcal N_i$ similar patients in the same arm.",
+   "x": "$U_i\\approx f_t(X_i,V_i)-\\frac{1}{|\\mathcal N_i|}\\sum_{j\\in\\mathcal N_i}f_t(X_i,V_j)$: neighbors share $X$, so the gap reflects unobserved $V$.",
+   "t": 4,
+   "ref": "Lecture14_MLopt_26.pdf p.31"
+  },
+  {
+   "f": "Interpreting $U$",
+   "b": "$U>0$: survived better than comparable same-arm patients; $U<0$: survived worse.",
+   "x": "$U$ is a proxy for the combined influence of unobserved prognostic factors, not a measurement of them.",
+   "t": 4,
+   "ref": "Lecture14_MLopt_26.pdf p.34"
+  },
+  {
+   "f": "Normalization of $U$",
+   "b": "$0\\le\\tilde U_i\\le1$ if $U_i\\ge0$; $-1\\le\\tilde U_i\\le0$ if $U_i\\le0$; done for treated and untreated.",
+   "x": "Makes a 'top 10% survivor' in the treatment arm comparable to one in the control arm.",
+   "t": 4,
+   "ref": "Lecture14_MLopt_26.pdf p.33"
+  },
+  {
+   "f": "Augmented balancing methods",
+   "b": "Matching on $(X,U)$ within buckets $m(X)$; entropy balancing on moments of $(X,U)$; IPTW with $\\pi=P(T\\mid X,U)$.",
+   "x": "$U$ plugs into existing methods as an extra covariate; no new estimator is needed.",
+   "t": 5,
+   "ref": "Lecture14_MLopt_26.pdf p.35"
+  },
+  {
+   "f": "ROAD II evaluation design",
+   "b": "Observational + RCT benchmark (GIST, RPS, CRLM); randomized cohorts as negative controls (STRASS, BRT); six-center CRLM consistency (OS, RFS).",
+   "x": "Tests accuracy, harmlessness when randomization already balances, and stability across centers.",
+   "t": 5,
+   "ref": "Lecture14_MLopt_26.pdf p.36"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "Maria's 5-year stroke risk is 18% without treatment and 10% with treatment. Her treatment effect $Y^1-Y^0$ is:",
+   "o": [
+    "$-8$ percentage points",
+    "$+8$ percentage points",
+    "$-44\\%$ in relative terms only",
+    "$28$ percentage points"
+   ],
+   "a": 0,
+   "e": "$Y^1-Y^0=10\\%-18\\%=-8$ pp, a reduction. $+8$ reverses the order of the difference.",
+   "d": "easy",
+   "t": 0,
+   "ref": "Lecture14_MLopt_26.pdf p.4"
+  },
+  {
+   "q": "Under $y=t\\cdot Y^1+(1-t)\\cdot Y^0$, a patient with $t=0$ reveals:",
+   "o": [
+    "Only $Y^0$, the outcome without treatment",
+    "Only $Y^1$, the outcome with treatment",
+    "Both $Y^0$ and $Y^1$",
+    "The difference $Y^1-Y^0$"
+   ],
+   "a": 0,
+   "e": "With $t=0$ the $Y^1$ term vanishes. Never observing both is the fundamental problem.",
+   "d": "easy",
+   "t": 0,
+   "ref": "Lecture14_MLopt_26.pdf p.5"
+  },
+  {
+   "q": "The propensity score is defined as:",
+   "o": [
+    "$e(x)=P(T=1\\mid X=x)$",
+    "$e(x)=P(Y=1\\mid X=x,T=1)$",
+    "$e(x)=P(X=x\\mid T=1)$",
+    "$e(x)=\\mathbb E[Y^1-Y^0\\mid X=x]$"
+   ],
+   "a": 0,
+   "e": "It is the probability of receiving treatment given covariates. The last option is the CATE.",
+   "d": "easy",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.13"
+  },
+  {
+   "q": "Which is given as an example of unobserved confounding?",
+   "o": [
+    "Mutations",
+    "Age",
+    "Tumor size",
+    "Sex"
+   ],
+   "a": 0,
+   "e": "Age, size and sex are observed features fixable by balancing; mutations are the slide's unobserved example.",
+   "d": "easy",
+   "t": 1,
+   "ref": "Lecture14_MLopt_26.pdf p.9"
+  },
+  {
+   "q": "A patient has $U>0$. This means:",
+   "o": [
+    "They survived better than comparable patients in the same arm",
+    "They survived worse than comparable patients in the same arm",
+    "They benefited from treatment more than the average patient",
+    "Their propensity of treatment exceeds 0.5"
+   ],
+   "a": 0,
+   "e": "$U$ is outcome minus same-arm neighbor mean, so $U>0$ is better-than-expected. It is not a treatment effect.",
+   "d": "easy",
+   "t": 4,
+   "ref": "Lecture14_MLopt_26.pdf p.34"
+  },
+  {
+   "q": "What does entropy balancing minimize?",
+   "o": [
+    "$\\sum_{i:T_i=0}w_i\\log w_i$ over control weights",
+    "$\\sum_{i:T_i=1}w_i^2$ over treated weights",
+    "Total covariate distance between matched pairs",
+    "Cross-entropy loss of a propensity model"
+   ],
+   "a": 0,
+   "e": "Entropy balancing minimizes $\\sum w\\log w$ (maximizes entropy) over control weights subject to moment constraints. Matched-pair distance is matching.",
+   "d": "easy",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.17"
+  },
+  {
+   "q": "Why can the two-model approach predict $\\hat Y^1>\\hat Y^0$ for Maria even if treatment helps?",
+   "o": [
+    "$M_1$ is trained on sicker patients whose severity $X$ does not capture",
+    "$M_1$ is trained on fewer patients, so it overfits to high risk",
+    "$M_0$ is a linear model while $M_1$ is a nonlinear model",
+    "Maria's covariates are outside the range of the training data"
+   ],
+   "a": 0,
+   "e": "Treated patients often have worse prognosis not encoded in $X$, so $M_1$ learns that prognosis, not the treatment's effect. Sample size is not the stated mechanism.",
+   "d": "medium",
+   "t": 1,
+   "ref": "Lecture14_MLopt_26.pdf p.7"
+  },
+  {
+   "q": "With $w_i=e(X_i)/(1-e(X_i))$ for controls, an untreated patient with $e(X_i)=0.8$ gets weight:",
+   "o": [
+    "4",
+    "0.25",
+    "1.25",
+    "0.8"
+   ],
+   "a": 0,
+   "e": "$0.8/0.2=4$. 0.25 is the inverse; 1.25 is $1/e$. Controls that look like treated patients are up-weighted.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.14"
+  },
+  {
+   "q": "According to the propensity-score intuition, which patients carry the most information?",
+   "o": [
+    "Those who could plausibly have received either treatment",
+    "Those almost certain to receive the treatment",
+    "Those almost certain not to receive the treatment",
+    "Those with the most extreme observed outcomes"
+   ],
+   "a": 0,
+   "e": "Patients with $e(x)$ far from 0 and 1 have comparable counterparts in both arms; near-certain assignments carry less information.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.13"
+  },
+  {
+   "q": "The constraint $\\sum_{i:T_i=0}w_iZ_i=\\frac{1}{n_1}\\sum_{j:T_j=1}Z_j$ in entropy balancing enforces:",
+   "o": [
+    "The weighted control mean of $Z$ equals the treated mean",
+    "The weighted treated mean of $Z$ equals the control mean",
+    "Every control weight equals $1/n_1$",
+    "Weighted controls and treated have equal sample sizes"
+   ],
+   "a": 0,
+   "e": "The left side is a weighted control average ($\\sum w_i=1$); the right side is the unweighted treated mean. Only controls are reweighted.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.17"
+  },
+  {
+   "q": "In prognostic matching (from the ROAD paper), how are patients matched?",
+   "o": [
+    "Minority-arm patients to the closest majority-arm patient within risk buckets",
+    "Each treated patient to all controls with the same propensity score",
+    "Majority-arm patients to the closest minority-arm patient across buckets",
+    "Random pairs of treated and control patients within each center"
+   ],
+   "a": 0,
+   "e": "Within each risk bucket the minority group is matched to the closest majority-group patient on risk score and clinical covariates.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.10"
+  },
+  {
+   "q": "When can ROAD I's weight $\\rho$ legitimately be chosen?",
+   "o": [
+    "When clinical benefit is established, from sensitivity/specificity priorities",
+    "Whenever the estimated treatment effect is still harmful",
+    "When it is tuned to match an unknown trial hazard ratio",
+    "Only when there is no observed confounding at all"
+   ],
+   "a": 0,
+   "e": "With established benefit (e.g. imatinib) $\\rho$ sets an operating point. With unknown effect, tuning until it looks beneficial is circular.",
+   "d": "medium",
+   "t": 3,
+   "ref": "Lecture14_MLopt_26.pdf p.20"
+  },
+  {
+   "q": "Why does $U_i=Y_i-\\frac{1}{|\\mathcal N_i|}\\sum_{j\\in\\mathcal N_i}Y_j$ reflect unobserved factors?",
+   "o": [
+    "Neighbors share similar $X$ and arm, so the gap is driven by unobserved $V$",
+    "Neighbors are from the other arm, so the gap is the treatment effect",
+    "Averaging neighbors removes all noise $\\epsilon$ from $Y_i$",
+    "Neighbors are chosen to have the same unobserved $V$ as patient $i$"
+   ],
+   "a": 0,
+   "e": "$U_i\\approx f_t(X_i,V_i)-\\text{avg}_j f_t(X_i,V_j)$: same $t$ and $X$, different $V$. Neighbors are in the same arm, not the other one.",
+   "d": "medium",
+   "t": 4,
+   "ref": "Lecture14_MLopt_26.pdf p.31"
+  },
+  {
+   "q": "How is IPTW modified in ROAD II's augmented approach?",
+   "o": [
+    "Weights use $\\pi=P(T\\mid X,U)$ instead of $P(T\\mid X)$",
+    "Weights are multiplied by $\\rho$ for treated non-recurrences",
+    "Weights use $\\pi=P(U\\mid X,T)$ instead of $P(T\\mid X)$",
+    "Treated patients get weight $U_i$ and controls weight 1"
+   ],
+   "a": 0,
+   "e": "The augmented IPTW conditions the propensity on both observed history and the unobserved-performance proxy $U$.",
+   "d": "medium",
+   "t": 5,
+   "ref": "Lecture14_MLopt_26.pdf p.35"
+  },
+  {
+   "q": "What is the role of the randomized cohorts (STRASS, BRT) in ROAD II's evaluation?",
+   "o": [
+    "Negative controls: check that adjusting for $U$ does not distort estimates",
+    "Benchmarks: supply the true effect for the observational GIST cohort",
+    "Training data for the neighbor model that computes $U$",
+    "Test whether center-specific effects become more consistent"
+   ],
+   "a": 0,
+   "e": "Randomization should already balance factors, so $U$ adjustment should change little. RCT benchmarks for GIST/RPS/CRLM and cross-center tests are separate arms of the evaluation.",
+   "d": "medium",
+   "t": 5,
+   "ref": "Lecture14_MLopt_26.pdf p.36"
+  },
+  {
+   "q": "Across GIST, RPS and CRLM, adding $U$ reduced benchmark log-HR error in:",
+   "o": [
+    "All 9 method × dataset comparisons",
+    "6 of 9 method × dataset comparisons",
+    "Only the entropy-balancing comparisons",
+    "Only the GIST cohort, for all methods"
+   ],
+   "a": 0,
+   "e": "3 methods × 3 datasets = 9, and adding $U$ helped in all of them.",
+   "d": "medium",
+   "t": 5,
+   "ref": "Lecture14_MLopt_26.pdf p.37"
+  },
+  {
+   "q": "An untreated patient has $e(X_i)=0.99$. What happens under the IPW weights $e/(1-e)$?",
+   "o": [
+    "Weight 99: one patient dominates the weighted control group",
+    "Weight 0.01: the patient is effectively dropped",
+    "Weight 1: controls are never reweighted",
+    "Weight 0.99: weights stay bounded by 1"
+   ],
+   "a": 0,
+   "e": "$0.99/0.01=99$. Near-one propensities blow up control weights, which is the instability the slide warns about.",
+   "d": "hard",
+   "t": 2,
+   "ref": "Lecture14_MLopt_26.pdf p.14"
+  },
+  {
+   "q": "Why can't ROAD I's $\\rho$ be used to estimate an unknown treatment effect?",
+   "o": [
+    "Choosing $\\rho$ until the effect looks beneficial presupposes the answer",
+    "$\\rho$ only affects the untreated model $h_{t=0}$",
+    "Larger $\\rho$ always lowers sensitivity, so it cannot be tuned",
+    "$\\rho$ requires randomized data to be estimated"
+   ],
+   "a": 0,
+   "e": "ROAD I raised $\\rho$ until imatinib looked beneficial, valid only because benefit was known. For an unknown effect that is circular.",
+   "d": "hard",
+   "t": 3,
+   "ref": "Lecture14_MLopt_26.pdf p.20"
+  },
+  {
+   "q": "Why is $U$ normalized separately for $U\\ge0$ and $U\\le0$, for treated and untreated patients?",
+   "o": [
+    "So a 'top 10% survivor' in one arm is comparable to one in the other",
+    "So that $U$ has zero mean and unit variance in the pooled data",
+    "So that $U$ becomes a valid propensity score in $[0,1]$",
+    "So that negative $U$ can be dropped before balancing"
+   ],
+   "a": 0,
+   "e": "$U$ is computed within each arm, so raw scales differ; normalization to $[-1,1]$ makes relative standing comparable across arms.",
+   "d": "hard",
+   "t": 4,
+   "ref": "Lecture14_MLopt_26.pdf p.33"
+  },
+  {
+   "q": "Why is $U$ described as a proxy and not a measurement of unobserved factors?",
+   "o": [
+    "It mixes all unobserved prognostic influences, plus noise, into one residual",
+    "It is computed only for treated patients, not untreated ones",
+    "It depends on the propensity model, which may be misspecified",
+    "It is bounded in $[-1,1]$, so it loses the original units"
+   ],
+   "a": 0,
+   "e": "$Y=f_t(X,V)+\\epsilon$: the neighbor gap captures the combined effect of $V$ and noise, not any specific factor such as a mutation. $U$ is computed for both arms.",
+   "d": "hard",
+   "t": 4,
+   "ref": "Lecture14_MLopt_26.pdf p.34"
+  },
+  {
+   "q": "Why is lower cross-center dispersion of log-HR evidence that augmenting with $U$ helps?",
+   "o": [
+    "Center-specific confounding should vanish if balancing works, so estimates should agree",
+    "Lower dispersion proves each center's estimate equals the RCT benchmark",
+    "Dispersion falls whenever more covariates are added, so it checks overfitting",
+    "Lower dispersion shows the randomized cohorts were not distorted"
+   ],
+   "a": 0,
+   "e": "If a treatment effect is real and bias is removed, centers with different case mixes should give similar estimates. Agreement does not by itself prove each matches the benchmark.",
+   "d": "hard",
+   "t": 5,
+   "ref": "Lecture14_MLopt_26.pdf p.39"
+  },
+  {
+   "q": "Which assumption, required by all standard balancing methods, does ROAD II try to relax?",
+   "o": [
+    "No unobserved confounding",
+    "Overlap between treatment arms",
+    "Linearity of the outcome model",
+    "Randomized treatment assignment"
+   ],
+   "a": 0,
+   "e": "Matching, entropy balancing and IPW all assume no factor affecting both treatment and outcome is missing from $X$; $U$ proxies those factors. Overlap is still needed.",
+   "d": "hard",
+   "t": 1,
+   "ref": "Lecture14_MLopt_26.pdf p.18"
+  }
+ ],
+ "written": [
+  {
+   "q": "Using potential outcomes, explain why estimating a treatment effect differs from prediction, describe the two-model CATE approach, and explain why it fails on observational data. Distinguish observed from unobserved confounding.",
+   "m": "Prediction estimates $\\hat Y=f(X)$ (e.g. Maria's 18% stroke risk). A treatment effect needs both $Y^0$ and $Y^1$ (Maria: $10\\%-18\\%=-8$ pp), but only $y=t\\cdot Y^1+(1-t)\\cdot Y^0$ is observed. Two-model approach: train $M_0$ on untreated and $M_1$ on treated patients and set $\\mathrm{CATE}(X)=\\mathbb E[Y\\mid X,T=1]-\\mathbb E[Y\\mid X,T=0]$. In observational data treated patients are often sicker; if that severity is not in $X$, $M_1$ learns a worse prognosis and may give $\\hat Y^1>\\hat Y^0$ although treatment is not harmful. RCTs avoid this by making arms similar. Observed confounding comes from recorded features (age, tumor size, sex) and can be handled by matching, entropy balancing or propensity weighting. Unobserved confounding comes from factors not in $X$ (mutations, unrecorded severity, clinician judgment); these methods all assume it is absent.",
+   "k": [
+    "Prediction vs $Y^1-Y^0$",
+    "Observed-outcome formula, never both outcomes",
+    "Two-model CATE formula",
+    "Bias mechanism: sicker treated, severity not in $X$",
+    "Observed vs unobserved confounding with examples and fixes"
+   ],
+   "t": 1
+  },
+  {
+   "q": "Compare inverse propensity weighting and entropy balancing as used in this lecture: give the weights or optimization problem, the intuition, and when each breaks down.",
+   "m": "IPW: estimate $e(X_i)=P(T_i=1\\mid X_i)$ and set $w_i=1$ if $T_i=1$; $w_i=\\frac{e(X_i)}{1-e(X_i)}$ if $T_i=0$. Treated keep weight 1; controls likely to have been treated are up-weighted, so the weighted controls resemble the treated population (a pseudo-population closer to random assignment). Patients who could plausibly receive either treatment carry most information. Breaks down with $e$ near 0 or 1: e.g. $e=0.99$ gives weight 99. Entropy balancing: $\\min_w\\sum_{i:T_i=0}w_i\\log w_i$ s.t. $\\sum_{i:T_i=0}w_i=1$, $\\sum_{i:T_i=0}w_iZ_i=\\frac{1}{n_1}\\sum_{j:T_j=1}Z_j$, $w_i\\ge0$, with $Z$ the observed $X$ and possibly a prognostic score $s(X)$; match means, optionally second moments. It reweights controls directly to match treated moments while keeping weights as even as possible. Breaks down with poor overlap: extreme weights or infeasible constraints. Both assume no unobserved confounding; ROAD II extends both by adding $U$ (IPTW with $P(T\\mid X,U)$, moments of $(X,U)$).",
+   "k": [
+    "IPW weights correct for controls and treated",
+    "IPW intuition and extreme-propensity instability",
+    "Entropy balancing objective and constraints",
+    "Choice of $Z$ and overlap/infeasibility failure",
+    "Shared no-unobserved-confounding assumption"
+   ],
+   "t": 2
+  },
+  {
+   "q": "Explain why ROAD I's $\\rho$ is not enough when the treatment effect is unknown, and describe how ROAD II estimates and uses a proxy for unobserved confounding, including how it was evaluated.",
+   "m": "ROAD I up-weights treated good outcomes by $\\rho$; raising it increases sensitivity and lowers specificity (e.g. 85%/76% at 1.5 to 94%/52% at 3.25). With established benefit (imatinib) this is choosing an operating point; with an unknown effect, tuning $\\rho$ until the effect looks beneficial or to an unknown trial HR presupposes the answer. ROAD II: model $Y=f_t(X,V)+\\epsilon$ with unobserved $V$. For each patient, find nearest neighbors in the same arm with similar $X$ and compute $U_i=Y_i-\\frac{1}{|\\mathcal N_i|}\\sum_{j\\in\\mathcal N_i}Y_j$, so $U_i\\approx f_t(X_i,V_i)-\\frac{1}{|\\mathcal N_i|}\\sum_{j\\in\\mathcal N_i}f_t(X_i,V_j)$, reflecting $V$. Do this for both arms and normalize to $\\tilde U\\in[0,1]$ for $U\\ge0$ and $[-1,0]$ for $U\\le0$ so relative standing is comparable across arms. $\\tilde U>0$: unusual robustness; $<0$: unusual frailty; a proxy for combined unobserved influence, not a measurement. Use it in balancing: match on $(X,U)$ within risk buckets, entropy-balance moments of $(X,U)$, IPTW with $P(T\\mid X,U)$. Evaluation: observational cohorts with RCT benchmarks (GIST, RPS, CRLM; log-HR error fell in all 9 comparisons), randomized negative controls (STRASS, BRT; check that adjustment does not distort), six-center CRLM (cross-center log-HR dispersion fell for all three methods for mortality and recurrence).",
+   "k": [
+    "$\\rho$ legitimate only with established benefit; circular otherwise",
+    "$U$ formula with same-arm neighbors",
+    "Why the gap reflects $V$",
+    "Normalization and interpretation, proxy not measurement",
+    "Three augmented methods",
+    "Three evaluation settings and results"
+   ],
+   "t": 4
+  }
+ ]
+}

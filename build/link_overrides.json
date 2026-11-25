@@ -1,0 +1,201 @@
+{
+ "c57|l1|In a multi-period model with production xₜ, sales zₜ and end-of-period stock yₜ,": null,
+ "c57|l1|An analyst charges holding cost as h·Σₜ xₜ instead of h·Σₜ yₜ. Effect?": null,
+ "c57|l1|Two weeks, one product: initial stock y₀ = 2, capacities (4, 4), demand caps (1,": null,
+ "c57|r6|For a maximization IP, a node's LP value is 6.33 and the incumbent is 6. With in": {
+  "file": "Fall_2026_15_C57-L11.pdf",
+  "page": 39
+ },
+ "c57|l10|Rec 6 Q1: plant 3 must produce k₀ if neither plant 1 nor plant 2 does. Correct c": {
+  "file": "Recitation6.pdf",
+  "page": 9
+ },
+ "c57|l10|Optional parcel of area A with binary ζ. Option 1: Σⱼ xⱼ ≤ Aζ. Option 2: Σⱼ xⱼ ≤": {
+  "file": "practice-exam-2026-solutions.pdf",
+  "page": 22
+ },
+ "c57|l10|HW3 P1(a): binaries x₁..xₙ, y; if at least k projects are selected then y = 1. W": {
+  "file": "Fall_2026_15_C57-L10.pdf",
+  "page": 19
+ },
+ "c57|l10|min cᵀx + fᵀy, Ux + Vy ≥ b, x ∈ Zᵖ, y ∈ ℝⁿ⁻ᵖ, with unique optimum (x*, y*). Whic": {
+  "file": "practice-exam-2026-solutions.pdf",
+  "page": 7
+ },
+ "095|s1|Why does the course say ML/statistics historically avoided MIO?": {
+  "file": "Lec01_2026.pdf",
+  "page": 7
+ },
+ "095|s1|\"Robustness is more important than optimality\" means:": null,
+ "095|s1|In the Lec 1 SVM preview $\\min_{w,b}\\tfrac12\\|w\\|_2^2 + C\\sum_i\\max\\{1-y_i(w^\\to": {
+  "file": "Lec01_2026.pdf",
+  "page": 19
+ },
+ "095|s2|Using Rec 1's patterns for binaries, which constraint models 'if at least $k$ of": {
+  "file": "Rec 1.pdf",
+  "page": 68
+ },
+ "095|s3|Robustifying $\\ell_2$ regression against label noise $\\|\\delta\\|_2 \\le \\lambda$ ": null,
+ "095|s4|The hard-thresholding operator $H_k(u)$:": {
+  "file": "Lec03_2026.pdf",
+  "page": 10
+ },
+ "095|s4|The dual approach scales with $n$ rather than $p$ because:": {
+  "file": "Lec03_2026.pdf",
+  "page": 16
+ },
+ "095|s4|Which sign do the entries of $\\nabla c(s)$ have?": {
+  "file": "Recitation2_student.pdf",
+  "page": 24
+ },
+ "095|s5|For fixed $\\beta$, the inner max of stable regression equals:": {
+  "file": "Recitation3_student.pdf",
+  "page": 14
+ },
+ "095|s5|Rec 3, ten listings, $k = 5$: the line $1500 + 2.5x$ has residuals $+60, +300, -": {
+  "file": "Recitation3_student.pdf",
+  "page": 18
+ },
+ "095|s5|At that LP optimum the dual variable $\\theta$ equals 200. What is $\\theta$?": {
+  "file": "Lecture-04.pdf",
+  "page": 18
+ },
+ "095|s5|Two luxury units sit far above an otherwise linear rent trend among ten listings": {
+  "file": "Recitation3_student.pdf",
+  "page": 19
+ },
+ "095|s5|HW2 Q2(b): with the misclassification loss $\\mathbb 1\\{y_i(\\beta^\\top x_i + \\bet": {
+  "file": "Lecture-04.pdf",
+  "page": 17
+ },
+ "095|s5|HW2 Q2(d): in the cutting-plane route for stable classification, the separation ": {
+  "file": "Recitation3_student.pdf",
+  "page": 14
+ },
+ "095|s6|Why add $\\tfrac1{2\\gamma}\\sum\\|\\xi_i\\|^2$?": {
+  "file": "Recitation3_student.pdf",
+  "page": 36
+ },
+ "095|s6|Rec 3's rents at 0.5, 1.0, …, 5.0 miles end with chord slope $-100$ per mile bet": {
+  "file": "Recitation3_student.pdf",
+  "page": 33
+ },
+ "095|s6|HW2 Q3, $p = 1$, points sorted $x_1 < \\dots < x_n$. Dividing the forward constra": {
+  "file": "Lecture05.pdf",
+  "page": 6
+ },
+ "095|s6|HW2 Q3(b): with $p = 2$, imposing both directions on Delaunay-neighbour pairs do": {
+  "file": "Lecture05.pdf",
+  "page": 6
+ },
+ "095|s6|Separation for point $i$ with $x_i = 1$, $\\hat\\theta_i = 1$, $\\hat\\xi_i = 0.5$; ": {
+  "file": "Lecture05.pdf",
+  "page": 7
+ },
+ "095|s7|You have $n = 150$ points and believe up to 45 may be arbitrarily corrupted. Fol": {
+  "file": "Recitation4.pdf",
+  "page": 20
+ },
+ "095|s7|Geometrically, LQAD with parameter $q$ finds:": {
+  "file": "Recitation4.pdf",
+  "page": 18
+ },
+ "095|s7|In the SLO step for $|r_{(q)}| = H_q(\\beta) - H_{q+1}(\\beta)$, how are the two p": {
+  "file": "Lecture05.pdf",
+  "page": 26
+ },
+ "095|s8|(Book) In the dual of regularized classification, $\\beta^* = -\\gamma X^\\top\\alph": null,
+ "095|s8|Why is logistic regression fit by Newton–Raphson (IRLS) or SGD instead of in clo": {
+  "file": "Lecture06.pdf",
+  "page": 9
+ },
+ "095|s9|Label-robust LR: point $i$ has margin $m_i = 3$. Flipping its label changes its ": {
+  "file": "Recitation4.pdf",
+  "page": 48
+ },
+ "095|s9|Margins are $(2.5, -1, 0.3, 4, 1.2)$ and $\\Gamma = 2$. Which labels does the adv": {
+  "file": "Recitation4.pdf",
+  "page": 48
+ },
+ "095|s9|For feature-robust LR with $\\|\\Delta x_i\\|_\\infty \\le \\rho$, the worst-case pert": {
+  "file": "Lecture06.pdf",
+  "page": 31
+ },
+ "095|s9|In robust-in-both LR, why doesn't the flip cost simplify to $-m_i$ as in the lab": {
+  "file": "Lecture06.pdf",
+  "page": 38
+ },
+ "095|s11|The robustness component of holistic regression is:": {
+  "file": "Lecture07.pdf",
+  "page": 27
+ },
+ "095|s11|Why does the significance constraint need an extra binary $b_j$?": {
+  "file": "Lecture07.pdf",
+  "page": 31
+ },
+ "095|s11|Compared with Lasso, holistic regression typically produces:": {
+  "file": "Lecture07.pdf",
+  "page": 46
+ },
+ "095|s11|You add an interaction $x_1x_2$ with binary $z_{12}$ and require that it enter o": {
+  "file": "Recitation4.pdf",
+  "page": 75
+ },
+ "095|s11|Each feature $j$ costs $c_j$ to measure, and total cost per patient must not exc": {
+  "file": "Recitation4.pdf",
+  "page": 77
+ },
+ "095|s11|The significance constraint uses $\\tilde\\sigma$ and $(X^\\top X)^{-1}_{jj}$ compu": {
+  "file": "Lecture07.pdf",
+  "page": 31
+ },
+ "095|s14|For large $n$, the probability that a given training row is absent from one boot": {
+  "file": "Lecture08 (1).pdf",
+  "page": 16
+ },
+ "095|s20|Out of sample: SAA cost 1,800, your prescription 1,500, perfect foresight 1,000.": {
+  "file": "Lecture10 (1).pdf",
+  "page": 28
+ },
+ "095|s20|Out of sample, a kernel-regression prescription costs 1,850, SAA 1,700 and perfe": {
+  "file": "Lecture10 (1).pdf",
+  "page": 29
+ },
+ "095|s20|In the shipment example the best prescriptions approach $P\\approx0.46$, not 1, a": {
+  "file": "Lecture10 (1).pdf",
+  "page": 29
+ },
+ "095|s20|How does $P$ differ from $R^2$?": {
+  "file": "Lecture10 (1).pdf",
+  "page": 28
+ },
+ "095|s20|Why is the shipment cost $c(z;y)$ convex in $z$, so the Lec 10 theorem applies?": {
+  "file": "Lecture10 (1).pdf",
+  "page": 15
+ },
+ "095|s21|Propensities are predicted in-sample by an overfit classifier. What goes wrong w": {
+  "file": "Lecture11 (1).pdf",
+  "page": 46
+ },
+ "095|s22|(Book) On the warfarin dosing data (3 dose groups), which method did best?": null,
+ "095|s24|Which three course metrics share the 'fraction of the gap closed relative to a d": {
+  "file": "Lecture10 (1).pdf",
+  "page": 28
+ },
+ "072|l7|For a forest, categoricals are encoded with pd.get_dummies(..., drop_first=False": {
+  "file": "InClass-RM_RegressionTree_2026.pdf",
+  "page": 70
+ },
+ "072|l7|Test SSE is 30. Σ(y − ȳ_train)² over the test set is 60 and Σ(y − ȳ_test)² is 50": {
+  "file": "POSTCLASS_Mazumder_15072_2026_Regression.pdf",
+  "page": 131
+ },
+ "072|l8|A boosted classifier has f₁(x) = −1.0, f₂(x) = 2.0, f₃(x) = 1.0 and η = 0.5. Its": {
+  "file": "Post-Class-RM_2026_Boosting.pdf",
+  "page": 12
+ },
+ "072|l9|A model ŷ = β₀ + 2x₁ + 1x₂ + 0.5x₁x₂ is fit with raw x₂ (mean 6). After refittin": {
+  "file": "Pre-Class-FeatureEng_2026_v1.pdf",
+  "page": 24
+ }
+}

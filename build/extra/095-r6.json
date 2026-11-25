@@ -1,0 +1,485 @@
+{
+ "id": "xr6",
+ "label": "R6",
+ "title": "Recitation 6: Kernels and Optimal Experiments",
+ "short": "Kernels & experiments",
+ "src": "15_095_rec6_student.pdf",
+ "brief": "Recitation 6 builds kernel regression from a gold-mapping example: the kernel picks the building blocks (one hill per borehole) and one convex problem picks their weights, giving nonlinear maps with a unique global optimum. It covers the Matérn kernel, why $\\lambda>0$ is needed, the representer theorem, and choosing kernel family, width $h$ and $\\lambda$ on held-out data, then compares the kernel to linear, convex, CART, kNN and neural-network fits. For decisions it contrasts predicting the objective (fit the cost of every order, then optimize) with predicting the optimizer (fit the order rule directly). The last part designs experiments with few, expensive subjects: optimize the split on mean and spread with a MIO, then flip a coin to assign treatment. Exams would ask for the closed-form weights and the $\\lambda$ limits, why the fit is convex, when kernels are a poor choice, the convexity of fitting a decision rule, and why an optimized split plus a coin beats a pure coin flip.",
+ "kp": [
+  "A fit picks the best function from a set; the kernel chooses the set, one building block per data point.",
+  "Matérn: $K=(1+\\sqrt3 d/h)e^{-\\sqrt3 d/h}$, distance only, rough but continuous (Gaussian smoother, exponential jagged).",
+  "Kernel ridge: $f(p)=\\bar y+\\sum_ja_jK(p_j,p)$, $a=(\\hat K+\\lambda nI)^{-1}(y-\\bar y)$: convex, unique global optimum.",
+  "$\\lambda=0$ interpolates noise (swings −19 to 29 g/t); $\\lambda\\to\\infty$ flattens the map to $\\bar y$.",
+  "Representer theorem: the optimum over all hills anywhere uses only the $n$ hills at the data.",
+  "Choose kernel family, h and λ on held-out data; data rule out wrong families, domain knowledge breaks near-ties.",
+  "Kernel error 0.65 vs 1.17–3.01 for other methods; its lead is largest with few data; a neural net's answer depends on the start.",
+  "Decisions: predict the objective $h(z,x)$ then minimize, or fit the rule $\\hat z(x)$ directly (convex; wins when the rule is simpler than the cost).",
+  "Avoid kernels for huge $n$ ($n^2$ memory, ~$n^3$ solve), jumps, readability needs, or known convex shape.",
+  "Few, expensive subjects: MIO split matching mean and second moment, then a coin picks the treated group."
+ ],
+ "topics": [
+  {
+   "n": "Kernels as building blocks",
+   "x": "Every fit picks the best function from a set; the kernel decides that set by supplying one building block $K(p_i,\\cdot)$ per data point. Building a kernel means answering four questions: what describes a case, when two cases are alike, how smooth the outcome is, and how far likeness reaches (width $h$). For the gold field the deck picks a Matérn kernel: rough but continuous hills that depend only on distance."
+  },
+  {
+   "n": "Kernel ridge regression and the regularizer",
+   "x": "The map is $f(p)=\\bar y+\\sum_j a_jK(p_j,p)$ with weights from $\\min_a \\frac1n\\sum_i(y_i-f(p_i))^2+\\lambda a^\\top\\hat Ka$, solved in closed form $a=(\\hat K+\\lambda nI)^{-1}(y-\\bar y)$. The problem is convex, so the answer is the unique global optimum. $\\lambda=0$ interpolates noisy readings; $\\lambda\\to\\infty$ flattens the map to $\\bar y$; the representer theorem says the $n$ hills at the data suffice."
+  },
+  {
+   "n": "Choosing the kernel, width, and comparing methods",
+   "x": "The kernel family and $h,\\lambda$ are chosen on held-out boreholes (leave-one-out): data rule out wrong families (linear, polynomial, exponential), domain knowledge breaks near-ties (Matérn vs Gaussian). Too narrow a width gives spikes, too wide a nearly flat surface. Against linear, convex, CART, kNN and a neural network, the kernel had the lowest error (0.65) and dug in the richest zone; the network's answer depended on its starting point."
+  },
+  {
+   "n": "Kernels for decisions: objective vs optimizer",
+   "x": "Ordering reagent with cost $c(z;y)=z+5\\max(y-z,0)$: either predict the objective (kernel-weighted past costs $h(z,x)$, then minimize over $z$) or predict the optimizer (fit the order rule $\\hat z(x)=\\sum_i a_iK(x_i,x)$ directly on realized costs). With a too-simple linear kernel $1+xx'$, the cost curve cannot be fit but the best order nearly is linear, so fitting the decision rule wins (6.68 vs 6.81 per block)."
+  },
+  {
+   "n": "When to use kernels",
+   "x": "Use kernels when the relationship is nonlinear, data are few (the kernel's lead was largest at 15–30 boreholes) and one reproducible convex answer is needed. Avoid them when $n$ is huge ($n^2$ entries, about $n^3$ solve), the outcome jumps, a readable rule is needed, or the shape is known convex. Practice: scale features, pick the kernel, tune $h$ and $\\lambda>0$ on held-out data."
+  },
+  {
+   "n": "Optimized experimental design",
+   "x": "When subjects are few and expensive (20 mice), a coin-flip split often leaves groups whose baseline gap exceeds the treatment effect. Instead, a MIO chooses two groups of 10 matching the mean and the second moment (hence spread) of baseline tumor size, then a coin decides which group gets the drug. Over 5,000 simulated runs this cut the wrong-sign rate from 16% to 0.5%."
+  }
+ ],
+ "cards": [
+  {
+   "f": "What does a fit choose, and what does the kernel choose?",
+   "b": "A fit picks the best function from a set: $\\min_{f\\in\\mathcal F}\\sum_i(y_i-f(x_i))^2$. The kernel chooses the set: all combinations of its building blocks.",
+   "x": "Linear regression has two building blocks ($1$ and $x$), so it can only draw lines (planes on a map). More blocks, more shapes.",
+   "t": 0,
+   "ref": "15_095_rec6_student.pdf p.6"
+  },
+  {
+   "f": "The four questions that define a kernel (gold field answers)",
+   "b": "(1) What describes a case? Location $p$. (2) When are two alike? When close: only $d=\\|p-p'\\|$ matters. (3) How smooth? Rough but continuous. (4) How far does likeness reach? Width $h$, set on held-out boreholes.",
+   "x": "Questions 1–3 fix the kernel family; question 4 is a hyperparameter tuned by validation, not chosen by belief.",
+   "t": 0,
+   "ref": "15_095_rec6_student.pdf p.7"
+  },
+  {
+   "f": "Matérn kernel used for the gold map",
+   "b": "$K(p,p')=\\left(1+\\frac{\\sqrt3\\,d}{h}\\right)e^{-\\sqrt3\\,d/h}$, $d=\\|p-p'\\|$. Equals 1 at $d=0$ and decays with distance: one pointed hill per borehole.",
+   "x": "Only the distance matters, not where or which direction. Gaussian = very smooth hills, exponential = jagged; Matérn is the rough-but-continuous middle.",
+   "t": 0,
+   "ref": "15_095_rec6_student.pdf p.9"
+  },
+  {
+   "f": "Kernel ridge model, objective and closed form",
+   "b": "$f(p)=\\bar y+\\sum_j a_jK(p_j,p)$; $\\min_a\\frac1n\\sum_i(y_i-f(p_i))^2+\\lambda a^\\top\\hat Ka$; solution $a=(\\hat K+\\lambda nI)^{-1}(y-\\bar y)$.",
+   "x": "Convex in the n weights, so one answer, the global optimum, every time. Weights can be negative: 16 of 30 hills dig rather than raise.",
+   "t": 1,
+   "ref": "15_095_rec6_student.pdf p.11"
+  },
+  {
+   "f": "Limits of $\\lambda$ in kernel ridge",
+   "b": "$\\lambda=0$: the map passes through every reading and chases noise (two readings 10 m apart, 8.05 and 7.25, make it swing from −19 to 29 g/t). $\\lambda\\to\\infty$: every $a_j\\to0$ and the map flattens to $\\bar y$.",
+   "x": "A tiny $\\lambda=0.0001$ already averages the two readings (7.63). Keep $\\lambda>0$.",
+   "t": 1,
+   "ref": "15_095_rec6_student.pdf p.13"
+  },
+  {
+   "f": "Representer theorem",
+   "b": "For $\\min_{f\\in\\mathcal H}\\frac1n\\sum_i(y_i-f(p_i))^2+\\lambda\\|f\\|_{\\mathcal H}^2$, with $\\mathcal H$ = every combination of hills anywhere, the best $f$ is $f(p)=\\sum_{i=1}^n a_iK(p_i,p)$.",
+   "x": "An optimization over functions becomes one over n weights, solved exactly. This is why hills at the boreholes are enough.",
+   "t": 1,
+   "ref": "15_095_rec6_student.pdf p.14"
+  },
+  {
+   "f": "Choosing the kernel family on held-out data",
+   "b": "Leave-one-out: fit on 29 boreholes, predict the 30th, repeat. Linear 1.67, polynomial 1.71, exponential 1.20, Matérn 3/2 1.06, Matérn 5/2 1.04, Gaussian 1.02.",
+   "x": "Data rule out the wrong families; Matérn vs Gaussian is too close to call with 30 points, so knowledge about rock breaks the tie.",
+   "t": 2,
+   "ref": "15_095_rec6_student.pdf p.16"
+  },
+  {
+   "f": "Effect of the width h",
+   "b": "h = 0.3 km: spikes at the boreholes (error 1.47). h = 2.5 km (cross-validated): finds the rich zones (0.65). h = 40 km: hills wider than the field (1.17).",
+   "x": "Choose $h$ and $\\lambda$ together on held-out boreholes.",
+   "t": 2,
+   "ref": "15_095_rec6_student.pdf p.17"
+  },
+  {
+   "f": "Neural network vs kernel on the same 30 boreholes",
+   "b": "Four network starts gave errors 1.18, 0.88, 0.80, 0.99 and two different mines (5.8 vs 8.3–8.5 g/t). The kernel gives one map, the global optimum.",
+   "x": "Nonconvex training depends on the start; the kernel fit is convex with a unique optimum, so it is reproducible.",
+   "t": 2,
+   "ref": "15_095_rec6_student.pdf p.19"
+  },
+  {
+   "f": "Reagent ordering cost",
+   "b": "$c(z;y)=z+5\\max(y-z,0)$: order $z$ at 1 per unit; the block needs $y$ (one per g/t); each missing unit costs 5 in rush delivery; extra is wasted.",
+   "x": "Running short costs more than an extra unit, so order more than the predicted grade.",
+   "t": 3,
+   "ref": "15_095_rec6_student.pdf p.21"
+  },
+  {
+   "f": "Predict the objective (kernel version)",
+   "b": "Predicted cost $h(z,x)=\\sum_i w_i(x)\\,c(z;y_i)$ with $w(x)=(\\hat K+\\lambda nI)^{-1}\\mathbf k(x)$, $\\mathbf k(x)_i=K(x_i,x)$. New block: $z^\\star=\\arg\\min_z h(z,x_0)$.",
+   "x": "With $K(x,x')=1+xx'$ every fit is a line in $x$, but the cost is flat then steep, so $z^\\star$ is off.",
+   "t": 3,
+   "ref": "15_095_rec6_student.pdf p.22"
+  },
+  {
+   "f": "Predict the optimizer (fit the decision rule)",
+   "b": "$\\hat z(x)=\\sum_i a_iK(x_i,x)$, with $\\min_a\\frac1n\\sum_i c(\\hat z(x_i);y_i)+\\lambda a^\\top\\hat Ka$.",
+   "x": "Convex: orders are linear in a and the cost is convex in the order. The best order is close to a line, so even the simple kernel suffices (cost 6.68 vs 6.81 for predict-the-objective, 6.45 perfect knowledge).",
+   "t": 3,
+   "ref": "15_095_rec6_student.pdf p.23"
+  },
+  {
+   "f": "When to avoid kernels",
+   "b": "$n$ huge ($\\hat K$ has $n^2$ entries, solve about $n^3$); outcome jumps (every hill is continuous, so the map blurs it; a tree splits it); need a readable rule; shape known convex (convex regression, nothing to tune).",
+   "x": "Use them when the relationship is nonlinear, data are few, and you need one reproducible answer.",
+   "t": 4,
+   "ref": "15_095_rec6_student.pdf p.26"
+  },
+  {
+   "f": "Why a coin-flip split can fail with 20 mice",
+   "b": "Average baseline gap between random groups is 7.2 mm³; in more than 1 flip in 4 the gap exceeds the 10 mm³ drug effect.",
+   "x": "A mouse that starts bigger ends bigger, so baseline imbalance is confounded with the treatment effect.",
+   "t": 5,
+   "ref": "15_095_rec6_student.pdf p.34"
+  },
+  {
+   "f": "Match the mean and the spread",
+   "b": "Middle 10 tumors vs 5 smallest + 5 largest: means 104.6 vs 105.6 but SD 8.7 vs 25.9. The optimized split gives SD 18.9 and 19.7.",
+   "x": "If big tumors respond differently, equal means alone still make the comparison unfair.",
+   "t": 5,
+   "ref": "15_095_rec6_student.pdf p.35"
+  },
+  {
+   "f": "Optimize the split, then flip the coin",
+   "b": "$\\min_{x\\in\\{0,1\\}^{20}}|\\mu_A-\\mu_B|+\\rho\\,|m_{2,A}-m_{2,B}|$ s.t. $\\sum_i x_i=10$; $m_2$ = average squared tumor size. Then a coin picks which group gets the drug.",
+   "x": "The MIO picks the groups; the coin keeps randomization: each mouse still has a 50% chance of treatment. Estimates went from −8.5…27.8 (coin) to 2.8…17.0 mm³.",
+   "t": 5,
+   "ref": "15_095_rec6_student.pdf p.37"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "In the 'building blocks' view of fitting, linear regression in one variable uses which blocks?",
+   "o": [
+    "$1$ and $x$, so only lines",
+    "One hill per data point",
+    "$1$, $x$ and $x^2$, so parabolas",
+    "Indicator functions of rectangles"
+   ],
+   "a": 0,
+   "e": "Two building blocks, combinations $a+bx$: lines (planes on a map). Hills per data point are the kernel's blocks; rectangles are CART's.",
+   "d": "easy",
+   "t": 0,
+   "ref": "15_095_rec6_student.pdf p.6"
+  },
+  {
+   "q": "Same random numbers, same width: which kernel expects the most jagged surface along a line?",
+   "o": [
+    "Exponential",
+    "Gaussian",
+    "Matérn",
+    "Linear"
+   ],
+   "a": 0,
+   "e": "Gaussian = very smooth, Matérn = rough but continuous, exponential = jagged. Linear draws a plane, not a random surface.",
+   "d": "easy",
+   "t": 0,
+   "ref": "15_095_rec6_student.pdf p.8"
+  },
+  {
+   "q": "Matérn kernel $K=(1+\\sqrt3 d/h)e^{-\\sqrt3 d/h}$ with $h=2.5$ km. Two boreholes are 2.5 km apart. Their similarity is about:",
+   "o": [
+    "0.48",
+    "0.18",
+    "0.37",
+    "0.61"
+   ],
+   "a": 0,
+   "e": "$d/h=1$: $(1+\\sqrt3)e^{-\\sqrt3}=2.732\\times0.177\\approx0.48$. 0.18 forgets the $(1+\\sqrt3)$ factor; 0.37 is $e^{-1}$.",
+   "d": "medium",
+   "t": 0,
+   "ref": "15_095_rec6_student.pdf p.9"
+  },
+  {
+   "q": "Closed-form weights for $f(p)=\\bar y+\\sum_j a_jK(p_j,p)$ under $\\frac1n\\sum_i(y_i-f(p_i))^2+\\lambda a^\\top\\hat Ka$:",
+   "o": [
+    "$a=(\\hat K+\\lambda nI)^{-1}(y-\\bar y)$",
+    "$a=(\\hat K+\\lambda I)^{-1}\\hat K y$",
+    "$a=\\hat K^{-1}(y-\\bar y)+\\lambda\\mathbf 1$",
+    "$a=(\\hat K^\\top\\hat K+\\lambda I)^{-1}y$"
+   ],
+   "a": 0,
+   "e": "The $n$ comes from the $\\frac1n$ in the loss, and the constant $\\bar y$ is removed before fitting. The distractors drop the $n$, the centering, or use a feature-space ridge formula.",
+   "d": "medium",
+   "t": 1,
+   "ref": "15_095_rec6_student.pdf p.11"
+  },
+  {
+   "q": "A second borehole 10 m from the richest one reads 8.05 vs 7.25 g/t (noise). Refit with λ = 0. What does the map do?",
+   "o": [
+    "Passes through both readings, swinging wildly between them",
+    "Averages the two readings",
+    "Cannot be computed",
+    "Nothing changes"
+   ],
+   "a": 0,
+   "e": "With no regularizer the fit interpolates: it threads both and swings from −19 to 29 g/t. Averaging (7.63) is what a small $\\lambda=0.0001$ does.",
+   "d": "easy",
+   "t": 1,
+   "ref": "15_095_rec6_student.pdf p.13"
+  },
+  {
+   "q": "As $\\lambda\\to\\infty$ in the kernel ridge fit $f(p)=\\bar y+\\sum_j a_jK(p_j,p)$, the map becomes:",
+   "o": [
+    "Flat at $\\bar y$",
+    "Flat at zero",
+    "The interpolating map",
+    "The linear-regression plane"
+   ],
+   "a": 0,
+   "e": "Every $a_j\\to0$; $\\bar y$ is the one part $\\lambda$ does not touch. Zero would be right only without the $\\bar y$ offset.",
+   "d": "medium",
+   "t": 1,
+   "ref": "15_095_rec6_student.pdf p.11"
+  },
+  {
+   "q": "What does the representer theorem buy in kernel regression?",
+   "o": [
+    "An optimization over a whole function space reduces to $n$ weights on hills at the data",
+    "A guarantee that the fit interpolates every data point",
+    "A proof that the Matérn kernel is the optimal kernel",
+    "A rule for choosing the width $h$ without validation"
+   ],
+   "a": 0,
+   "e": "The best $f\\in\\mathcal H$ uses only the $n$ hills at the data points, so it is solved exactly. It says nothing about which kernel or $h$ to use.",
+   "d": "medium",
+   "t": 1,
+   "ref": "15_095_rec6_student.pdf p.14"
+  },
+  {
+   "q": "Why is $\\min_a\\frac1n\\sum_i(y_i-f(p_i))^2+\\lambda a^\\top\\hat Ka$ convex even though the fitted map is highly nonlinear in $p$?",
+   "o": [
+    "$f(p_i)$ is linear in $a$, squared loss is convex, and $a^\\top\\hat Ka$ is a convex quadratic",
+    "The Matérn kernel is a convex function of distance",
+    "The fitted map is a convex function of location",
+    "Regularization makes any loss convex for large $\\lambda$"
+   ],
+   "a": 0,
+   "e": "Nonlinearity is in $p$, not in the decision variables $a$. The Matérn hill is not convex in $d$, and the map has many peaks, so it is not convex in $p$.",
+   "d": "hard",
+   "t": 1,
+   "ref": "15_095_rec6_student.pdf p.11"
+  },
+  {
+   "q": "Fitting the gold map with the linear kernel is equivalent to:",
+   "o": [
+    "Linear regression: a tilted plane",
+    "One dome (degree-2 fit)",
+    "kNN with k = 1",
+    "Gaussian kernel with very large width"
+   ],
+   "a": 0,
+   "e": "The kernel decides the building blocks; the linear kernel gives a tilted plane. The degree-2 polynomial kernel gives one dome.",
+   "d": "easy",
+   "t": 2,
+   "ref": "15_095_rec6_student.pdf p.15"
+  },
+  {
+   "q": "Leave-one-out errors: Matérn 3/2 1.06, Matérn 5/2 1.04, Gaussian 1.02. Why does the deck still use Matérn?",
+   "o": [
+    "The differences are too small to call with 30 boreholes, and rock is rough but continuous",
+    "Gaussian kernels cannot be solved in closed form",
+    "Matérn has the lowest leave-one-out error",
+    "Gaussian kernels are nonconvex to fit"
+   ],
+   "a": 0,
+   "e": "Data rule out the wrong families (linear, polynomial, exponential); knowledge about rock breaks the near-tie. Picking Gaussian purely on 1.02 over-reads noise.",
+   "d": "medium",
+   "t": 2,
+   "ref": "15_095_rec6_student.pdf p.16"
+  },
+  {
+   "q": "Four starts of a neural network on the same 30 boreholes give errors 0.80–1.18 and two different mine sites. The root cause:",
+   "o": [
+    "Training is nonconvex, so the result depends on the start",
+    "The network is underregularized, so it interpolates noise",
+    "30 boreholes are too few for any method to be reproducible",
+    "The network uses a Gaussian activation"
+   ],
+   "a": 0,
+   "e": "Nonconvex fit = local optima that depend on initialization. The kernel fit on the same data is convex and gives one map, so 'too few data' is not the reason.",
+   "d": "medium",
+   "t": 2,
+   "ref": "15_095_rec6_student.pdf p.19"
+  },
+  {
+   "q": "Linear and convex regression both pick mine sites with low true grade (2 and 4.16 g/t). Why are their sites at the field's edge?",
+   "o": [
+    "A plane or a convex bowl over a square field attains its maximum on the boundary",
+    "Both are overfitted to boreholes near the edge",
+    "Both use greedy splits that stop at the boundary",
+    "Their regularizer pushes predictions outward"
+   ],
+   "a": 0,
+   "e": "Maximizing a linear or convex function over a box is attained at its boundary (a corner), so the predicted peak cannot be in an interior rich zone. The kernel's hills can peak inside (8.62 vs best 8.79).",
+   "d": "hard",
+   "t": 2,
+   "ref": "15_095_rec6_student.pdf p.20"
+  },
+  {
+   "q": "Cost $c(z;y)=z+5\\max(y-z,0)$. You order $z=6$ and the block needs $y=8$. Cost?",
+   "o": [
+    "16",
+    "10",
+    "8",
+    "12"
+   ],
+   "a": 0,
+   "e": "$6+5\\cdot2=16$. 10 counts only the shortfall penalty; 8 prices every unit needed at 1.",
+   "d": "easy",
+   "t": 3,
+   "ref": "15_095_rec6_student.pdf p.21"
+  },
+  {
+   "q": "With $c(z;y)=z+5\\max(y-z,0)$ and $y$ random, the cost-minimizing order $z$ is the quantile of $y$ at level:",
+   "o": [
+    "0.8",
+    "5/6 ≈ 0.83",
+    "0.2",
+    "0.5"
+   ],
+   "a": 0,
+   "e": "Raising $z$ by one unit costs 1 and saves 5 when $y>z$: optimal at $P(y>z)=1/5$, the 80th percentile. 5/6 wrongly uses 5 as the net underage cost; the extra unit's price 1 must be subtracted (net 4 vs 1).",
+   "d": "hard",
+   "t": 3,
+   "ref": "15_095_rec6_student.pdf p.21"
+  },
+  {
+   "q": "With kernel $K(x,x')=1+xx'$, why does 'predict the objective' choose a poor order?",
+   "o": [
+    "Every fitted cost is a line in x, but the true cost is flat then steep",
+    "The cost is nonconvex, so the minimization has local optima",
+    "Kernel weights are undefined for a linear kernel",
+    "Past costs are not observed for every order z"
+   ],
+   "a": 0,
+   "e": "Too simple a kernel cannot follow the kinked cost curve, so $z^\\star$ is off. Past costs are computable for every z from the recorded $y_i$.",
+   "d": "medium",
+   "t": 3,
+   "ref": "15_095_rec6_student.pdf p.22"
+  },
+  {
+   "q": "Why is $\\min_a\\frac1n\\sum_i c(\\hat z(x_i);y_i)+\\lambda a^\\top\\hat Ka$ with $\\hat z(x)=\\sum_i a_iK(x_i,x)$ a convex problem?",
+   "o": [
+    "$\\hat z$ is linear in $a$ and $c$ is convex (a max of affine functions) in the order",
+    "$c$ is differentiable and strictly convex in $z$",
+    "$\\hat K$ is diagonal for the kernel $1+xx'$",
+    "The constraint $\\hat z\\ge0$ makes the feasible set convex"
+   ],
+   "a": 0,
+   "e": "Convex function of an affine map is convex, plus a convex regularizer. $c$ has a kink at $z=y$, so it is not differentiable or strictly convex.",
+   "d": "hard",
+   "t": 3,
+   "ref": "15_095_rec6_student.pdf p.23"
+  },
+  {
+   "q": "Doubling the number of data points from 30 to 60 multiplies the size of $\\hat K$ and the solve time by roughly:",
+   "o": [
+    "4 and 8",
+    "2 and 4",
+    "2 and 8",
+    "4 and 16"
+   ],
+   "a": 0,
+   "e": "$\\hat K$ has $n^2$ entries ($2^2=4$) and the solve costs about $n^3$ ($2^3=8$). This is why kernels are avoided for huge $n$.",
+   "d": "medium",
+   "t": 4,
+   "ref": "15_095_rec6_student.pdf p.26"
+  },
+  {
+   "q": "In 'optimize the split, then flip the coin', what is the probability that a given mouse receives the drug?",
+   "o": [
+    "50%",
+    "It depends on its tumor size",
+    "0% or 100%, fixed by the MIO",
+    "10/20 only if it is in group A"
+   ],
+   "a": 0,
+   "e": "The MIO only forms the groups; a coin then decides which group is treated, so each mouse has a 50% chance. That keeps randomization.",
+   "d": "easy",
+   "t": 5,
+   "ref": "15_095_rec6_student.pdf p.37"
+  },
+  {
+   "q": "One coin flip gives group means 108.2 and 102.0 mm³; the drug's true effect is 10 mm³. What is the issue?",
+   "o": [
+    "A 6.2 mm³ baseline gap, comparable to the effect, enters the estimate",
+    "The gap of 6.2 is negligible next to the 10 mm³ effect",
+    "The groups have unequal sizes",
+    "The coin flip is biased toward larger tumors"
+   ],
+   "a": 0,
+   "e": "Bigger tumors end bigger, so the baseline gap mixes into the day-21 comparison. Coin flips are unbiased on average (gap 7.2 on average) but noisy: more than 1 in 4 exceed the effect.",
+   "d": "medium",
+   "t": 5,
+   "ref": "15_095_rec6_student.pdf p.34"
+  },
+  {
+   "q": "The split MIO matches $\\mu$ and $m_2$ (average squared size). Why does that match the spread?",
+   "o": [
+    "Variance $=m_2-\\mu^2$, so equal $\\mu$ and equal $m_2$ give equal variance",
+    "$m_2$ is the standard deviation of each group",
+    "Equal $m_2$ alone forces equal means",
+    "Matching $m_2$ equalizes the largest tumors in each group"
+   ],
+   "a": 0,
+   "e": "Second moment minus squared mean is the variance. Equal $m_2$ alone does not force equal means, which is why both terms appear.",
+   "d": "hard",
+   "t": 5,
+   "ref": "15_095_rec6_student.pdf p.37"
+  }
+ ],
+ "written": [
+  {
+   "q": "State the kernel ridge regression model and objective used for the gold map, give its closed-form solution, and explain what happens as $\\lambda\\to0$ and $\\lambda\\to\\infty$. Why does fitting only $n$ weights not lose generality?",
+   "m": "Model $f(p)=\\bar y+\\sum_j a_jK(p_j,p)$, one kernel hill per borehole. Objective $\\min_a\\frac1n\\sum_i(y_i-f(p_i))^2+\\lambda a^\\top\\hat Ka$, convex in $a$ (prediction linear in $a$, convex quadratic regularizer), with unique optimum $a=(\\hat K+\\lambda nI)^{-1}(y-\\bar y)$. As $\\lambda\\to0$ the map interpolates every reading and chases noise: two readings 10 m apart (8.05, 7.25) make it swing from −19 to 29 g/t, while $\\lambda=0.0001$ averages them (7.63). As $\\lambda\\to\\infty$ all $a_j\\to0$ and the map flattens to $\\bar y$. By the representer theorem, the minimizer of loss $+\\lambda\\|f\\|^2_{\\mathcal H}$ over every combination of hills anywhere is a combination of the $n$ hills at the data, so restricting to $n$ weights is exact.",
+   "k": [
+    "Correct model with $\\bar y$ offset",
+    "Objective with $\\lambda a^\\top\\hat Ka$",
+    "Closed form $(\\hat K+\\lambda nI)^{-1}(y-\\bar y)$",
+    "Convex, unique global optimum",
+    "$\\lambda\\to0$ interpolates noise",
+    "$\\lambda\\to\\infty$ flattens to $\\bar y$",
+    "Representer theorem justifies n weights"
+   ],
+   "t": 1
+  },
+  {
+   "q": "A plant orders reagent $z$ at cost $c(z;y)=z+5\\max(y-z,0)$ given a predicted grade $x$. Compare 'predict the objective' and 'predict the optimizer' with the kernel $K(x,x')=1+xx'$. Why does the second do better, and why is it a convex problem?",
+   "m": "Predict the objective: estimate the cost of every order as $h(z,x)=\\sum_i w_i(x)c(z;y_i)$ with kernel weights $w(x)=(\\hat K+\\lambda nI)^{-1}\\mathbf k(x)$, then order $z^\\star=\\arg\\min_z h(z,x_0)$. With $K=1+xx'$ every fitted cost is linear in $x$, but the true expected cost is flat then steep, so $z^\\star$ is off. Predict the optimizer: fit the rule $\\hat z(x)=\\sum_i a_iK(x_i,x)$ by $\\min_a\\frac1n\\sum_ic(\\hat z(x_i);y_i)+\\lambda a^\\top\\hat Ka$. The best order is close to linear in $x$, so the same simple kernel can represent it; costs per block were 6.68 vs 6.81 (ordering $x$: 7.70; perfect knowledge: 6.45). Convexity: $\\hat z(x_i)$ is linear in $a$, $c$ is convex piecewise linear in $z$, so the composition is convex; the regularizer is a convex quadratic. As $\\lambda$ grows, $a\\to0$ and $\\hat z\\to0$.",
+   "k": [
+    "Describes h(z,x) as kernel-weighted past costs then argmin",
+    "Linear kernel cannot fit the kinked cost",
+    "Describes fitting the decision rule on realized cost",
+    "Best order is near linear, so simple kernel suffices",
+    "Convexity: linear in a composed with convex c, plus convex regularizer",
+    "Cites cost comparison or λ limit"
+   ],
+   "t": 3
+  },
+  {
+   "q": "A lab has 20 mice with measured baseline tumor sizes and can afford no more. Explain why a coin-flip split is risky, formulate the optimized split, and explain why a coin is still flipped afterwards.",
+   "m": "Baseline size predicts final size, so a baseline gap between groups adds directly to the estimated effect. With 20 mice the coin's average gap is 7.2 mm³ and exceeds the 10 mm³ effect in more than 1 flip in 4. Matching means is not enough: groups with equal means (104.6, 105.6) can have SD 8.7 vs 25.9, unfair if large tumors respond differently. MIO: $\\min_{x\\in\\{0,1\\}^{20}}|\\mu_A-\\mu_B|+\\rho|m_{2,A}-m_{2,B}|$ s.t. $\\sum_ix_i=10$, where $m_2$ is the average squared size (equal $\\mu$ and $m_2$ imply equal variance). The optimized split gives equal means (gap 0.0 vs 6.2) and SDs 18.9 vs 19.7. A coin then decides which group gets the drug, so each mouse has a 50% chance of treatment. Over 5,000 simulated runs, estimates ranged 2.8–17.0 mm³ (wrong sign 0.5%) vs −8.5–27.8 (wrong sign 16%) for the coin split.",
+   "k": [
+    "Baseline imbalance confounds the effect estimate",
+    "Cites coin gap vs effect size",
+    "Need to match spread, not just mean",
+    "Correct MIO with cardinality constraint",
+    "Why m2 matching implies spread matching",
+    "Coin assigns treatment after split, preserving randomization",
+    "Cites simulation results"
+   ],
+   "t": 5
+  }
+ ]
+}

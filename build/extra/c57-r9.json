@@ -1,0 +1,443 @@
+{
+ "id": "r9",
+ "label": "R9",
+ "title": "Robust optimization",
+ "short": "Robust optimization reformulations",
+ "src": "Recitation9.pdf",
+ "brief": "Robust optimization requires a constraint $a_i^\\top x\\le b_i$ to hold for every coefficient vector in an uncertainty set $U_i$: infinitely many constraints, or equivalently one ill-structured constraint $\\max_{a_i\\in U_i}a_i^\\top x\\le b_i$. The two-variable example with $U=\\{a\\in\\mathbb R^2_+: a_1+a_2\\le3\\}$ shows the fix: evaluate the inner max analytically ($3\\max\\{x_1,x_2\\}$) and obtain an equivalent LP. For norm uncertainty sets $U_i=\\{\\bar a_i+\\Delta_i^\\top u_i: \\|u_i\\|\\le\\rho\\}$ the inner max is $\\bar a_i^\\top x$ plus a norm penalty that swaps norms: budget ($\\ell_1$) gives $\\rho\\|\\Delta_ix\\|_\\infty$, ellipsoidal ($\\ell_2$) gives $\\rho\\|\\Delta_ix\\|_2$, box ($\\ell_\\infty$) gives $\\rho\\|\\Delta_ix\\|_1$; budget and box linearize to LPs, ellipsoidal is conic. For polyhedral sets $\\{\\bar a_i+u_i: D_iu_i\\le d_i\\}$, LP duality replaces the inner max with its dual min, giving an LP with extra variables $p_i\\ge0$. When that LP is large, a cutting-plane method keeps only the original variables and adds worst-case constraints as they are violated, with special handling when the master is unbounded.",
+ "kp": [
+  "Robust constraint: $a_i^\\top x\\le b_i$ for all $a_i\\in U_i$ $\\iff$ $g_i(x):=\\max_{a_i\\in U_i}a_i^\\top x\\le b_i$; tractable when each $g_i$ has a tractable representation.",
+  "Example: $U=\\{a\\in\\mathbb R^2_+: a_1+a_2\\le3\\}$ gives $g(x)=3\\max\\{x_1,x_2\\}$ for $x\\ge0$, so $a^\\top x\\le6\\ \\forall a\\in U$ becomes $x_1\\le2$, $x_2\\le2$.",
+  "Norm uncertainty set: $U_i=\\{\\bar a_i+\\Delta_i^\\top u_i: \\|u_i\\|\\le\\rho\\}$; $\\ell_1$ = budget, $\\ell_2$ = ellipsoidal, $\\ell_\\infty$ = box.",
+  "Inner max $=\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|$ with the swapped norm: $\\ell_1$ set $\\to\\|\\cdot\\|_\\infty$, $\\ell_2\\to\\|\\cdot\\|_2$, $\\ell_\\infty\\to\\|\\cdot\\|_1$.",
+  "Budget counterpart: $\\bar a_i^\\top x\\pm\\rho(\\Delta_ix)_j\\le b_i$ for all $j$ — an LP with no new variables.",
+  "Box counterpart: auxiliary $t_{ij}$ with $-t_{ij}\\le(\\Delta_ix)_j\\le t_{ij}$ and $\\bar a_i^\\top x+\\rho\\sum_jt_{ij}\\le b_i$ — an LP.",
+  "Ellipsoidal counterpart $\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_2\\le b_i$ is a conic program.",
+  "Polyhedral: robust constraint $\\iff\\exists p_i\\ge0$ with $p_i^\\top D_i=x^\\top$ and $\\bar a_i^\\top x+p_i^\\top d_i\\le b_i$ (LP duality, inner problem feasible and finite).",
+  "Direct polyhedral LP: $n+\\sum_i\\ell_i$ variables and $m(n+1)$ scalar constraints; cutting planes keep $n$ variables and add constraints only when needed.",
+  "Cutting planes: start from the nominal problem, find each row's worst case $\\hat a_i$, add $\\hat a_i^\\top x\\le b_i$ if violated by more than $\\varepsilon$, stop when no cut is added."
+ ],
+ "topics": [
+  {
+   "n": "From nominal to robust constraints",
+   "x": "A nominal constraint uses one known coefficient vector; a robust one must hold for every $a$ in an uncertainty set $U$, which is a semi-infinite family. Writing it as $\\max_{a\\in U}a^\\top x\\le b$ gives one constraint, but an ill-structured one whose left side is itself an optimization problem. The strategy is to replace that max $g_i(x)$ with an equivalent tractable expression."
+  },
+  {
+   "n": "Norm uncertainty sets",
+   "x": "$U_i=\\{\\bar a_i+\\Delta_i^\\top u_i: \\|u_i\\|\\le\\rho\\}$ perturbs the nominal row $\\bar a_i$ through a fixed scaling matrix $\\Delta_i$ and a perturbation $u_i$ of size at most $\\rho$. The $\\ell_1$ ball gives budget uncertainty, the $\\ell_2$ ball ellipsoidal uncertainty and the $\\ell_\\infty$ ball box uncertainty."
+  },
+  {
+   "n": "Robust counterparts for norm sets",
+   "x": "The inner problem is $Z_i^*=\\bar a_i^\\top x+\\max_{\\|u_i\\|\\le\\rho}u_i^\\top(\\Delta_ix)$. Over an $\\ell_1$ ball this is $\\rho\\|\\Delta_ix\\|_\\infty$, over an $\\ell_2$ ball $\\rho\\|\\Delta_ix\\|_2$, over an $\\ell_\\infty$ ball $\\rho\\|\\Delta_ix\\|_1$. These follow from linear algebra, and the $\\ell_1$ and $\\ell_\\infty$ cases also from LP duality."
+  },
+  {
+   "n": "Linearizing the counterparts",
+   "x": "A max of absolute values is at most $b$ iff every term is, so the budget counterpart becomes $2k_i$ linear constraints. A sum of absolute values needs auxiliary $t_{ij}\\ge|(\\Delta_ix)_j|$, giving an LP for box uncertainty. The ellipsoidal counterpart keeps a 2-norm and is conic."
+  },
+  {
+   "n": "Polyhedral uncertainty via LP duality",
+   "x": "For $U_i=\\{\\bar a_i+u_i: D_iu_i\\le d_i\\}$, which need not be a norm ball, the inner max $\\max\\{u_i^\\top x: D_iu_i\\le d_i\\}$ equals the dual $\\min\\{p_i^\\top d_i: p_i^\\top D_i=x^\\top, p_i\\ge0\\}$. A min is at most $b$ iff some feasible $p_i$ achieves it, so the robust problem becomes one LP in $(x,\\{p_i\\})$, at the cost of many extra variables and constraints."
+  },
+  {
+   "n": "Cutting-plane algorithm",
+   "x": "Start with the nominal problem as master, solve, then for each row compute the worst case $\\hat a_i=\\arg\\max_{a_i\\in U_i}a_i^\\top x^*$ and add $\\hat a_i^\\top x\\le b_i$ if it is violated by more than $\\varepsilon$. Stop when no cut is added. An unbounded master does not prove the robust problem unbounded: take $x^*$ with $c^\\top x^*>M$ and cut it off."
+  }
+ ],
+ "cards": [
+  {
+   "f": "Nominal vs robust constraint.",
+   "b": "Nominal: $a^\\top x\\le b$ for one known $a$. Robust: $a^\\top x\\le b$ for all $a\\in U$ (infinitely many constraints), equivalently $\\max_{a\\in U}a^\\top x\\le b$.",
+   "x": "The max form is ill-structured: evaluating its left side means solving an optimization problem.",
+   "t": 0,
+   "ref": "Recitation9.pdf p.3"
+  },
+  {
+   "f": "Robust counterpart of $a_1x_1+a_2x_2\\le6$ for all $a\\in\\{a\\in\\mathbb R^2_+: a_1+a_2\\le3\\}$, with $x\\ge0$.",
+   "b": "$\\max_{a\\in U}a^\\top x=3\\max\\{x_1,x_2\\}$, so the constraint is $x_1\\le2$, $x_2\\le2$.",
+   "x": "Maximizing $x_1+x_2$ drops from 6 (nominal) to 4 (robust).",
+   "t": 0,
+   "ref": "Recitation9.pdf p.5"
+  },
+  {
+   "f": "When does a robust LP have a tractable equivalent?",
+   "b": "When each $g_i(x)=\\max_{a_i\\in U_i}a_i^\\top x$ has a tractable representation; then $\\max c^\\top x$ s.t. $g_i(x)\\le b_i$, $x\\ge0$ is equivalent.",
+   "x": "The work is all in finding a closed form or dual for $g_i$.",
+   "t": 0,
+   "ref": "Recitation9.pdf p.6"
+  },
+  {
+   "f": "Norm uncertainty set: definition.",
+   "b": "$U_i=\\{a_i=\\bar a_i+\\Delta_i^\\top u_i: \\|u_i\\|\\le\\rho,\\ u_i\\in\\mathbb R^{k_i}\\}$: nominal $\\bar a_i$, fixed scaling matrix $\\Delta_i\\in\\mathbb R^{k_i\\times n}$, perturbation $u_i$, size $\\rho\\ge0$.",
+   "x": "$\\rho=0$ recovers the nominal problem.",
+   "t": 1,
+   "ref": "Recitation9.pdf p.8"
+  },
+  {
+   "f": "Which norm gives which named uncertainty set?",
+   "b": "$\\ell_1$ ball: budget. $\\ell_2$ ball: ellipsoidal. $\\ell_\\infty$ ball: box.",
+   "x": "Diamond, disk, square around $\\bar a_i$ (before scaling by $\\Delta_i$).",
+   "t": 1,
+   "ref": "Recitation9.pdf p.10"
+  },
+  {
+   "f": "Inner max for each norm uncertainty set.",
+   "b": "$Z_i^*=\\bar a_i^\\top x+\\max_{\\|u_i\\|\\le\\rho}u_i^\\top(\\Delta_ix)$ $=\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_\\infty$ ($\\ell_1$ set), $+\\rho\\|\\Delta_ix\\|_2$ ($\\ell_2$ set), $+\\rho\\|\\Delta_ix\\|_1$ ($\\ell_\\infty$ set).",
+   "x": "The norms swap: $\\ell_1\\leftrightarrow\\ell_\\infty$, while $\\ell_2$ stays $\\ell_2$.",
+   "t": 2,
+   "ref": "Recitation9.pdf p.20"
+  },
+  {
+   "f": "Budget ($\\ell_1$) uncertainty: robust counterpart.",
+   "b": "$\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_\\infty\\le b_i$.",
+   "x": "The adversary spends its whole budget on the single most damaging coordinate.",
+   "t": 2,
+   "ref": "Recitation9.pdf p.21"
+  },
+  {
+   "f": "Box ($\\ell_\\infty$) uncertainty: robust counterpart.",
+   "b": "$\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_1\\le b_i$.",
+   "x": "Every coordinate moves to its worst extreme at once.",
+   "t": 2,
+   "ref": "Recitation9.pdf p.26"
+  },
+  {
+   "f": "Linearize $\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_\\infty\\le b_i$.",
+   "b": "$\\bar a_i^\\top x+\\rho(\\Delta_ix)_j\\le b_i$ and $\\bar a_i^\\top x-\\rho(\\Delta_ix)_j\\le b_i$ for $j=1,\\dots,k_i$: $2k_i$ linear constraints.",
+   "x": "A max is $\\le b$ iff every term is $\\le b$, so no new variables are needed.",
+   "t": 3,
+   "ref": "Recitation9.pdf p.22"
+  },
+  {
+   "f": "Linearize $\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_1\\le b_i$.",
+   "b": "Add $t_{ij}\\ge0$ with $-t_{ij}\\le(\\Delta_ix)_j\\le t_{ij}$ and $\\bar a_i^\\top x+\\rho\\sum_{j=1}^{k_i}t_{ij}\\le b_i$.",
+   "x": "Unlike the max case, a sum of absolute values needs auxiliary variables.",
+   "t": 3,
+   "ref": "Recitation9.pdf p.27"
+  },
+  {
+   "f": "Tractability by uncertainty set.",
+   "b": "Box: linear. Budget: linear. Polyhedral: linear. Ellipsoidal: conic.",
+   "x": "Only the 2-norm penalty leaves LP territory.",
+   "t": 3,
+   "ref": "Recitation9.pdf p.7"
+  },
+  {
+   "f": "Polyhedral uncertainty set.",
+   "b": "$U_i=\\{\\bar a_i+u_i: D_iu_i\\le d_i,\\ u_i\\in\\mathbb R^n\\}$ with $D_i\\in\\mathbb R^{\\ell_i\\times n}$, $d_i\\in\\mathbb R^{\\ell_i}$. It need not be a norm uncertainty set.",
+   "x": "Example: $\\bar a=(2,2)$ with $-u_1\\le1$, $-u_2\\le1$, $u_1+u_2\\le1$ is a triangle, not a norm ball.",
+   "t": 4,
+   "ref": "Recitation9.pdf p.30"
+  },
+  {
+   "f": "Dualize the polyhedral inner problem.",
+   "b": "Primal: $\\max_{u_i}u_i^\\top x$ s.t. $D_iu_i\\le d_i$. Dual: $\\min_{p_i\\ge0}p_i^\\top d_i$ s.t. $p_i^\\top D_i=x^\\top$. Robust constraint $\\iff\\exists p_i\\ge0$: $p_i^\\top D_i=x^\\top$, $\\bar a_i^\\top x+p_i^\\top d_i\\le b_i$.",
+   "x": "'max $\\le b$' is hard; 'min $\\le b$' just needs one feasible witness $p_i$.",
+   "t": 4,
+   "ref": "Recitation9.pdf p.34"
+  },
+  {
+   "f": "Size of the direct polyhedral LP.",
+   "b": "$n+\\sum_i\\ell_i$ variables; $m(n+1)$ scalar constraints excluding nonnegativity ($n$ equalities from $p_i^\\top D_i=x^\\top$ plus one robust inequality per row). For $m=1000$, $n=100$, $\\ell_i=200$: 200,100 variables, 101,000 constraints.",
+   "x": "Cutting planes keep just the $n=100$ original variables in the master.",
+   "t": 4,
+   "ref": "Recitation9.pdf p.37"
+  },
+  {
+   "f": "Cutting-plane algorithm steps.",
+   "b": "1) Master = nominal problem ($\\hat U_i=\\{\\bar a_i\\}$). 2) Solve: infeasible $\\Rightarrow$ robust infeasible; unbounded $\\Rightarrow$ pick $x^*$ with $c^\\top x^*>M$; else optimal $x^*$. 3) For each row, $\\hat a_i=\\arg\\max_{a_i\\in U_i}a_i^\\top x^*$; if $\\hat a_i^\\top x^*>b_i+\\varepsilon$, add $\\hat a_i^\\top x\\le b_i$. 4) No cut $\\Rightarrow$ $x^*$ robust optimal; else back to 2.",
+   "x": "Master infeasibility is conclusive because the master is a relaxation.",
+   "t": 5,
+   "ref": "Recitation9.pdf p.38"
+  },
+  {
+   "f": "Why not stop when the master is unbounded?",
+   "b": "The master has only some of the robust constraints, so it can be unbounded while the robust problem is finite. Pick $x^*$ with $c^\\top x^*>M$ and add any violated worst-case cut to block the direction.",
+   "x": "Example: $\\max_{x\\ge0}x$ s.t. $a_1x\\le1$, $a_1\\in[0,1]$: nominal $a_1=0$ is unbounded; $x^*=101$ yields the cut $x\\le1$, then $x^*=1$ is robust optimal.",
+   "t": 5,
+   "ref": "Recitation9.pdf p.39"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "For a continuous uncertainty set $U$, the robust constraint $a^\\top x\\le b\\ \\ \\forall a\\in U$ represents:",
+   "o": [
+    "Infinitely many linear constraints, one per $a\\in U$",
+    "A single linear constraint at the nominal $\\bar a$",
+    "A constraint required to hold with high probability",
+    "An integrality restriction on $x$"
+   ],
+   "a": 0,
+   "e": "The constraint must hold for every point of $U$, a semi-infinite family. Enforcing only the nominal $\\bar a$ is the non-robust problem.",
+   "d": "easy",
+   "t": 0,
+   "src": "Recitation9.pdf p.3"
+  },
+  {
+   "q": "Nominal: $\\max x_1+x_2$ s.t. $x_1+x_2\\le6$, $x\\ge0$. With $U=\\{a\\in\\mathbb R^2_+: a_1+a_2\\le3\\}$ and constraint $a^\\top x\\le6\\ \\forall a\\in U$, what is the robust optimal value?",
+   "o": [
+    "4",
+    "6",
+    "3",
+    "2"
+   ],
+   "a": 0,
+   "e": "Worst case $3\\max\\{x_1,x_2\\}\\le6$ gives $x_1\\le2$, $x_2\\le2$, so the optimum is $(2,2)$ with value 4. 6 is the nominal value, ignoring uncertainty.",
+   "d": "medium",
+   "t": 0,
+   "src": "Recitation9.pdf p.5"
+  },
+  {
+   "q": "For $x\\ge0$, why is $\\max\\{a_1x_1+a_2x_2: a\\in\\mathbb R^2_+, a_1+a_2\\le3\\}=3\\max\\{x_1,x_2\\}$?",
+   "o": [
+    "A linear function over the triangle peaks at a vertex: $(3,0)$, $(0,3)$ or $(0,0)$",
+    "The max is attained at the centroid $(1,1)$",
+    "The adversary always splits evenly, $a=(1.5,1.5)$",
+    "By symmetry the max is $1.5(x_1+x_2)$"
+   ],
+   "a": 0,
+   "e": "The vertices give $3x_1$, $3x_2$ and 0, so the max is $3\\max\\{x_1,x_2\\}$. An even split gives $1.5(x_1+x_2)\\le3\\max\\{x_1,x_2\\}$, never more.",
+   "d": "medium",
+   "t": 0,
+   "src": "Recitation9.pdf p.5"
+  },
+  {
+   "q": "The uncertainty set $\\{\\bar a+\\Delta^\\top u: \\|u\\|_\\infty\\le\\rho\\}$ is called:",
+   "o": [
+    "Box uncertainty",
+    "Budget uncertainty",
+    "Ellipsoidal uncertainty",
+    "Polyhedral-dual uncertainty"
+   ],
+   "a": 0,
+   "e": "The $\\ell_\\infty$ ball is a box. Budget uncertainty is the $\\ell_1$ ball.",
+   "d": "easy",
+   "t": 1,
+   "src": "Recitation9.pdf p.16"
+  },
+  {
+   "q": "For $x=(3,-4)$, what are $\\|x\\|_1$, $\\|x\\|_2$, $\\|x\\|_\\infty$?",
+   "o": [
+    "7, 5, 4",
+    "7, 5, 3",
+    "$-1$, 5, 4",
+    "7, 25, 4"
+   ],
+   "a": 0,
+   "e": "$|3|+|-4|=7$; $\\sqrt{9+16}=5$; $\\max\\{3,4\\}=4$. The $-1$ forgets absolute values; 25 forgets the square root.",
+   "d": "easy",
+   "t": 1,
+   "src": "Recitation9.pdf p.9"
+  },
+  {
+   "q": "With budget uncertainty $\\|u_i\\|_1\\le\\rho$, the inner max $\\max_{a_i\\in U_i}a_i^\\top x$ equals:",
+   "o": [
+    "$\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_\\infty$",
+    "$\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_1$",
+    "$\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_2$",
+    "$\\bar a_i^\\top x$"
+   ],
+   "a": 0,
+   "e": "A linear function over the $\\ell_1$ ball peaks at a vertex $\\pm\\rho e_j$, picking the largest $|(\\Delta_ix)_j|$. The $\\ell_1$ penalty belongs to box uncertainty: the norms swap.",
+   "d": "medium",
+   "t": 2,
+   "src": "Recitation9.pdf p.21"
+  },
+  {
+   "q": "Box uncertainty with $\\bar a=(2,1)$, $\\Delta=I$, $\\rho=0.5$, and $x=(1,3)$. What is the worst-case value of $a^\\top x$?",
+   "o": [
+    "7",
+    "6.5",
+    "5",
+    "$5+0.5\\sqrt{10}\\approx6.58$"
+   ],
+   "a": 0,
+   "e": "$\\bar a^\\top x+\\rho\\|x\\|_1=5+0.5\\cdot4=7$. 6.5 uses $\\|x\\|_\\infty=3$ (budget uncertainty); 6.58 uses $\\|x\\|_2$ (ellipsoidal).",
+   "d": "medium",
+   "t": 2,
+   "src": "Recitation9.pdf p.26"
+  },
+  {
+   "q": "With $\\Delta=I$ and the same $\\rho$, how do the worst-case values $\\max_{a\\in U}a^\\top x$ compare across budget, ellipsoidal and box sets, for any $x$?",
+   "o": [
+    "budget $\\le$ ellipsoidal $\\le$ box",
+    "box $\\le$ ellipsoidal $\\le$ budget",
+    "All three are equal",
+    "It depends on the signs of $x$"
+   ],
+   "a": 0,
+   "e": "The penalties are $\\rho\\|x\\|_\\infty\\le\\rho\\|x\\|_2\\le\\rho\\|x\\|_1$, matching the nesting $\\ell_1$ ball $\\subseteq\\ell_2$ ball $\\subseteq\\ell_\\infty$ ball. Box is the most conservative, not the least.",
+   "d": "hard",
+   "t": 2,
+   "src": "Recitation9.pdf p.20"
+  },
+  {
+   "q": "Without adding variables, how many linear constraints replace one budget-robust constraint $\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_\\infty\\le b_i$ with $\\Delta_i\\in\\mathbb R^{k_i\\times n}$?",
+   "o": [
+    "$2k_i$",
+    "$k_i$",
+    "$2^{k_i}$",
+    "$n$"
+   ],
+   "a": 0,
+   "e": "One constraint for each sign and each component: $\\bar a_i^\\top x\\pm\\rho(\\Delta_ix)_j\\le b_i$, $j=1,\\dots,k_i$. $k_i$ misses the negative side of the absolute value.",
+   "d": "medium",
+   "t": 3,
+   "src": "Recitation9.pdf p.22"
+  },
+  {
+   "q": "Which robust counterpart is NOT a linear program?",
+   "o": [
+    "Ellipsoidal ($\\ell_2$) uncertainty",
+    "Box ($\\ell_\\infty$) uncertainty",
+    "Budget ($\\ell_1$) uncertainty",
+    "Polyhedral uncertainty"
+   ],
+   "a": 0,
+   "e": "The $\\rho\\|\\Delta_ix\\|_2$ term makes it a conic program. Box and budget linearize, and polyhedral dualizes into an LP.",
+   "d": "easy",
+   "t": 3,
+   "src": "Recitation9.pdf p.25"
+  },
+  {
+   "q": "In the box LP, $t_{ij}$ satisfy $-t_{ij}\\le(\\Delta_ix)_j\\le t_{ij}$ and $\\bar a_i^\\top x+\\rho\\sum_jt_{ij}\\le b_i$. Why is this equivalent to $\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_1\\le b_i$?",
+   "o": [
+    "Feasible $t$ have $t_{ij}\\ge|(\\Delta_ix)_j|$, and $t_{ij}=|(\\Delta_ix)_j|$ is always allowed, so $x$ is feasible in one iff in the other",
+    "At the optimum the solver sets every $t_{ij}=0$",
+    "$t_{ij}$ equals the dual variable of row $i$",
+    "$\\rho>0$ forces $\\sum_jt_{ij}=\\|\\Delta_ix\\|_\\infty$"
+   ],
+   "a": 0,
+   "e": "The two bounds give $t_{ij}\\ge|(\\Delta_ix)_j|$, so $\\sum_jt_{ij}\\ge\\|\\Delta_ix\\|_1$ with equality achievable; hence the same $x$ are feasible. Setting $t_{ij}=0$ would force $\\Delta_ix=0$.",
+   "d": "hard",
+   "t": 3,
+   "src": "Recitation9.pdf p.28"
+  },
+  {
+   "q": "A polyhedral uncertainty set $\\{\\bar a_i+u_i: D_iu_i\\le d_i\\}$:",
+   "o": [
+    "need not be a norm uncertainty set",
+    "is always a box",
+    "is always an ellipsoid",
+    "always gives a conic counterpart"
+   ],
+   "a": 0,
+   "e": "The recitation's triangle around $\\bar a=(2,2)$ is polyhedral but not a norm ball. Its counterpart is an LP, not conic.",
+   "d": "easy",
+   "t": 4,
+   "src": "Recitation9.pdf p.31"
+  },
+  {
+   "q": "What is the LP dual of the inner problem $\\max_u u^\\top x$ s.t. $Du\\le d$, with $u$ free?",
+   "o": [
+    "$\\min_{p\\ge0}p^\\top d$ s.t. $p^\\top D=x^\\top$",
+    "$\\min_{p}p^\\top d$ s.t. $p^\\top D\\ge x^\\top$",
+    "$\\max_{p\\ge0}p^\\top d$ s.t. $p^\\top D=x^\\top$",
+    "$\\min_{p\\le0}p^\\top d$ s.t. $p^\\top D=x^\\top$"
+   ],
+   "a": 0,
+   "e": "$\\le$ constraints in a max give $p\\ge0$; free primal variables give dual equalities. $p^\\top D\\ge x^\\top$ would correspond to $u\\ge0$.",
+   "d": "medium",
+   "t": 4,
+   "src": "Recitation9.pdf p.34"
+  },
+  {
+   "q": "Why can the robust constraint $\\bar a^\\top x+\\max\\{u^\\top x: Du\\le d\\}\\le b$ be replaced by '$\\exists p\\ge0$ with $p^\\top D=x^\\top$ and $\\bar a^\\top x+p^\\top d\\le b$'?",
+   "o": [
+    "Strong duality makes the inner max equal the dual min, and a min is $\\le c$ iff some dual-feasible $p$ achieves $\\le c$",
+    "Weak duality alone makes the max equal every feasible dual objective",
+    "$p$ is the worst-case perturbation $u$",
+    "$D$ is invertible, so $p$ is unique"
+   ],
+   "a": 0,
+   "e": "Weak duality shows any feasible $p$ certifies the bound (sufficiency); strong duality, assuming the inner problem is feasible with a finite optimum, gives necessity. Weak duality alone only gives an upper bound, not equality.",
+   "d": "hard",
+   "t": 4,
+   "src": "Recitation9.pdf p.34"
+  },
+  {
+   "q": "A direct polyhedral LP has $m=50$ rows, $n=20$ variables and $\\ell_i=30$ for every $i$. How many variables and scalar constraints (excluding nonnegativity)?",
+   "o": [
+    "1,520 variables; 1,050 constraints",
+    "1,500 variables; 1,000 constraints",
+    "1,520 variables; 1,000 constraints",
+    "70 variables; 1,050 constraints"
+   ],
+   "a": 0,
+   "e": "Variables $n+\\sum_i\\ell_i=20+50\\cdot30=1520$. Constraints $m(n+1)=50\\cdot21=1050$: $n$ equalities from $p_i^\\top D_i=x^\\top$ plus one robust inequality per row. 1,000 forgets the robust inequalities.",
+   "d": "medium",
+   "t": 4,
+   "src": "Recitation9.pdf p.37"
+  },
+  {
+   "q": "How is the cutting-plane master problem initialized?",
+   "o": [
+    "As the nominal problem, $\\hat U_i=\\{\\bar a_i\\}$",
+    "With every extreme point of each $U_i$",
+    "With no constraints at all",
+    "As the dual of the robust LP"
+   ],
+   "a": 0,
+   "e": "Step 1 uses the nominal rows; cuts are added only when violated. Listing all extreme points is what the method avoids.",
+   "d": "easy",
+   "t": 5,
+   "src": "Recitation9.pdf p.38"
+  },
+  {
+   "q": "Cutting planes, row 1 with $U_1=\\{a\\in\\mathbb R^2_+: a_1+a_2\\le3\\}$, $b_1=6$, $\\varepsilon=0$. The master returns $x^*=(4,1)$. What happens next?",
+   "o": [
+    "Add the cut $3x_1\\le6$ (worst case $\\hat a=(3,0)$ gives 12 > 6)",
+    "Add the cut $3x_2\\le6$",
+    "Stop: $x^*$ is robust optimal",
+    "Declare the robust problem infeasible"
+   ],
+   "a": 0,
+   "e": "$\\hat a=\\arg\\max_{a\\in U}(4a_1+a_2)=(3,0)$ with value $12>6$, so add $3x_1\\le6$, i.e. $x_1\\le2$. The vertex $(0,3)$ gives only 3 and is not the worst case.",
+   "d": "hard",
+   "t": 5,
+   "src": "Recitation9.pdf p.38"
+  },
+  {
+   "q": "Why can't the cutting-plane method stop when the master is unbounded?",
+   "o": [
+    "The master holds only some robust constraints, so it can be unbounded while the robust problem is finite",
+    "An unbounded master proves the robust problem is unbounded",
+    "It means the uncertainty set is empty",
+    "The method needs an infeasible master first"
+   ],
+   "a": 0,
+   "e": "The master is a relaxation; missing cuts can leave a direction open. In the recitation example the nominal $a_1=0$ master is unbounded, yet the robust optimum is $x^*=1$.",
+   "d": "medium",
+   "t": 5,
+   "src": "Recitation9.pdf p.39"
+  }
+ ],
+ "written": [
+  {
+   "q": "Consider $\\max c^\\top x$ s.t. $\\max_{a_i\\in U_i}a_i^\\top x\\le b_i$ ($i=1,\\dots,m$), $x\\ge0$, with box uncertainty $U_i=\\{\\bar a_i+\\Delta_i^\\top u_i: \\|u_i\\|_\\infty\\le\\rho\\}$. (a) Derive the robust counterpart of row $i$. (b) Rewrite the whole problem as an LP. (c) How do (a)-(b) change for budget ($\\ell_1$) and ellipsoidal ($\\ell_2$) sets, and which remain LPs?",
+   "m": "(a) $\\max_{a_i\\in U_i}a_i^\\top x=\\bar a_i^\\top x+\\max_{\\|u_i\\|_\\infty\\le\\rho}u_i^\\top(\\Delta_ix)$. Each $u_{ij}\\in[-\\rho,\\rho]$ independently, so choose $u_{ij}=\\rho\\,\\mathrm{sign}((\\Delta_ix)_j)$, giving $\\rho\\sum_j|(\\Delta_ix)_j|=\\rho\\|\\Delta_ix\\|_1$. Row $i$: $\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_1\\le b_i$. (b) $\\max_{x,t}c^\\top x$ s.t. $\\bar a_i^\\top x+\\rho\\sum_{j=1}^{k_i}t_{ij}\\le b_i$, $-t_{ij}\\le(\\Delta_ix)_j\\le t_{ij}$ for all $i,j$, $x\\ge0$, $t\\ge0$ — an LP, equivalent because feasible $t_{ij}\\ge|(\\Delta_ix)_j|$ and equality is attainable. (c) Budget: penalty $\\rho\\|\\Delta_ix\\|_\\infty$, linearized as $\\bar a_i^\\top x\\pm\\rho(\\Delta_ix)_j\\le b_i$ for all $j$ ($2k_i$ constraints, no new variables) — LP. Ellipsoidal: $\\bar a_i^\\top x+\\rho\\|\\Delta_ix\\|_2\\le b_i$ — a conic program, not an LP.",
+   "k": [
+    "Splits inner max into $\\bar a_i^\\top x+\\max u_i^\\top(\\Delta_ix)$",
+    "Derives $\\rho\\|\\Delta_ix\\|_1$ via sign choice",
+    "Correct LP with auxiliary $t_{ij}$ and both-sided bounds",
+    "Justifies equivalence of the $t$ reformulation",
+    "Budget gives $\\rho\\|\\Delta_ix\\|_\\infty$ and $2k_i$ linear constraints",
+    "Ellipsoidal gives a conic program"
+   ],
+   "t": 3
+  },
+  {
+   "q": "A robust LP has $m$ rows with polyhedral uncertainty $U_i=\\{\\bar a_i+u_i: D_iu_i\\le d_i\\}$, $D_i\\in\\mathbb R^{\\ell_i\\times n}$. (a) Use LP duality to give a finite reformulation of row $i$, and state the assumption you need. (b) Count variables and scalar constraints of the resulting LP and evaluate for $m=1000$, $n=100$, $\\ell_i=200$. (c) Describe the cutting-plane alternative: master, separation subproblem for this set, stopping rule, and the unbounded-master case.",
+   "m": "(a) Inner primal: $\\max_{u_i}u_i^\\top x$ s.t. $D_iu_i\\le d_i$; dual: $\\min_{p_i\\ge0}p_i^\\top d_i$ s.t. $p_i^\\top D_i=x^\\top$. Assuming the inner problem is feasible with a finite optimum, strong duality equates them, so row $i$ holds iff $\\exists p_i\\ge0$ with $p_i^\\top D_i=x^\\top$ and $\\bar a_i^\\top x+p_i^\\top d_i\\le b_i$. The robust problem becomes $\\max_{x,\\{p_i\\}}c^\\top x$ s.t. those constraints for all $i$, $x\\ge0$. (b) Variables $n+\\sum_i\\ell_i$; constraints $m(n+1)$ ($n$ equalities plus one inequality per row). For the data: $100+1000\\cdot200=200{,}100$ variables and $1000\\cdot101=101{,}000$ constraints. (c) Master starts as the nominal LP in the $n$ original variables. Given $x^*$, for each row solve the LP $\\max_{u_i}(\\bar a_i+u_i)^\\top x^*$ s.t. $D_iu_i\\le d_i$ to get $\\hat a_i$; if $\\hat a_i^\\top x^*>b_i+\\varepsilon$, add $\\hat a_i^\\top x\\le b_i$. Stop when no cut is added; $x^*$ is then robust optimal. If the master is infeasible, the robust problem is infeasible. If it is unbounded, do not stop: choose $x^*$ with $c^\\top x^*>M$, separate as above and add violated cuts to block the direction.",
+   "k": [
+    "Correct primal and dual inner problems",
+    "Existence of $p_i\\ge0$ reformulation with feasibility/finite-optimum assumption",
+    "Variable count $n+\\sum_i\\ell_i$ and constraint count $m(n+1)$",
+    "Numbers 200,100 and 101,000",
+    "Master initialized with nominal rows",
+    "Separation is an LP over $U_i$; add violated cuts with tolerance",
+    "Correct handling of infeasible and unbounded master"
+   ],
+   "t": 4
+  }
+ ]
+}

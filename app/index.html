@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Carrel">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#fbf8f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)">
+<title>Carrel</title>
+<meta name="description" content="An MBAn study hall: lecture quizzes linked to their slides, deadlines, tasks and recovery in one local app.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23173b3d'/%3E%3Cpath d='M9 23V9h14' stroke='%23f2ead8' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/fonts/fonts.css">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="css/app.css">
+<script>
+  // theme before first paint, so a night session never flashes white
+  (function () { try { var t = JSON.parse(localStorage.getItem('carrel.settings') || '{}').theme; if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {} document.documentElement.classList.add('js'); })();
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="bar" id="bar">
+  <div class="bar__inner">
+    <button class="iconbtn mhead__menu" type="button" id="mMenu" aria-label="Menu" aria-expanded="false" aria-controls="mMenuPanel">
+      <svg viewBox="0 0 20 20" aria-hidden="true" class="ic"><path d="M3.5 6h13M3.5 10h13M3.5 14h13"/></svg>
+    </button>
+    <span class="mhead__title" id="mTitle"></span>
+    <span class="mhead__right" id="mRight"></span>
+    <a class="wordmark" href="#/today" aria-label="Carrel, today">Carrel</a>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#/today" data-nav="today"><svg viewBox="0 0 20 20" aria-hidden="true" class="ic tabs__ic"><path d="M3.5 9.5L10 4l6.5 5.5M5 8.5v8h3.5v-4.5h3v4.5H15v-8"/></svg><span class="tabs__label">Today</span></a>
+      <a href="#/study" data-nav="study"><svg viewBox="0 0 20 20" aria-hidden="true" class="ic tabs__ic"><path d="M10 6.2C8.6 4.9 6.6 4.5 3.5 4.5v11c3.1 0 5.1.4 6.5 1.7 1.4-1.3 3.4-1.7 6.5-1.7v-11c-3.1 0-5.1.4-6.5 1.7zM10 6.2v11"/></svg><span class="tabs__label">Study</span></a>
+      <a href="#/calendar" data-nav="calendar"><svg viewBox="0 0 20 20" aria-hidden="true" class="ic tabs__ic"><rect x="3.5" y="4.5" width="13" height="12" rx="1.5"/><path d="M3.5 8.5h13M7 3v3M13 3v3"/></svg><span class="tabs__label">Calendar</span></a>
+      <a href="#/tasks" data-nav="tasks"><svg viewBox="0 0 20 20" aria-hidden="true" class="ic tabs__ic"><path d="M4 10.5l4 4 8-9"/></svg><span class="tabs__label">Tasks</span></a>
+      <a href="#/recovery" data-nav="recovery"><svg viewBox="0 0 20 20" aria-hidden="true" class="ic tabs__ic"><path d="M3 8h5l-5 6.5h5M10.5 6.5h3.5l-3.5 4.5h3.5M15.5 3.5h2.5l-2.5 3h2.5"/></svg><span class="tabs__label">Recovery</span></a>
+    </nav>
+    <div class="bar__tools">
+      <button class="iconbtn" type="button" id="openSearch" aria-label="Search everything" title="Search  (/)">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13 13l4.5 4.5"/></svg>
+      </button>
+      <button class="iconbtn" type="button" id="openChat" aria-label="Open Claude" title="Claude  (C)">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 4.5h13v9h-7l-4 3v-3h-2z"/></svg>
+      </button>
+      <button class="iconbtn" type="button" id="openSettings" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="2.6"/><path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- phones: the menu that replaces the top bar's tools; filled by app.js -->
+<div class="mmenu" id="mMenuPanel" role="dialog" aria-modal="true" aria-labelledby="mMenuTitle" hidden></div>
+
+<div class="shell" id="shell">
+  <main id="main" tabindex="-1">
+    <noscript><p class="noscript">Carrel runs in the browser and needs JavaScript. Start it with <code>Start Carrel.cmd</code> and allow scripts for localhost.</p></noscript>
+  </main>
+
+  <aside class="drawer" id="drawer" aria-label="Side panel" hidden>
+    <div class="drawer__grip" id="drawerGrip" role="separator" aria-orientation="vertical" aria-label="Resize side panel" tabindex="0"></div>
+    <div class="drawer__head">
+      <div class="seg" role="tablist" aria-label="Side panel view">
+        <button type="button" role="tab" data-pane="slides" id="paneTabSlides" aria-controls="paneSlides">Slides</button>
+        <button type="button" role="tab" data-pane="chat" id="paneTabChat" aria-controls="paneChat">Claude</button>
+        <button type="button" role="tab" data-pane="tasks" id="paneTabTasks" aria-controls="paneTasks">Tasks</button>
+        <button type="button" role="tab" data-pane="notes" id="paneTabNotes" aria-controls="paneNotes">Notes</button>
+      </div>
+      <button class="iconbtn" type="button" id="closeDrawer" aria-label="Close side panel" title="Close  (Esc)">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg>
+      </button>
+    </div>
+    <section class="pane" id="paneSlides" data-pane="slides" role="tabpanel" aria-labelledby="paneTabSlides"></section>
+    <section class="pane" id="paneChat" data-pane="chat" role="tabpanel" aria-labelledby="paneTabChat"></section>
+    <section class="pane" id="paneTasks" data-pane="tasks" role="tabpanel" aria-labelledby="paneTabTasks"></section>
+    <section class="pane" id="paneNotes" data-pane="notes" role="tabpanel" aria-labelledby="paneTabNotes"></section>
+  </aside>
+</div>
+
+<div class="seltool" id="seltool" role="toolbar" aria-label="Selection actions" hidden>
+  <button type="button" data-act="explain">Explain concept</button>
+  <button type="button" data-act="ask">Ask Claude</button>
+  <button type="button" data-act="slide" hidden>Find slide</button>
+</div>
+
+<section class="explain" id="explain" role="dialog" aria-modal="false" aria-labelledby="explainTitle" hidden>
+  <div class="explain__head">
+    <h2 id="explainTitle">Explain</h2>
+    <button class="iconbtn" type="button" data-close aria-label="Close explanation"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+  </div>
+  <div class="explain__body prose" id="explainBody" aria-live="polite"></div>
+  <div class="explain__foot">
+    <button class="btn btn--primary" type="button" id="explainDeeper">Go deeper in chat</button>
+    <button class="btn" type="button" id="explainSlide" hidden>Open the slide</button>
+  </div>
+</section>
+
+<dialog class="modal" id="settings" aria-labelledby="settingsTitle"></dialog>
+<dialog class="modal modal--search" id="search" aria-labelledby="searchTitle"></dialog>
+<dialog class="modal" id="welcome" aria-labelledby="welcomeTitle"></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="visually-hidden" id="srStatus" role="status" aria-live="polite"></div>
+
+<script src="vendor/katex/katex.min.js" defer></script>
+<script src="vendor/pdfjs/pdf.min.js" defer></script>
+<script src="data/courses.js" defer></script>
+<script src="data/vault.js" defer></script>
+<script src="js/core.js" defer></script>
+<script src="js/md.js" defer></script>
+<script src="js/claude.js" defer></script>
+<script src="js/drawer.js" defer></script>
+<script src="js/study.js" defer></script>
+<script src="js/plan.js" defer></script>
+<script src="js/generate.js" defer></script>
+<script src="js/newdecks.js" defer></script>
+<script src="js/focus.js" defer></script>
+<script src="js/calendar.js" defer></script>
+<script src="js/tasks.js" defer></script>
+<script src="js/sync.js" defer></script>
+<script src="js/recovery.js" defer></script>
+<script src="js/today.js" defer></script>
+<script src="js/search.js" defer></script>
+<script src="js/sheet.js" defer></script>
+<script src="js/walk.js" defer></script>
+<script src="js/review.js" defer></script>
+<script src="js/grades.js" defer></script>
+<script src="js/backplan.js" defer></script>
+<script src="js/notes.js" defer></script>
+<script src="js/welcome.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>

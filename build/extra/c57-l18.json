@@ -1,0 +1,788 @@
+{
+ "id": "l18",
+ "label": "L18",
+ "title": "Unconstrained minimization: gradient descent",
+ "short": "Gradient descent",
+ "src": "Fall_2026_15_C57-L18.pdf",
+ "brief": "Unconstrained minimization $\\min_{x\\in\\mathbb R^n} f(x)$ is the core problem of non-linear optimization, and its techniques carry over to constrained algorithms. A local minimum of a $C^2$ function must satisfy $\\nabla f(x^*)=0$ and $\\nabla^2 f(x^*)\\succeq 0$, while $\\nabla f(x^*)=0$ with $\\nabla^2 f(x^*)\\succ 0$ is sufficient; for a convex $f$ every stationary point is a global minimum, as in ridge regression where $\\beta^*=(X^\\top X+\\lambda I)^{-1}X^\\top y$. Descent methods move along directions with $\\nabla f(x^k)^\\top d^k<0$; gradient descent takes $d^k=-\\nabla f(x^k)$ and produces monotonically decreasing objective values. For an $M$-smooth convex $f$ with constant step $\\alpha\\le 1/M$ it converges sub-linearly, $f(x^k)-z^*\\le\\|x^0-x^*\\|^2/(2\\alpha k)$, and adding $m$-strong convexity gives linear convergence with factor $1-m/M$. Speed in practice depends on the step-size rule (constant, diminishing, exact or backtracking line search), the starting point, and the conditioning of the Hessian, which diagonal scaling and norm-based steepest descent address.",
+ "kp": [
+  "Local min of a $C^2$ $f$ $\\Rightarrow$ $\\nabla f(x^*)=0$ and $\\nabla^2 f(x^*)\\succeq 0$: necessary, not sufficient.",
+  "$\\nabla f(x^*)=0$ and $\\nabla^2 f(x^*)\\succ 0$ $\\Rightarrow$ local min; indefinite Hessian $\\Rightarrow$ not a local min; PSD only $\\Rightarrow$ undecided.",
+  "Convex differentiable $f$: $x^*$ is a global min iff $\\nabla f(x^*)=0$.",
+  "Ridge: $\\nabla^2 f=X^\\top X+\\lambda I\\succ 0$, so $\\beta^*=(X^\\top X+\\lambda I)^{-1}X^\\top y$ is the global min.",
+  "Descent direction: $\\nabla f(x^k)^\\top d^k<0$; gradient descent uses $d^k=-\\nabla f(x^k)$.",
+  "Order $p$ / rate $\\beta$: linear ($a^k$), sub-linear ($1/k$), super-linear ($(1/k)^k$), quadratic ($a^{2^k}$).",
+  "$M$-smooth + convex, $\\alpha\\le 1/M$: $f(x^k)-z^*\\le\\|x^0-x^*\\|^2/(2\\alpha k)$ (sub-linear).",
+  "$M$-smooth + $m$-strongly convex, $\\alpha=1/M$: $f(x^k)-z^*\\le(1-m/M)^k(f(x^0)-z^*)$, i.e. $O(\\frac{M}{m}\\log\\frac1\\varepsilon)$ iterations.",
+  "Step size: small = slow, large = unstable; exact line search = fewer, costlier iterations; backtracking = cheaper, more iterations.",
+  "Ill-conditioning ($\\kappa\\gg1$) slows GD (Kantorovich factor $((\\kappa-1)/(\\kappa+1))^2$); diagonal scaling $x^{k+1}=x^k-\\alpha_kD\\nabla f(x^k)$ re-units the problem."
+ ],
+ "topics": [
+  {
+   "n": "Optimality conditions for unconstrained minimization",
+   "x": "A local minimum of a twice continuously differentiable $f$ must have zero gradient and a PSD Hessian; zero gradient plus a PD Hessian guarantees a local minimum. The PSD case is inconclusive, as $f=x_1^3+x_2^2$ at the origin shows."
+  },
+  {
+   "n": "Convexity and global optimality",
+   "x": "For a differentiable convex function the first-order condition $f(x)\\ge f(x^*)+\\nabla f(x^*)^\\top(x-x^*)$ turns any stationary point into a global minimum. Ridge regression is a convex quadratic with PD Hessian $X^\\top X+\\lambda I$, so its stationary point is the closed-form global solution; in non-convex problems finding global minima is very hard."
+  },
+  {
+   "n": "Descent methods and rates of convergence",
+   "x": "A generic descent method repeats: pick $d^k$ with $\\nabla f(x^k)^\\top d^k<0$, pick $\\alpha_k>0$, update $x^{k+1}=x^k+\\alpha_kd^k$, until e.g. $\\|\\nabla f(x^k)\\|\\le\\eta$. Gradient descent sets $d^k=-\\nabla f(x^k)$. Speed is measured by the order $p$ and rate $\\beta$ in $\\lim|z_{k+1}-z^*|/|z_k-z^*|^p=\\beta$."
+  },
+  {
+   "n": "Smoothness, strong convexity and GD guarantees",
+   "x": "$M$-smoothness (Lipschitz gradient) gives a quadratic upper bound and $m$-strong convexity a quadratic lower bound on $f$. With these, GD on a convex $M$-smooth $f$ converges sub-linearly, and on an $m$-strongly convex one linearly with factor $1-m/M$."
+  },
+  {
+   "n": "M-smoothness: the intuition",
+   "x": "The gradient changes by at most $M$ per unit of distance, so the curvature of $f$ is capped at $M$. Geometrically, at every point $f$ sits under a parabola of curvature $M$ that touches it there. Minimising that parabola is exactly a gradient step of $1/M$, which is why $\\alpha=1/M$ always decreases $f$."
+  },
+  {
+   "n": "m-strong convexity: the intuition",
+   "x": "$f$ curves upward at least as fast as $\\frac m2\\|x\\|^2$: it lies above its tangent plane plus a bowl of curvature $m$. That floor rules out flat regions, gives a unique minimiser, and makes a small gradient a certificate of near-optimality. With smoothness, $f$ is sandwiched between two parabolas, and the ratio $M/m$ sets how fast gradient descent converges."
+  },
+  {
+   "n": "Gradient descent for ridge regression",
+   "x": "Each GD step moves every coefficient by $\\alpha\\sum_ix_{ij}(y_i-\\hat y_i)$ and shrinks it by $\\alpha\\lambda\\beta_j$. Because the loss is convex, GD reaches the global minimum (wine-price example: 46 samples, 7 features); the step size drives the speed."
+  },
+  {
+   "n": "Step sizes and initialization",
+   "x": "Step-size rules: constant, diminishing ($\\alpha_k\\to0$, $\\sum\\alpha_k=\\infty$), exact line search, and backtracking (Armijo) line search. Small steps are slow, large steps unstable. For non-convex $f$ the starting point decides which stationary point GD reaches, so multiple starts help."
+  },
+  {
+   "n": "Conditioning, scaling and steepest descent",
+   "x": "The condition number $\\kappa=\\lambda_{\\max}/\\lambda_{\\min}$ of the (Hessian) matrix controls GD speed; Kantorovich bounds the per-step contraction by $((\\kappa-1)/(\\kappa+1))^2$ for quadratics with exact line search. Diagonal scaling $D=SS^\\top$ is GD on $g(y)=f(Sy)$, and steepest descent under different norms gives GD ($\\ell_2$), scaled GD (quadratic norm) and coordinate descent ($\\ell_1$)."
+  }
+ ],
+ "cards": [
+  {
+   "f": "Necessary optimality conditions for a local minimum of a $C^2$ function.",
+   "b": "$\\nabla f(x^*)=0$ (first order) and $\\nabla^2 f(x^*)\\succeq 0$ (second order). Proof: $\\nabla f(x^*)^\\top d\\ge0$ for all $d$, applied to $\\pm e_i$; then a second-order Taylor expansion gives $d^\\top\\nabla^2f(x^*)d\\ge0$.",
+   "x": "Necessary only: a PSD Hessian at a stationary point does not certify a minimum.",
+   "t": 0,
+   "ref": "Fall_2026_15_C57-L18.pdf p.6"
+  },
+  {
+   "f": "Second-order sufficient condition for a local minimum.",
+   "b": "If $\\nabla f(x^*)=0$ and $\\nabla^2 f(x^*)\\succ 0$, then $x^*$ is a local minimum: by continuity the Hessian stays PD in a ball $B(x^*,\\rho)$, so the Taylor remainder $\\frac12y^\\top\\nabla^2f(x^*+z)y>0$ there.",
+   "x": "Strict PD is what makes it sufficient; PSD is not enough.",
+   "t": 0,
+   "ref": "Fall_2026_15_C57-L18.pdf p.9"
+  },
+  {
+   "f": "Why is the origin not a local min of $f(x)=x_1^3+x_2^2$?",
+   "b": "$\\nabla f(0)=0$ and $\\nabla^2 f(0)=\\mathrm{diag}(0,2)\\succeq0$, so both necessary conditions hold, yet $f(-\\varepsilon,0)=-\\varepsilon^3<0=f(0)$.",
+   "x": "The standard counterexample to treating PSD as sufficient.",
+   "t": 0,
+   "ref": "Fall_2026_15_C57-L18.pdf p.11"
+  },
+  {
+   "f": "$f(x)=\\frac12x_1^2+x_1x_2+2x_2^2-4x_1-4x_2-x_2^3$: classify $(4,0)$ and $(3,1)$.",
+   "b": "$\\nabla^2 f=\\begin{pmatrix}1&1\\\\1&4-6x_2\\end{pmatrix}$. At $(4,0)$: $\\begin{pmatrix}1&1\\\\1&4\\end{pmatrix}\\succ0$ $\\Rightarrow$ local min. At $(3,1)$: $\\begin{pmatrix}1&1\\\\1&-2\\end{pmatrix}$, det $=-3$ $\\Rightarrow$ indefinite, not a local min.",
+   "x": "Both points are stationary; only the Hessian separates them.",
+   "t": 0,
+   "ref": "Fall_2026_15_C57-L18.pdf p.10"
+  },
+  {
+   "f": "Global optimality for a differentiable convex function.",
+   "b": "$x^*$ is a global minimum iff $\\nabla f(x^*)=0$. Proof: convexity gives $f(x)\\ge f(x^*)+\\nabla f(x^*)^\\top(x-x^*)=f(x^*)$ for all $x$.",
+   "x": "Convexity turns the local first-order test into a global certificate.",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L18.pdf p.12"
+  },
+  {
+   "f": "Ridge regression: gradient, Hessian and optimal $\\beta$.",
+   "b": "$f(\\beta)=\\frac12\\|y-X\\beta\\|^2+\\frac\\lambda2\\|\\beta\\|^2$; $\\nabla f=-X^\\top(y-X\\beta)+\\lambda\\beta$; $\\nabla^2 f=X^\\top X+\\lambda I\\succ0$ since $u^\\top(X^\\top X+\\lambda I)u=\\|Xu\\|^2+\\lambda\\|u\\|^2>0$; $\\beta^*=(X^\\top X+\\lambda I)^{-1}X^\\top y$.",
+   "x": "$\\lambda>0$ makes the Hessian PD even when $X^\\top X$ is singular.",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L18.pdf p.13"
+  },
+  {
+   "f": "At a stationary point, what does each Hessian case tell you?",
+   "b": "$\\succ0$: local minimum. $\\succeq0$: can be a local minimum (undecided). Indefinite: not a local minimum. If $f$ is convex, any stationary point is global.",
+   "x": "In non-convex problems, identifying global minima is very hard.",
+   "t": 1,
+   "ref": "Fall_2026_15_C57-L18.pdf p.14"
+  },
+  {
+   "f": "Generic descent method: the direction condition and why $f$ decreases.",
+   "b": "Choose $d^k$ with $\\nabla f(x^k)^\\top d^k<0$ and $\\alpha_k>0$, set $x^{k+1}=x^k+\\alpha_kd^k$. To first order $f(x^{k+1})\\approx f(x^k)+\\alpha_k\\nabla f(x^k)^\\top d^k<f(x^k)$ when $\\alpha_k$ is small enough.",
+   "x": "Stop when e.g. $\\|\\nabla f(x^k)\\|\\le\\eta$; the method seeks a stationary point, not a certified minimum.",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L18.pdf p.16"
+  },
+  {
+   "f": "Order $p$ and rate $\\beta$ of convergence, with the four standard cases.",
+   "b": "$\\lim_k |z_{k+1}-z^*|/|z_k-z^*|^p=\\beta$. Linear: $p=1$, $0<\\beta<1$ ($a^k$). Sub-linear: $p=1$, $\\beta=1$ ($1/k$). Super-linear: $p=1$, $\\beta=0$ ($(1/k)^k$). Quadratic: $p=2$ ($a^{2^k}$).",
+   "x": "Sub-linear and linear share $p=1$; the rate $\\beta$ tells them apart.",
+   "t": 2,
+   "ref": "Fall_2026_15_C57-L18.pdf p.18"
+  },
+  {
+   "f": "Define $M$-smooth and $m$-strongly convex, and the quadratic bounds each implies.",
+   "b": "$M$-smooth: $\\|\\nabla f(x)-\\nabla f(y)\\|\\le M\\|x-y\\|$, so $f(y)\\le f(x)+\\nabla f(x)^\\top(y-x)+\\frac M2\\|y-x\\|^2$. $m$-strongly convex: $f(x)-\\frac m2\\|x\\|^2$ convex, so $f(y)\\ge f(x)+\\nabla f(x)^\\top(y-x)+\\frac m2\\|y-x\\|^2$.",
+   "x": "$M$ caps curvature from above, $m$ guarantees it from below.",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "f": "GD convergence for $M$-smooth convex $f$, constant step $\\alpha\\le1/M$.",
+   "b": "$f(x^k)-z^*\\le\\frac{1}{2\\alpha k}\\|x^0-x^*\\|^2$: sub-linear, $O(1/k)$. Within $\\varepsilon$ after at most $\\|x^0-x^*\\|^2/(2\\alpha\\varepsilon)$ iterations.",
+   "x": "Worse start, smaller $\\alpha$ or tighter $\\varepsilon$ all mean more iterations.",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L18.pdf p.24"
+  },
+  {
+   "f": "GD convergence for $M$-smooth, $m$-strongly convex $f$ with $\\alpha=1/M$.",
+   "b": "$f(x^k)-z^*\\le(1-\\frac mM)^k(f(x^0)-z^*)$: linear with $c=1-m/M$; $O(\\frac Mm\\log\\frac1\\varepsilon)$ iterations. Proof: smoothness gives $f(x^{k+1})\\le f(x^k)-\\frac1{2M}\\|\\nabla f(x^k)\\|^2$, strong convexity gives $z^*\\ge f(x^k)-\\frac1{2m}\\|\\nabla f(x^k)\\|^2$.",
+   "x": "$M/m$ acts like a condition number: the closer to 1, the faster.",
+   "t": 3,
+   "ref": "Fall_2026_15_C57-L18.pdf p.25"
+  },
+  {
+   "f": "GD update for one ridge-regression coefficient and its interpretation.",
+   "b": "$\\beta_j^{k+1}\\leftarrow\\beta_j^k+\\alpha\\sum_i x_{ij}(y_i-\\sum_l x_{il}\\beta_l^k)-\\alpha\\lambda\\beta_j^k$. If a prediction is below its target and $x_{ij}>0$, $\\beta_j$ increases; the $\\lambda$ term penalizes any growth.",
+   "x": "Iterative model adjustment driven by residuals, shrunk by the regularizer.",
+   "t": 6,
+   "ref": "Fall_2026_15_C57-L18.pdf p.28"
+  },
+  {
+   "f": "Backtracking line search: the procedure.",
+   "b": "Start with $\\alpha=s$. Accept if $f(x^k+\\alpha d^k)\\le f(x^k)+\\sigma\\alpha\\nabla f(x^k)^\\top d^k$ with $0<\\sigma\\le\\frac12$; otherwise set $\\alpha\\leftarrow\\beta\\alpha$, $0<\\beta<1$. Result: $\\alpha_k=s\\beta^{m_k}$.",
+   "x": "Exact line search: fewer iterations, more work each; backtracking: cheaper iterations, more of them.",
+   "t": 7,
+   "ref": "Fall_2026_15_C57-L18.pdf p.44"
+  },
+  {
+   "f": "Condition number and the Kantorovich bound for quadratics.",
+   "b": "$\\kappa(Q)=\\lambda_{\\max}/\\lambda_{\\min}\\ge1$. For $f=\\frac12x^\\top Qx-c^\\top x+b$, $Q\\succ0$, GD with exact line search: $f(x^{k+1})-z^*\\le\\left(\\frac{\\kappa-1}{\\kappa+1}\\right)^2(f(x^k)-z^*)$.",
+   "x": "$\\kappa\\approx1$: fast; $\\kappa\\gg1$: slow zig-zag. Beyond quadratics, $\\kappa(\\nabla^2f(x^*))\\lesssim M/m$.",
+   "t": 8,
+   "ref": "Fall_2026_15_C57-L18.pdf p.49"
+  },
+  {
+   "f": "Diagonal scaling and norm-based steepest descent.",
+   "b": "Scaled GD $x^{k+1}=x^k-\\alpha_kD\\nabla f(x^k)$, $D=SS^\\top\\succ0$, is GD on $g(y)=f(Sy)$. Steepest descent $d^k\\in\\arg\\min\\{\\nabla f(x^k)^\\top v:\\|v\\|=1\\}$: $\\ell_2$ gives GD, $\\|z\\|_P$ gives $-P^{-1}\\nabla f$, $\\ell_1$ gives coordinate descent.",
+   "x": "Example: $D=\\mathrm{diag}(1/1000,1)$ cut $\\kappa$ from 1,668 to 4.4 and iterations from 68 to 20.",
+   "t": 8,
+   "ref": "Fall_2026_15_C57-L18.pdf p.53"
+  },
+  {
+   "f": "Intuition: what does $M$-smoothness say about $f$?",
+   "b": "The gradient changes by at most $M$ per unit of distance, so curvature is capped at $M$. At every point $f$ sits under a parabola of curvature $M$ that touches it there.",
+   "x": "A ceiling, not a floor: $\\sin x$ is 1-smooth and not convex.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "f": "Why is $\\alpha=1/M$ the natural step for an $M$-smooth $f$?",
+   "b": "It minimises the quadratic upper bound at $x^k$: $x^{k+1}=x^k-\\frac1M\\nabla f(x^k)$ guarantees $f(x^{k+1})\\le f(x^k)-\\frac1{2M}\\|\\nabla f(x^k)\\|^2$.",
+   "x": "On $\\frac M2x^2$, any $\\alpha>2/M$ diverges.",
+   "t": 4,
+   "ref": "Fall_2026_15_C57-L18.pdf p.26"
+  },
+  {
+   "f": "Intuition: what does $m$-strong convexity say about $f$?",
+   "b": "$f$ curves up at least as fast as $\\frac m2\\|x\\|^2$: it lies above its tangent plane plus a bowl of curvature $m$. No flat stretches, so the minimiser exists and is unique.",
+   "x": "Strictly convex is not strongly convex: $e^x$ flattens out to the left.",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "f": "The gradient as an optimality certificate under strong convexity",
+   "b": "$f(x)-z^*\\le\\frac1{2m}\\|\\nabla f(x)\\|^2$: a small gradient proves near-optimality, because a bowl of curvature $\\ge m$ cannot be flat far from its bottom.",
+   "x": "Fails for plain convexity: $x^4$ is so flat at the bottom that its gap $x^4$ dwarfs its squared slope $16x^6$.",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L18.pdf p.26"
+  },
+  {
+   "f": "The parabola sandwich and the rate it gives",
+   "b": "$f(x)+\\nabla f^\\top(y-x)+\\frac m2\\|y-x\\|^2\\le f(y)\\le f(x)+\\nabla f^\\top(y-x)+\\frac M2\\|y-x\\|^2$. Upper bound: each step drops $f$ by $\\frac1{2M}\\|\\nabla f\\|^2$. Lower bound: $\\|\\nabla f\\|^2\\ge2m(f-z^*)$. Together: $f(x^{k+1})-z^*\\le(1-\\frac mM)(f(x^k)-z^*)$.",
+   "x": "$m\\le M$ always; $M/m$ is the condition number that sets the speed.",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L18.pdf p.26"
+  },
+  {
+   "f": "Hessian test for $M$ and $m$ (twice-differentiable $f$)",
+   "b": "$M$-smooth: all Hessian eigenvalues lie in $[-M,M]$. $m$-strongly convex: all eigenvalues are at least $m$, i.e. $\\nabla^2f\\succeq mI$. For a quadratic $\\frac12x^\\top Qx$: $M=\\lambda_{\\max}(Q)$, $m=\\lambda_{\\min}(Q)$.",
+   "x": "Standard fact, beyond the slides. Ridge: $m\\ge\\lambda$, $M=\\lambda_{\\max}(X^\\top X)+\\lambda$.",
+   "t": 5,
+   "ref": "Fall_2026_15_C57-L18.pdf p.49"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "$x^*$ is a local minimum of a twice continuously differentiable $f$. Which must hold?",
+   "o": [
+    "$\\nabla f(x^*)=0$ and $\\nabla^2 f(x^*)\\succeq0$",
+    "$\\nabla f(x^*)=0$ and $\\nabla^2 f(x^*)\\succ0$",
+    "$\\nabla^2 f(x^*)\\succ0$ only",
+    "$\\nabla f(x^*)=0$ and $f$ convex"
+   ],
+   "a": 0,
+   "e": "The necessary conditions are a zero gradient and a PSD Hessian. A PD Hessian is the sufficient condition; a local minimum can have a singular Hessian (the $f'=0$, $f''=0$ case).",
+   "d": "easy",
+   "t": 0,
+   "src": "Fall_2026_15_C57-L18.pdf p.6"
+  },
+  {
+   "q": "For $f(x)=\\frac12x_1^2+x_1x_2+2x_2^2-4x_1-4x_2-x_2^3$, what is $\\nabla^2 f$ at the stationary point $(3,1)$ and what does it imply?",
+   "o": [
+    "$\\begin{pmatrix}1&1\\\\1&-2\\end{pmatrix}$, indefinite: not a local minimum",
+    "$\\begin{pmatrix}1&1\\\\1&4\\end{pmatrix}$, PD: local minimum",
+    "$\\begin{pmatrix}1&1\\\\1&-2\\end{pmatrix}$, negative definite: local maximum",
+    "$\\begin{pmatrix}1&1\\\\1&-2\\end{pmatrix}$, PSD: possibly a local minimum"
+   ],
+   "a": 0,
+   "e": "$\\partial^2f/\\partial x_2^2=4-6x_2=-2$; det $=1\\cdot(-2)-1=-3<0$, so the eigenvalues have opposite signs. It cannot be negative definite because the $(1,1)$ entry is $+1$.",
+   "d": "medium",
+   "t": 0,
+   "src": "Fall_2026_15_C57-L18.pdf p.10"
+  },
+  {
+   "q": "For $f(x)=x_1^3+x_2^2$ at $x=0$, which statement is correct?",
+   "o": [
+    "Both second-order necessary conditions hold, but $0$ is not a local minimum",
+    "$0$ is a local minimum because $\\nabla^2 f(0)\\succeq0$",
+    "$0$ fails the first-order condition",
+    "$0$ is a strict local maximum"
+   ],
+   "a": 0,
+   "e": "$\\nabla f(0)=(0,0)$ and $\\nabla^2f(0)=\\mathrm{diag}(0,2)\\succeq0$, but $f(-\\varepsilon,0)=-\\varepsilon^3<0$. PSD at a stationary point is necessary, not sufficient.",
+   "d": "hard",
+   "t": 0,
+   "src": "Fall_2026_15_C57-L18.pdf p.11"
+  },
+  {
+   "q": "$f$ is continuously differentiable and convex, and $\\nabla f(x^*)=0$. What can you conclude?",
+   "o": [
+    "$x^*$ is a global minimum",
+    "$x^*$ is a local minimum that may not be global",
+    "Nothing until you check $\\nabla^2f(x^*)\\succ0$",
+    "$x^*$ is a saddle point unless $f$ is strictly convex"
+   ],
+   "a": 0,
+   "e": "Convexity gives $f(x)\\ge f(x^*)+\\nabla f(x^*)^\\top(x-x^*)=f(x^*)$ for all $x$. No second-order check is needed; strict convexity would only add uniqueness.",
+   "d": "easy",
+   "t": 1,
+   "src": "Fall_2026_15_C57-L18.pdf p.12"
+  },
+  {
+   "q": "Ridge regression with one feature: $x=(1,2)^\\top$, $y=(1,2)^\\top$, $\\lambda=5$, objective $\\frac12\\|y-X\\beta\\|^2+\\frac\\lambda2\\beta^2$. What is $\\beta^*$?",
+   "o": [
+    "$0.5$",
+    "$1$",
+    "$5/6$",
+    "$0.2$"
+   ],
+   "a": 0,
+   "e": "$\\beta^*=(X^\\top X+\\lambda)^{-1}X^\\top y=5/(5+5)=0.5$. $\\beta=1$ is the unregularized least-squares fit, which ignores $\\lambda$.",
+   "d": "medium",
+   "t": 1,
+   "src": "Fall_2026_15_C57-L18.pdf p.13"
+  },
+  {
+   "q": "In a generic descent method, $d^k$ is a valid descent direction at $x^k$ when:",
+   "o": [
+    "$\\nabla f(x^k)^\\top d^k<0$",
+    "$\\nabla f(x^k)^\\top d^k>0$",
+    "$\\|d^k\\|=1$",
+    "$d^k$ is orthogonal to $\\nabla f(x^k)$"
+   ],
+   "a": 0,
+   "e": "A negative directional derivative makes $f(x^k+\\alpha d^k)<f(x^k)$ for small $\\alpha$. An orthogonal direction has zero first-order change, so no guaranteed decrease.",
+   "d": "easy",
+   "t": 2,
+   "src": "Fall_2026_15_C57-L18.pdf p.16"
+  },
+  {
+   "q": "The sequence $z_k=1/k\\to0$ converges with:",
+   "o": [
+    "Order $p=1$, rate $\\beta=1$: sub-linear",
+    "Order $p=1$, rate $\\beta=1/2$: linear",
+    "Order $p=1$, rate $\\beta=0$: super-linear",
+    "Order $p=2$: quadratic"
+   ],
+   "a": 0,
+   "e": "$|z_{k+1}|/|z_k|=k/(k+1)\\to1$, so $\\beta=1$: sub-linear. Linear convergence needs the ratio to settle strictly below 1, as for $a^k$.",
+   "d": "medium",
+   "t": 2,
+   "src": "Fall_2026_15_C57-L18.pdf p.18"
+  },
+  {
+   "q": "Which sequence (with $0<a<1$) converges quadratically?",
+   "o": [
+    "$z_k=a^{2^k}$",
+    "$z_k=a^k$",
+    "$z_k=(1/k)^k$",
+    "$z_k=1/k$"
+   ],
+   "a": 0,
+   "e": "$z_{k+1}/z_k^2=a^{2^{k+1}}/a^{2^{k+1}}=1$, so $p=2$. $(1/k)^k$ is super-linear: ratio $\\to0$ with $p=1$, but not order 2.",
+   "d": "medium",
+   "t": 2,
+   "src": "Fall_2026_15_C57-L18.pdf p.18"
+  },
+  {
+   "q": "Gradient descent on an $M$-smooth convex $f$ with $M=4$, step $\\alpha=1/M$, and $\\|x^0-x^*\\|^2=8$. How many iterations does the lecture's bound need for $f(x^k)-z^*\\le0.01$?",
+   "o": [
+    "1,600",
+    "400",
+    "6,400",
+    "16"
+   ],
+   "a": 0,
+   "e": "$k\\ge\\|x^0-x^*\\|^2/(2\\alpha\\varepsilon)=8/(2\\cdot0.25\\cdot0.01)=1{,}600$. Using $\\alpha=1$ instead of $1/4$ gives 400; the bound grows as $1/\\varepsilon$, not $\\log(1/\\varepsilon)$.",
+   "d": "hard",
+   "t": 3,
+   "src": "Fall_2026_15_C57-L18.pdf p.24"
+  },
+  {
+   "q": "$f$ is $M$-smooth and $m$-strongly convex with $M=10$, $m=1$; GD uses $\\alpha=1/M$ and $f(x^0)-z^*=100$. The guaranteed bound on $f(x^2)-z^*$ is:",
+   "o": [
+    "$81$",
+    "$90$",
+    "$1$",
+    "$99$"
+   ],
+   "a": 0,
+   "e": "$c=1-m/M=0.9$, so $f(x^2)-z^*\\le0.9^2\\cdot100=81$. 90 is the one-step bound; 1 would use $c=m/M$.",
+   "d": "hard",
+   "t": 3,
+   "src": "Fall_2026_15_C57-L18.pdf p.25"
+  },
+  {
+   "q": "Which summary of gradient-descent guarantees matches the lecture?",
+   "o": [
+    "Convex + $M$-smooth: sub-linear; adding $m$-strong convexity: linear with $c=1-m/M$",
+    "Convex + $M$-smooth: linear; strongly convex: quadratic",
+    "Both cases converge quadratically with a constant step",
+    "Strongly convex: sub-linear with $c=m/M$"
+   ],
+   "a": 0,
+   "e": "The bounds are $O(1/k)$ under convexity and $(1-m/M)^k$ under strong convexity. Quadratic convergence is not claimed for gradient descent.",
+   "d": "medium",
+   "t": 3,
+   "src": "Fall_2026_15_C57-L18.pdf p.25"
+  },
+  {
+   "q": "A function $f$ is $m$-strongly convex if:",
+   "o": [
+    "$f(x)-\\frac m2\\|x\\|^2$ is convex",
+    "$\\|\\nabla f(x)-\\nabla f(y)\\|\\le m\\|x-y\\|$",
+    "$f(x)+\\frac m2\\|x\\|^2$ is convex",
+    "$f(y)\\le f(x)+\\nabla f(x)^\\top(y-x)+\\frac m2\\|y-x\\|^2$"
+   ],
+   "a": 0,
+   "e": "Strong convexity means convexity survives subtracting a quadratic. The Lipschitz-gradient condition and the quadratic upper bound describe $M$-smoothness instead.",
+   "d": "easy",
+   "t": 3,
+   "src": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "q": "In the GD update for ridge coefficient $\\beta_j$, observation $i$ has $x_{ij}>0$ and prediction below its target. Its effect on $\\beta_j$ is:",
+   "o": [
+    "$\\alpha x_{ij}(y_i-\\hat y_i)>0$ pushes $\\beta_j$ up, while $-\\alpha\\lambda\\beta_j$ shrinks it",
+    "It pushes $\\beta_j$ down, since residuals enter with a minus sign",
+    "None, because only the $\\lambda$ term changes $\\beta_j$",
+    "It pushes $\\beta_j$ up, and $\\lambda$ amplifies the increase"
+   ],
+   "a": 0,
+   "e": "The update adds $\\alpha\\sum_ix_{ij}(y_i-\\hat y_i)$ and subtracts $\\alpha\\lambda\\beta_j^k$. A positive residual with positive feature raises $\\beta_j$; the regularizer penalizes any increase.",
+   "d": "medium",
+   "t": 6,
+   "src": "Fall_2026_15_C57-L18.pdf p.29"
+  },
+  {
+   "q": "What is the core trade-off in choosing a constant step size?",
+   "o": [
+    "Too small: slow progress per iteration; too large: unstable behavior",
+    "Larger is always faster",
+    "Smaller always finds the global minimum",
+    "Step size only matters for non-convex $f$"
+   ],
+   "a": 0,
+   "e": "The lecture shows slow convergence with small steps and instability with large ones, with faster convergence in between. A small step does not rescue a non-convex problem from local minima.",
+   "d": "easy",
+   "t": 7,
+   "src": "Fall_2026_15_C57-L18.pdf p.32"
+  },
+  {
+   "q": "You run gradient descent on a non-convex $f$. What does the lecture recommend?",
+   "o": [
+    "Run from several starting points in parallel and keep the best output",
+    "Use one start point; GD always finds the global minimum",
+    "Use a diminishing step size to guarantee a global minimum",
+    "Increase the tolerance $\\eta$ until the result stops changing"
+   ],
+   "a": 0,
+   "e": "GD finds a stationary point that depends on the initialization; multistart keeps the best. No step-size rule guarantees a global minimum without convexity.",
+   "d": "medium",
+   "t": 7,
+   "src": "Fall_2026_15_C57-L18.pdf p.33"
+  },
+  {
+   "q": "Backtracking on $f(x)=x^2$ at $x^k=1$ with $d^k=-\\nabla f(x^k)=-2$, $s=1$, $\\beta=0.5$, $\\sigma=0.5$. Which step is returned?",
+   "o": [
+    "$\\alpha=0.5$",
+    "$\\alpha=1$",
+    "$\\alpha=0.25$",
+    "$\\alpha=0.125$"
+   ],
+   "a": 0,
+   "e": "Test $f(1-2\\alpha)\\le1-4\\sigma\\alpha=1-2\\alpha$. $\\alpha=1$: $1\\le-1$ fails. $\\alpha=0.5$: $0\\le0$ holds, so stop. Smaller steps also pass but are never tried.",
+   "d": "hard",
+   "t": 7,
+   "src": "Fall_2026_15_C57-L18.pdf p.44"
+  },
+  {
+   "q": "For a quadratic with $\\kappa(Q)=3$ and exact line search, Kantorovich bounds the per-iteration contraction of $f(x^k)-z^*$ by:",
+   "o": [
+    "$0.25$",
+    "$0.5$",
+    "$2/3$",
+    "$1/9$"
+   ],
+   "a": 0,
+   "e": "$((\\kappa-1)/(\\kappa+1))^2=(2/4)^2=0.25$. Forgetting the square gives 0.5.",
+   "d": "medium",
+   "t": 8,
+   "src": "Fall_2026_15_C57-L18.pdf p.49"
+  },
+  {
+   "q": "Scaled gradient descent $x^{k+1}=x^k-\\alpha_kD\\nabla f(x^k)$ with $D=SS^\\top\\succ0$ is equivalent to:",
+   "o": [
+    "Plain GD on $g(y)=f(Sy)$, a change of coordinates",
+    "Coordinate descent, one variable at a time",
+    "GD with a diminishing step size",
+    "Exact line search along $-\\nabla f$"
+   ],
+   "a": 0,
+   "e": "GD on $g$ gives $Sy^{k+1}=Sy^k-\\alpha_kSS^\\top\\nabla f(Sy^k)$, i.e. the scaled update. Coordinate descent is steepest descent under the $\\ell_1$ norm, a different rule.",
+   "d": "hard",
+   "t": 8,
+   "src": "Fall_2026_15_C57-L18.pdf p.51"
+  },
+  {
+   "q": "In words, what does it mean for $f$ to be $M$-smooth?",
+   "o": [
+    "Its gradient cannot change faster than $M$ per unit of distance, so its curvature is capped at $M$",
+    "$f$ grows at least quadratically away from its minimiser, with curvature at least $M$",
+    "$f$ itself changes by at most $M$ per unit of distance: $|f(x)-f(y)|\\le M\\|x-y\\|$",
+    "$f(x)\\le M$ for every $x$"
+   ],
+   "a": 0,
+   "e": "Smoothness is Lipschitz continuity of the gradient, $\\|\\nabla f(x)-\\nabla f(y)\\|\\le M\\|x-y\\|$: the slope can only turn so fast, so $f$ can never bend more sharply than curvature $M$. The tempting wrong answer, Lipschitz $f$, bounds the slope itself, not how fast the slope changes; and a curvature floor is strong convexity, the opposite bound.",
+   "d": "easy",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "q": "Geometrically, the inequality $f(y)\\le f(x)+\\nabla f(x)^\\top(y-x)+\\frac M2\\|y-x\\|^2$ says that, at every point $x$:",
+   "o": [
+    "$f$ lies below an upward parabola of curvature $M$ that touches $f$ at $x$",
+    "$f$ lies above its tangent plane at $x$",
+    "$f$ lies above an upward parabola of curvature $M$ that touches $f$ at $x$",
+    "$f$ lies below its tangent plane at $x$"
+   ],
+   "a": 0,
+   "e": "The right-hand side is the tangent plane plus a bowl $\\frac M2\\|y-x\\|^2$, equal to $f(x)$ at $y=x$. Smoothness puts a ceiling over $f$. Lying above the tangent plane is plain convexity, and lying above a parabola is strong convexity: both are lower bounds, not this upper bound.",
+   "d": "medium",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "q": "Why is $\\alpha=1/M$ the natural step size for an $M$-smooth function?",
+   "o": [
+    "Minimising the quadratic upper bound at $x^k$ over $y$ gives $y=x^k-\\frac1M\\nabla f(x^k)$: the step jumps to the bottom of the ceiling, so $f$ is guaranteed to drop",
+    "It is the step exact line search would choose at every iteration",
+    "It makes gradient descent reach $x^*$ in one iteration for any $M$-smooth $f$",
+    "It is the largest step for which $f$ stays convex along the search direction"
+   ],
+   "a": 0,
+   "e": "Setting the gradient of $f(x^k)+\\nabla f(x^k)^\\top(y-x^k)+\\frac M2\\|y-x^k\\|^2$ to zero gives $y=x^k-\\nabla f(x^k)/M$. Since $f$ is below this model and the model is minimised there, $f(x^{k+1})\\le f(x^k)-\\frac1{2M}\\|\\nabla f(x^k)\\|^2$. Exact line search minimises $f$ itself, not the model, and generally picks a different step.",
+   "d": "medium",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L18.pdf p.26"
+  },
+  {
+   "q": "With $\\alpha=1/M$ on an $M$-smooth $f$, each gradient step is guaranteed to decrease $f$ by at least:",
+   "o": [
+    "$\\frac1{2M}\\|\\nabla f(x^k)\\|^2$",
+    "$\\frac1M\\|\\nabla f(x^k)\\|^2$",
+    "$\\frac M2\\|\\nabla f(x^k)\\|^2$",
+    "$\\frac1{2M}\\|\\nabla f(x^k)\\|$"
+   ],
+   "a": 0,
+   "e": "Plug $x^{k+1}-x^k=-\\frac1M\\nabla f(x^k)$ into the upper bound: $f(x^k)-\\frac1M\\|\\nabla f\\|^2+\\frac M2\\cdot\\frac1{M^2}\\|\\nabla f\\|^2=f(x^k)-\\frac1{2M}\\|\\nabla f\\|^2$. Forgetting the $+\\frac M2\\|\\cdot\\|^2$ penalty gives $\\frac1M$; the decrease is in the squared gradient norm, not the norm.",
+   "d": "medium",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L18.pdf p.26"
+  },
+  {
+   "q": "For $f(x)=3x_1^2+x_2^2$, what is the smallest $M$ for which $f$ is $M$-smooth?",
+   "o": [
+    "$M=6$",
+    "$M=3$",
+    "$M=2$",
+    "$M=8$"
+   ],
+   "a": 0,
+   "e": "$\\nabla f(x)=(6x_1,\\,2x_2)$, so $\\|\\nabla f(x)-\\nabla f(y)\\|\\le 6\\|x-y\\|$, with equality along $x_1$. For a twice-differentiable $f$, $M$ is the largest Hessian eigenvalue in absolute value; here $\\nabla^2f=\\mathrm{diag}(6,2)$. Reading off the coefficient 3 forgets that $\\frac{d^2}{dx^2}3x^2=6$; 8 adds the eigenvalues. (The Hessian test is standard, not stated on the slides.)",
+   "d": "hard",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "q": "Which function on $\\mathbb R$ is NOT $M$-smooth for any finite $M$?",
+   "o": [
+    "$f(x)=x^4$",
+    "$f(x)=x^2$",
+    "$f(x)=\\log(1+e^x)$",
+    "$f(x)=\\sqrt{1+x^2}$"
+   ],
+   "a": 0,
+   "e": "$f'(x)=4x^3$ turns ever faster: $f''(x)=12x^2$ is unbounded, so no single $M$ caps the curvature. The others have bounded second derivatives: 2, at most $\\frac14$ (the logistic $\\sigma(1-\\sigma)$), and at most 1.",
+   "d": "medium",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "q": "$f(x)=\\sin x$ on $\\mathbb R$ is:",
+   "o": [
+    "1-smooth but not convex, so smoothness alone says nothing about global minima",
+    "not smooth, because smoothness requires convexity",
+    "convex and 1-smooth",
+    "1-strongly convex"
+   ],
+   "a": 0,
+   "e": "$|\\cos x-\\cos y|\\le|x-y|$, so the gradient is 1-Lipschitz, yet $\\sin$ is not convex. Smoothness is only a ceiling on curvature; it controls how far a step can go wrong, not whether a stationary point is a global minimum. That needs convexity.",
+   "d": "easy",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "q": "On $f(x)=\\frac M2x^2$, gradient descent with constant step $\\alpha$ gives $x^{k+1}=(1-\\alpha M)x^k$. What happens with $\\alpha>2/M$?",
+   "o": [
+    "$|1-\\alpha M|>1$: each step overshoots further than the last and the iterates diverge",
+    "It still converges, because $f$ is convex",
+    "It converges, but only sub-linearly",
+    "It converges in one step, because the step is large"
+   ],
+   "a": 0,
+   "e": "Steps up to $1/M$ move monotonically toward 0; between $1/M$ and $2/M$ they overshoot but shrink; beyond $2/M$ the factor exceeds 1 in absolute value and the iterates blow up. Convexity does not save a step that is too long for the curvature: that is the \"not too large\" half of the step-size trade-off, and $1/M$ sits safely inside the stable range.",
+   "d": "hard",
+   "t": 4,
+   "src": "Fall_2026_15_C57-L18.pdf p.32"
+  },
+  {
+   "q": "In words, what does it mean for $f$ to be $m$-strongly convex?",
+   "o": [
+    "$f$ curves upward at least as much as $\\frac m2\\|x\\|^2$ everywhere: a bowl with curvature at least $m$",
+    "Its gradient changes by at most $m$ per unit of distance",
+    "$f(x)\\ge m$ for every $x$",
+    "$f$ is convex and has a global minimum"
+   ],
+   "a": 0,
+   "e": "The definition, $f(x)-\\frac m2\\|x\\|^2$ convex, says that after removing a bowl of curvature $m$ what is left still curves up, so $f$ has at least curvature $m$ in every direction. A gradient that changes by at most $m$ is smoothness (a ceiling, not a floor), and a convex function with a minimum can still be flat.",
+   "d": "easy",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "q": "The inequality $f(y)\\ge f(x)+\\nabla f(x)^\\top(y-x)+\\frac m2\\|y-x\\|^2$ says that $f$ lies:",
+   "o": [
+    "above its tangent plane plus a bowl of curvature $m$, so it pulls away from every tangent plane at least quadratically",
+    "above its tangent plane, and nothing more",
+    "below a parabola of curvature $m$ touching it at $x$",
+    "above a parabola of curvature $M$ touching it at $x$"
+   ],
+   "a": 0,
+   "e": "Plain convexity gives only the tangent-plane bound; strong convexity adds $\\frac m2\\|y-x\\|^2$, a quadratic floor. Lying below a parabola is smoothness, the matching ceiling with $M$.",
+   "d": "medium",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "q": "Which convex function on $\\mathbb R$ is NOT strongly convex for any $m>0$?",
+   "o": [
+    "$f(x)=e^x$",
+    "$f(x)=x^2$",
+    "$f(x)=x^2+e^x$",
+    "$f(x)=\\frac12x^2+3x$"
+   ],
+   "a": 0,
+   "e": "$f''(x)=e^x$ is positive but tends to 0 as $x\\to-\\infty$, so no fixed $m>0$ works: far to the left $e^x$ is almost flat, and it has no minimiser at all. The others have curvature at least 2, 2 and 1. Strictly convex is not the same as strongly convex.",
+   "d": "medium",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "q": "Why does strong convexity guarantee a unique global minimiser, when plain convexity does not?",
+   "o": [
+    "The quadratic floor makes $f$ grow without bound in every direction and rules out flat stretches, so a minimiser exists and no two points can tie at the bottom",
+    "Every convex function already has a unique minimiser; strong convexity only speeds up gradient descent",
+    "Strong convexity bounds the gradient, which keeps the iterates bounded",
+    "Strong convexity makes the Hessian singular at $x^*$"
+   ],
+   "a": 0,
+   "e": "A convex function can have a flat bottom ($f=0$ on an interval) or no minimiser ($e^x$). The $\\frac m2\\|y-x\\|^2$ floor forces growth away from any point, which gives existence, and strict curvature, which gives uniqueness. Bounding the gradient is smoothness, and the Hessian is at least $mI\\succ0$, not singular.",
+   "d": "medium",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L18.pdf p.23"
+  },
+  {
+   "q": "$f$ is 2-strongly convex. At a point $x$, $f(x)=10$ and $\\|\\nabla f(x)\\|=4$. What lower bound does strong convexity give on $z^*=\\min f$?",
+   "o": [
+    "$z^*\\ge6$",
+    "$z^*\\ge2$",
+    "$z^*\\ge9$",
+    "$z^*\\ge8$"
+   ],
+   "a": 0,
+   "e": "Minimise the lower bound over $y$: $z^*\\ge f(x)-\\frac1{2m}\\|\\nabla f(x)\\|^2=10-\\frac{16}{4}=6$. Using $\\frac1m$ instead of $\\frac1{2m}$ gives 2; forgetting to square the gradient gives 9.",
+   "d": "hard",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L18.pdf p.26"
+  },
+  {
+   "q": "Under $m$-strong convexity, $f(x)-z^*\\le\\frac1{2m}\\|\\nabla f(x)\\|^2$. What is the intuition?",
+   "o": [
+    "A bowl with curvature at least $m$ cannot be nearly flat far from its bottom, so a small slope proves you are close to optimal",
+    "Smoothness keeps the gradient small near the optimum",
+    "The same bound holds for every convex function",
+    "Near $x^*$ the function is approximately linear"
+   ],
+   "a": 0,
+   "e": "This is the lecture's step 2: the gradient becomes a certificate of the optimality gap. For a merely convex $f$ it fails: $f(x)=x^4$ near 0 has gap $x^4$ but squared slope $16x^6$, so the ratio $1/(16x^2)$ blows up and no $m$ works, because $x^4$ is too flat at the bottom. Smoothness gives the reverse inequality, $\\|\\nabla f(x)\\|^2\\le2M(f(x)-z^*)$.",
+   "d": "medium",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L18.pdf p.26"
+  },
+  {
+   "q": "Ridge regression $f(\\beta)=\\frac12\\|y-X\\beta\\|^2+\\frac\\lambda2\\|\\beta\\|^2$ with more features than observations, so $X^\\top X$ is singular. Is $f$ strongly convex?",
+   "o": [
+    "Yes: $\\nabla^2f=X^\\top X+\\lambda I\\succeq\\lambda I$, so $f$ is $m$-strongly convex with $m\\ge\\lambda$",
+    "No: a singular $X^\\top X$ means the least-squares term is flat in some direction, so $f$ is only convex",
+    "Only if $\\lambda$ exceeds the largest eigenvalue of $X^\\top X$",
+    "Yes, because $X^\\top X$ is always positive definite"
+   ],
+   "a": 0,
+   "e": "Least squares alone is flat along the null space of $X$, which is why it has infinitely many minimisers when $p>n$. The penalty adds curvature $\\lambda$ in every direction, which restores a unique minimiser and linear GD convergence. Its smoothness constant is $M=\\lambda_{\\max}(X^\\top X)+\\lambda$.",
+   "d": "hard",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L18.pdf p.28"
+  },
+  {
+   "q": "Why does gradient descent's linear rate depend on the ratio $M/m$, not on $M$ or $m$ alone?",
+   "o": [
+    "Scaling $f$ by $c>0$ multiplies both $M$ and $m$ by $c$ without changing the problem; only the ratio measures how stretched the level sets are",
+    "A larger $M$ always means faster convergence, whatever $m$ is",
+    "Only $m$ matters; $M$ enters only the step size",
+    "The ratio matters only for non-convex functions"
+   ],
+   "a": 0,
+   "e": "The contraction factor $1-m/M$ is scale-free, as it should be: $f$ and $10f$ have the same minimiser and the same GD path (with $\\alpha=1/M$). $M/m$ bounds the condition number of the Hessian, the elongation of the level sets, which is what actually slows GD.",
+   "d": "medium",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L18.pdf p.49"
+  },
+  {
+   "q": "$f$ is $M$-smooth and $m$-strongly convex with $M/m=100$, and GD uses $\\alpha=1/M$. About how many iterations does the bound $(1-m/M)^k$ need to shrink $f(x^0)-z^*$ by a factor of $10^6$?",
+   "o": [
+    "About 1,380",
+    "About 140",
+    "About 14",
+    "About 13,800"
+   ],
+   "a": 0,
+   "e": "Need $(0.99)^k\\le10^{-6}$, so $k\\ge\\ln(10^6)/(-\\ln0.99)\\approx13.8/0.01005\\approx1{,}375$, matching $O\\big(\\frac Mm\\log\\frac1\\varepsilon\\big)\\approx100\\times13.8$. Each factor of 10 in accuracy costs only about 230 more iterations (linear convergence), but each factor of 10 in $M/m$ multiplies the count by 10.",
+   "d": "hard",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L18.pdf p.25"
+  },
+  {
+   "q": "What does a large $M/m$ look like, and why does it slow gradient descent?",
+   "o": [
+    "A long narrow valley: the step must stay at or below $1/M$ to be stable in the steep direction, so along the flat direction (curvature $m$) each step makes only about $m/M$ of the possible progress",
+    "A round bowl, where GD overshoots the minimum in every direction",
+    "A landscape with many local minima that trap GD",
+    "A valley floor where the gradient is exactly zero"
+   ],
+   "a": 0,
+   "e": "Level sets become elongated ellipses. The steep walls force a small step; the gentle floor then needs many small steps, and the iterates zigzag across the valley. Rescaling (diagonal scaling, p.51) reshapes the valley toward a round bowl and fixes this.",
+   "d": "medium",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L18.pdf p.50"
+  },
+  {
+   "q": "Can a function be $m$-strongly convex and $M$-smooth with $m>M$?",
+   "o": [
+    "No: the lower parabola must sit under the upper one, so $m\\le M$; when $m=M$, $f$ is a round quadratic and GD with $\\alpha=1/M$ reaches $x^*$ in one step",
+    "Yes, when $f$ is very strongly convex",
+    "Yes, but then gradient descent diverges",
+    "No, because a strongly convex function is never smooth"
+   ],
+   "a": 0,
+   "e": "Both bounds hold at the same $x$ and $y$, so $f(x)+\\nabla f(x)^\\top(y-x)+\\frac m2\\|y-x\\|^2\\le f(x)+\\nabla f(x)^\\top(y-x)+\\frac M2\\|y-x\\|^2$, which forces $m\\le M$. At $m=M$, $f=\\frac M2\\|x-x^*\\|^2+z^*$ and $x^1=x^0-\\frac1M M(x^0-x^*)=x^*$, matching the rate factor $1-m/M=0$.",
+   "d": "hard",
+   "t": 5,
+   "src": "Fall_2026_15_C57-L18.pdf p.23"
+  }
+ ],
+ "written": [
+  {
+   "q": "Let $f(x)=\\frac12x_1^2+x_1x_2+2x_2^2-4x_1-4x_2-x_2^3$. (a) Compute $\\nabla f$ and $\\nabla^2f$. (b) Find all stationary points. (c) Classify each with second-order conditions. (d) Is $f$ convex, and does it have a global minimum? What does this say about relying on gradient descent here?",
+   "m": "(a) $\\nabla f=(x_1+x_2-4,\\;x_1+4x_2-4-3x_2^2)^\\top$, $\\nabla^2f=\\begin{pmatrix}1&1\\\\1&4-6x_2\\end{pmatrix}$. (b) First component gives $x_1=4-x_2$; substituting, $3x_2-3x_2^2=0$, so $x_2\\in\\{0,1\\}$: points $(4,0)$ and $(3,1)$. (c) At $(4,0)$ the Hessian $\\begin{pmatrix}1&1\\\\1&4\\end{pmatrix}$ has leading minors $1>0$ and $3>0$, so it is PD and $(4,0)$ is a strict local minimum. At $(3,1)$ it is $\\begin{pmatrix}1&1\\\\1&-2\\end{pmatrix}$ with determinant $-3$, indefinite, so not a local minimum. (d) Not convex: the Hessian is not PSD everywhere (e.g. at $x_2=1$). Along $x=(4,t)$, $f=2t^2-8-t^3\\to-\\infty$, so there is no global minimum and $(4,0)$ is only local. GD converges to a stationary point that depends on the start; it can reach $(4,0)$ from good starts or diverge from others, and nothing certifies global optimality.",
+   "k": [
+    "Correct gradient and Hessian",
+    "Both stationary points found",
+    "$(4,0)$ PD so local min; $(3,1)$ indefinite so not a min",
+    "Not convex: Hessian not PSD everywhere",
+    "Unbounded below, so local is not global",
+    "GD only finds stationary points and depends on initialization"
+   ],
+   "t": 0
+  },
+  {
+   "q": "You minimize $f(x)=500x_1^2+20x_1x_2+0.5x_2^2$ with gradient descent. (a) Write $f=\\frac12x^\\top Qx$, identify $M$ and $m$, and state the linear rate guaranteed with $\\alpha=1/M$. (b) Use the condition number to explain why plain GD is slow, and show how diagonal scaling with $D=\\mathrm{diag}(1/1000,1)$ helps. (c) Compare exact and backtracking line search as step-size rules for this problem.",
+   "m": "(a) $Q=\\begin{pmatrix}1000&20\\\\20&1\\end{pmatrix}$, constant Hessian. $M=\\lambda_{\\max}\\approx1000.4$, $m=\\lambda_{\\min}\\approx0.6$, so $f$ is $M$-smooth and $m$-strongly convex and $f(x^k)-z^*\\le(1-m/M)^k(f(x^0)-z^*)$ with $1-m/M\\approx1-1/1668$, a very weak contraction. (b) $\\kappa(Q)\\approx1{,}668$; the Kantorovich factor with exact line search is $((\\kappa-1)/(\\kappa+1))^2\\approx0.998$ per step, and the iterates zig-zag across a long, narrow valley. Scaled GD $x^{k+1}=x^k-\\alpha D\\nabla f(x^k)$ is GD on $g(y)=f(Sy)$ with $SS^\\top=D$; the scaled matrix $D^{1/2}QD^{1/2}=\\begin{pmatrix}1&0.63\\\\0.63&1\\end{pmatrix}$ has $\\kappa\\approx4.4$, factor $\\approx0.40$. The lecture reports 68 iterations falling to 20. (c) Exact line search picks $\\alpha_k\\in\\arg\\min_{\\alpha\\ge0}f(x^k+\\alpha d^k)$: best progress per direction and fewer iterations, but a 1-D optimization each step (closed form for a quadratic). Backtracking shrinks $\\alpha$ by $\\beta$ until the Armijo condition $f(x^k+\\alpha d^k)\\le f(x^k)+\\sigma\\alpha\\nabla f(x^k)^\\top d^k$ holds: cheaper per step, more iterations.",
+   "k": [
+    "Correct $Q$ with off-diagonal 20",
+    "$M$, $m$ as extreme eigenvalues; rate $1-m/M$",
+    "$\\kappa\\approx1668$ and the Kantorovich factor",
+    "Scaled update and equivalence to GD on $f(Sy)$",
+    "Scaled $\\kappa\\approx4.4$, 68 to 20 iterations",
+    "Exact vs backtracking: work per iteration vs number of iterations"
+   ],
+   "t": 8
+  },
+  {
+   "q": "Let $f$ be $M$-smooth and $m$-strongly convex, and run gradient descent with $\\alpha=1/M$. (a) Use the smoothness bound to show $f(x^{k+1})\\le f(x^k)-\\frac1{2M}\\|\\nabla f(x^k)\\|^2$. (b) Use the strong-convexity bound to show $z^*\\ge f(x^k)-\\frac1{2m}\\|\\nabla f(x^k)\\|^2$. (c) Combine them into $f(x^{k+1})-z^*\\le(1-\\frac mM)(f(x^k)-z^*)$. (d) In one or two sentences each, explain what (a) and (b) mean intuitively, and why the rate depends only on $M/m$.",
+   "m": "(a) Put $y=x^{k+1}=x^k-\\frac1M\\nabla f(x^k)$ in $f(y)\\le f(x)+\\nabla f(x)^\\top(y-x)+\\frac M2\\|y-x\\|^2$: $f(x^{k+1})\\le f(x^k)-\\frac1M\\|\\nabla f\\|^2+\\frac1{2M}\\|\\nabla f\\|^2=f(x^k)-\\frac1{2M}\\|\\nabla f(x^k)\\|^2$.\n(b) The right side of $f(y)\\ge f(x^k)+\\nabla f(x^k)^\\top(y-x^k)+\\frac m2\\|y-x^k\\|^2$ is minimised at $y=x^k-\\frac1m\\nabla f(x^k)$, with value $f(x^k)-\\frac1{2m}\\|\\nabla f(x^k)\\|^2$. Since $f(y)$ is at least that for every $y$, so is $z^*$.\n(c) From (b), $\\|\\nabla f(x^k)\\|^2\\ge2m(f(x^k)-z^*)$. Substitute into (a) and subtract $z^*$: $f(x^{k+1})-z^*\\le f(x^k)-z^*-\\frac mM(f(x^k)-z^*)$.\n(d) (a): the ceiling guarantees progress proportional to the squared slope; a step of $1/M$ can never overshoot. (b): the floor means a gentle slope only happens near the bottom, so the slope measures how far from optimal you are. The rate is $1-m/M$: scaling $f$ scales $M$ and $m$ together, so only their ratio, the conditioning, matters.",
+   "k": [
+    "Correct substitution of $\\alpha=1/M$ into the smoothness bound",
+    "Minimises the strong-convexity lower bound over $y$",
+    "Combines into the $(1-m/M)$ contraction",
+    "Ceiling intuition: guaranteed decrease, a safe step",
+    "Floor intuition: the gradient certifies the gap",
+    "Rate is scale-free and depends on $M/m$"
+   ],
+   "t": 5
+  },
+  {
+   "q": "Let $f(x)=\\frac12(x_1^2+\\kappa x_2^2)$ with $\\kappa\\ge1$. (a) Find the smallest $M$ and largest $m$. (b) Run one step of gradient descent with $\\alpha=1/M$ from $x^0=(1,1)$ and give $x^1$. (c) How fast does each coordinate converge, and what happens when $\\kappa=1000$? (d) Explain the result geometrically.",
+   "m": "(a) $\\nabla^2f=\\mathrm{diag}(1,\\kappa)$, so $M=\\kappa$, $m=1$, $M/m=\\kappa$.\n(b) $\\nabla f(x)=(x_1,\\kappa x_2)$, so $x^1=(1-\\frac1\\kappa,\\;1-1)=(1-\\frac1\\kappa,\\,0)$.\n(c) The steep coordinate $x_2$ is solved in one step; the flat coordinate shrinks by the factor $1-1/\\kappa$ each step. At $\\kappa=1000$ that is $0.999$ per step: about 6,900 steps to reduce $x_1$ by $10^3$, matching $O(\\frac Mm\\log\\frac1\\varepsilon)$.\n(d) The level sets are ellipses stretched $\\sqrt\\kappa$ times longer along $x_1$. The step has to be short enough for the steep $x_2$ walls ($\\alpha\\le1/M$, or $<2/M$ to avoid divergence), which makes it tiny relative to the gentle $x_1$ slope. A diagonal rescaling $x_2\\to x_2/\\sqrt\\kappa$ would make the bowl round and GD would finish in one step.",
+   "k": [
+    "$M=\\kappa$, $m=1$",
+    "Correct $x^1=(1-1/\\kappa,0)$",
+    "Per-coordinate rates: one step vs factor $1-1/\\kappa$",
+    "Iteration count of order $\\kappa\\log(1/\\varepsilon)$",
+    "Narrow-valley picture: the step is limited by the steep direction",
+    "Mentions scaling as the fix"
+   ],
+   "t": 4
+  }
+ ]
+}

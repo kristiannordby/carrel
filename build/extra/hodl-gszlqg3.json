@@ -1,0 +1,432 @@
+{
+ "id": "gszlqg3",
+ "label": "L1",
+ "title": "Lecture 1: The Next-Token Machine",
+ "short": "Next-Token Machine",
+ "src": "15.766 Lecture 1.pdf",
+ "brief": "This lecture introduces the language model as a next-token prediction machine: given a sequence of tokens, it returns a probability distribution over the next token, and by the chain rule this defines a distribution over whole sequences. Two ingredients make modern LLMs possible: the Transformer architecture and massive training data (e.g., GPT-3's ~500B tokens). Training uses causal language modeling — every prefix of a sentence becomes an input with the next word as a 'fake' label. Text generation is an autoregressive loop of predict-append-repeat until a stopping condition, and the choice of decoding strategy (greedy vs. sampling, tuned by temperature) controls the tradeoff between factual determinism and creative diversity. The lecture closes with setup instructions for Colab and MIT's Parley API, used for hands-on work in the course.",
+ "kp": [
+  "A language model outputs a conditional probability distribution over the next token given a sequence.",
+  "By the chain rule, next-token probabilities define a probability distribution over entire sequences.",
+  "Two ingredients enable modern LLMs: architecture (the Transformer) and massive data (web, books, Wikipedia).",
+  "Training is 'causal language modeling': every prefix of text is an input, the next word is the label.",
+  "GPT-3 was trained on ~500B tokens across Common Crawl, Books, WebText, and Wikipedia with 96 Transformer layers.",
+  "Text generation is an autoregressive loop: predict next token, append to prompt, repeat until stop condition.",
+  "Greedy decoding picks the highest-probability token every time; it suits factual, deterministic tasks.",
+  "Random sampling draws tokens proportional to probability; it suits creative, diverse tasks but risks sampling the 'tail'.",
+  "Temperature reshapes the softmax distribution: low temperature sharpens it (greedy-like), high temperature flattens it (near-uniform, more nonsense).",
+  "Once an LLM samples a bad/low-probability token, it may not recover and can go 'off the rails'."
+ ],
+ "topics": [
+  {
+   "n": "Language model as next-token distribution",
+   "x": "A GPT takes a sequence of tokens and outputs a probability distribution over the next token in the vocabulary. Applying the chain rule repeatedly turns this single-token distribution into a distribution over full sequences, which is the mathematical object an LLM actually models."
+  },
+  {
+   "n": "Two ingredients: architecture and data",
+   "x": "Learning a good next-token distribution requires (1) an architecture expressive enough to model it — the Transformer, covered in depth later — and (2) enormous amounts of text data such as the web, books, and Wikipedia. The convergence of better architectures and huge datasets is presented as the cause of the GenAI revolution."
+  },
+  {
+   "n": "Causal language model pre-training",
+   "x": "Training data is built by taking every prefix of a sentence as an input and the next word as a 'fake' label, so a single sentence yields many training examples. This self-supervised scheme, called causal language modeling, is how GPT-3-scale models are pre-trained on hundreds of billions of tokens."
+  },
+  {
+   "n": "Autoregressive text generation",
+   "x": "Generation is a loop: feed the prompt, predict the next token, append it to the sequence, and repeat until a stopping token or condition is reached. This simple mechanism is how a single-sentence prompt can expand into full paragraphs of coherent text."
+  },
+  {
+   "n": "Decoding strategies: greedy vs. sampling",
+   "x": "At each generation step you can either greedily pick the single most probable token (good for factual, deterministic answers) or randomly sample a token in proportion to its probability (good for diverse, creative output). Sampling risks occasionally drawing a low-probability 'tail' token that the model cannot recover from."
+  },
+  {
+   "n": "Temperature control of sampling",
+   "x": "Temperature rescales the softmax before sampling: low temperature sharpens the distribution toward the head (more greedy-like, deterministic), high temperature flattens it toward uniform, making even nonsense tokens like 'aardvark' plausible. It is the main lever for tuning the creativity/reliability tradeoff in random sampling."
+  },
+  {
+   "n": "Course setup: Colab and Parley",
+   "x": "Students configure a free Google Colab notebook with a T4 GPU and connect it to MIT's Parley API (via an API key stored in Colab Secrets) to call LLMs programmatically using the OpenAI client library. This is the technical environment used for hands-on exercises in the course."
+  }
+ ],
+ "cards": [
+  {
+   "f": "What does a language model (GPT) output, given a sequence of tokens?",
+   "b": "A conditional probability distribution over the next token in the vocabulary.",
+   "x": "It's a distribution, not a single deterministic answer.",
+   "t": 0,
+   "ref": "15.766 Lecture 1.pdf p.19"
+  },
+  {
+   "f": "How does a next-token distribution become a distribution over entire sequences?",
+   "b": "Via the chain rule: multiply the conditional probabilities of each token given all previous tokens.",
+   "x": "Chain rule turns one-step predictions into whole-sequence probabilities.",
+   "t": 0,
+   "ref": "15.766 Lecture 1.pdf p.20"
+  },
+  {
+   "f": "What are the two ingredients needed to learn the next-token distribution effectively?",
+   "b": "Architecture (the Transformer) and data (a huge amount of it, e.g. web, books, Wikipedia).",
+   "x": "Neither alone is sufficient — their convergence drove the GenAI revolution.",
+   "t": 1,
+   "ref": "15.766 Lecture 1.pdf p.21"
+  },
+  {
+   "f": "What is 'causal language modeling'?",
+   "b": "Training by taking every prefix of a sentence as input and the next word as the ('fake') label.",
+   "x": "One sentence generates many training examples, one per prefix.",
+   "t": 2,
+   "ref": "15.766 Lecture 1.pdf p.25"
+  },
+  {
+   "f": "Roughly how much training data (tokens) did GPT-3 use, and what were the main sources?",
+   "b": "~500B tokens total: Common Crawl (filtered, 410B), Books2 (55B), WebText2 (19B), Books1 (12B), Wikipedia (3B).",
+   "x": "Common Crawl (the web) dwarfs the other sources.",
+   "t": 2,
+   "ref": "15.766 Lecture 1.pdf p.27"
+  },
+  {
+   "f": "How many Transformer layers and attention heads did GPT-3 have?",
+   "b": "96 Transformer layers, each with 96 attention heads in its multi-head attention.",
+   "x": "Scale in both depth and width.",
+   "t": 1,
+   "ref": "15.766 Lecture 1.pdf p.27"
+  },
+  {
+   "f": "Describe the text generation loop in one sentence.",
+   "b": "Predict the next token, append it to the prompt, and repeat until a stopping condition is reached.",
+   "x": "This autoregressive loop is literally how a single sentence prompt becomes a paragraph.",
+   "t": 3,
+   "ref": "15.766 Lecture 1.pdf p.32"
+  },
+  {
+   "f": "What is Greedy Decoding?",
+   "b": "Always choosing the single highest-probability next token.",
+   "x": "Deterministic — same prompt always gives the same output.",
+   "t": 4,
+   "ref": "15.766 Lecture 1.pdf p.36"
+  },
+  {
+   "f": "When is Greedy Decoding most appropriate?",
+   "b": "When factual accuracy and deterministic outputs matter.",
+   "x": "Not ideal for creative writing — can be repetitive/bland.",
+   "t": 4,
+   "ref": "15.766 Lecture 1.pdf p.38"
+  },
+  {
+   "f": "When is random sampling preferred over greedy decoding?",
+   "b": "When diversity and creativity of output matter and stochastic outputs are acceptable.",
+   "x": "Tradeoff: more variety, less reliability.",
+   "t": 4,
+   "ref": "15.766 Lecture 1.pdf p.39"
+  },
+  {
+   "f": "Why is random sampling risky even though each individual 'tail' token has low probability?",
+   "b": "Because the combined probability of sampling *some* token from the long tail can still be high, and once sampled the model may not recover and can go off the rails.",
+   "x": "Low probability per-token ≠ low probability of a tail event overall.",
+   "t": 4,
+   "ref": "15.766 Lecture 1.pdf p.42"
+  },
+  {
+   "f": "What does lowering the temperature do to the softmax distribution?",
+   "b": "Sharpens it — the head (high-probability tokens) takes almost all the probability mass, behaving more like greedy decoding.",
+   "x": "T→0 approaches greedy decoding.",
+   "t": 5,
+   "ref": "15.766 Lecture 1.pdf p.49"
+  },
+  {
+   "f": "What does raising the temperature do to the softmax distribution?",
+   "b": "Flattens it toward uniform — the tail becomes 'real,' and at very high temperature the model is almost guessing randomly.",
+   "x": "At T=50 in the example, even 'aardvark' gets ~23% probability alongside real words.",
+   "t": 5,
+   "ref": "15.766 Lecture 1.pdf p.49"
+  },
+  {
+   "f": "In the lecture's example, what probability did the nonsense token 'aardvark' have at T=1 vs. T=50?",
+   "b": "About 3 in 10,000 at T=1, versus about 1 in 4 at T=50.",
+   "x": "Illustrates how extreme temperature destroys the head/tail distinction.",
+   "t": 5,
+   "ref": "15.766 Lecture 1.pdf p.49"
+  },
+  {
+   "f": "What GPU should you select in Colab's Runtime settings for the free tier?",
+   "b": "T4 GPU (under Runtime ▸ Change runtime type ▸ Hardware accelerator).",
+   "x": "A100/L4 are premium and require a paid plan.",
+   "t": 6,
+   "ref": "15.766 Lecture 1.pdf p.55"
+  },
+  {
+   "f": "How do you securely provide your Parley API key to a Colab notebook?",
+   "b": "Store it in Colab Secrets (key icon in sidebar) under a name like PARLEY_API_KEY, with Notebook access switched on, then retrieve it via userdata.get(...).",
+   "x": "Avoids hardcoding the API key in plain text in the notebook.",
+   "t": 6,
+   "ref": "15.766 Lecture 1.pdf p.60"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "What does a language model fundamentally output when given a sequence of tokens?",
+   "o": [
+    "A conditional probability distribution over the next token",
+    "The single correct next word, deterministically",
+    "A vector embedding of the entire input sequence",
+    "A classification label for the sentence's topic"
+   ],
+   "a": 0,
+   "e": "The slides define a GPT as returning the conditional probability of any next word given a sequence (p.19). It is not deterministic (that's only true under greedy decoding), it is not primarily an embedding tool, and it's not a classifier — those are different model types.",
+   "d": "easy",
+   "t": 0,
+   "src": "15.766 Lecture 1.pdf p.19"
+  },
+  {
+   "q": "By what principle does a next-token probability model imply a distribution over entire token sequences?",
+   "o": [
+    "The chain rule of probability",
+    "The central limit theorem",
+    "Bayes' theorem on priors and posteriors",
+    "The law of large numbers"
+   ],
+   "a": 0,
+   "e": "Slide 20 shows this is done 'by the chain rule' — multiplying successive conditional probabilities. The other named theorems are real probability tools but are not what's used here.",
+   "d": "medium",
+   "t": 0,
+   "src": "15.766 Lecture 1.pdf p.20"
+  },
+  {
+   "q": "According to the lecture, what are the two ingredients needed to effectively learn the next-token distribution?",
+   "o": [
+    "Architecture and data",
+    "Labels and compute budget",
+    "Regularization and cross-validation",
+    "GPUs and TPUs"
+   ],
+   "a": 0,
+   "e": "Slide 21 explicitly names architecture ('how should we even model the probability distribution') and data ('we need a ton of data') as the two ingredients. Labels/cross-validation are supervised-learning concepts not emphasized here; hardware is an enabler, not named as one of the two ingredients.",
+   "d": "easy",
+   "t": 1,
+   "src": "15.766 Lecture 1.pdf p.21"
+  },
+  {
+   "q": "In the causal language modeling training example on 'The mission of the MIT Sloan...', what is the 'fake label' for the input 'The mission of the MIT'?",
+   "o": [
+    "The next word in the sentence, 'Sloan'",
+    "A human-annotated category label",
+    "The full remaining sentence",
+    "<END> token always"
+   ],
+   "a": 0,
+   "e": "Slide 25 shows each prefix paired with the single next word as the label (e.g., 'The mission of the MIT' → 'Sloan'). There's no human annotation involved (that's the expensive 2021 approach from p.16), and the label is one token, not the rest of the sentence.",
+   "d": "medium",
+   "t": 2,
+   "src": "15.766 Lecture 1.pdf p.25"
+  },
+  {
+   "q": "Per the slides, roughly what fraction of GPT-3's ~500B training tokens came from Common Crawl (filtered)?",
+   "o": [
+    "About 82% (410B of ~500B)",
+    "About 50%",
+    "About 25%",
+    "About 6% (similar to Wikipedia's share)"
+   ],
+   "a": 0,
+   "e": "410B of the roughly 410+55+19+12+3 = 499B total tokens is about 82%. Wikipedia's 3B is the smallest share (~0.6%), not comparable to Common Crawl's share — a common error is assuming more even splits across sources.",
+   "d": "hard",
+   "t": 2,
+   "src": "15.766 Lecture 1.pdf p.27"
+  },
+  {
+   "q": "How many Transformer layers did GPT-3 have, per the slides?",
+   "o": [
+    "96",
+    "12",
+    "24",
+    "175"
+   ],
+   "a": 0,
+   "e": "Slide 27 states GPT-3 had 96 Transformer layers and 96 attention heads per multi-head attention layer. 175 (billion) is GPT-3's parameter count, a commonly confused number, not its layer count; 12 and 24 are plausible-sounding but incorrect distractors.",
+   "d": "medium",
+   "t": 1,
+   "src": "15.766 Lecture 1.pdf p.27"
+  },
+  {
+   "q": "What best describes the text generation process used by GPTs, per the lecture?",
+   "o": [
+    "An autoregressive loop: predict next token, append it, repeat until a stopping condition",
+    "A single forward pass that outputs the entire response at once",
+    "A beam search that is always run to produce the final output",
+    "A retrieval step that copies the most similar training sentence"
+   ],
+   "a": 0,
+   "e": "Slides 30–34 depict generation as repeatedly predicting a token, appending it to the prompt, and repeating until a stop condition — not a single pass. Beam search is mentioned only as an optional alternative to greedy decoding, not the default process; there's no retrieval/copying mechanism described.",
+   "d": "easy",
+   "t": 3,
+   "src": "15.766 Lecture 1.pdf p.32"
+  },
+  {
+   "q": "Which decoding method is described as appropriate when factual accuracy and deterministic output are required?",
+   "o": [
+    "Greedy Decoding",
+    "Random sampling with high temperature",
+    "Random sampling with low temperature",
+    "Beam search with temperature scaling"
+   ],
+   "a": 0,
+   "e": "Slide 38 explicitly ties Greedy Decoding to factual accuracy and determinism. High-temperature sampling is the opposite (more random/creative); low-temperature sampling approximates greedy but the slides attribute the deterministic-accuracy claim specifically to Greedy Decoding, not to a sampling variant.",
+   "d": "easy",
+   "t": 4,
+   "src": "15.766 Lecture 1.pdf p.38"
+  },
+  {
+   "q": "Why can random sampling cause an LLM to 'go off the rails,' per the lecture's example?",
+   "o": [
+    "Even though each tail token is individually low-probability, the probability of sampling *some* tail token can be high, and the model may not recover from a bad token choice",
+    "Random sampling always selects the lowest-probability token by design",
+    "The softmax function is undefined for tail tokens",
+    "Greedy decoding is used internally regardless of the sampling setting, causing inconsistency"
+   ],
+   "a": 0,
+   "e": "Slides 41–42 state that while any single tail token has low probability, the cumulative probability of drawing from the tail can still be substantial, and once drawn, the model may not recover. Sampling does not deliberately pick low-probability tokens, softmax is well-defined everywhere, and greedy/sampling are distinct, not silently swapped.",
+   "d": "hard",
+   "t": 4,
+   "src": "15.766 Lecture 1.pdf p.42"
+  },
+  {
+   "q": "What effect does increasing temperature have on the softmax distribution over next tokens?",
+   "o": [
+    "It flattens the distribution, giving more probability mass to the tail (less distinction between head and tail)",
+    "It sharpens the distribution, concentrating probability on the single most likely token",
+    "It has no effect on sampling, only on greedy decoding",
+    "It converts the distribution into a uniform distribution over only the top-2 tokens"
+   ],
+   "a": 0,
+   "e": "Slide 49 shows that as T increases from 0.5 to 5 to 50, the distribution becomes flatter and more uniform, with nonsense tokens gaining real probability mass. Sharpening happens at *low* temperature, the opposite of this answer; temperature affects any sampling-based decoding, not just a special case; it does not restrict to any fixed top-k set.",
+   "d": "medium",
+   "t": 5,
+   "src": "15.766 Lecture 1.pdf p.49"
+  },
+  {
+   "q": "In the lecture's worked example, approximately what probability did 'aardvark' (a nonsense token) have at T=5?",
+   "o": [
+    "About 1 in 10 (0.097)",
+    "About 3 in 10,000 (0.0003)",
+    "About 1 in 4 (0.233)",
+    "Essentially 0"
+   ],
+   "a": 0,
+   "e": "Slide 49 reports aardvark's renormalized probability as 0.097 at T=5 — meaningfully elevated from its near-zero baseline but not yet as extreme as the ~0.233 seen at T=50. The 0.0003-ish figure corresponds to T=1 from the original table on p.36/43, and 'essentially 0' describes only the sharp low-temperature regime.",
+   "d": "hard",
+   "t": 5,
+   "src": "15.766 Lecture 1.pdf p.49"
+  },
+  {
+   "q": "What was the estimated cost/effort of the 2021-era approach to building a customer-complaint pipeline, according to the lecture?",
+   "o": [
+    "Paying people to label ~20,000 complaints over six weeks, costing tens of thousands of dollars",
+    "A single afternoon of prompt engineering",
+    "Free, since TF-IDF requires no labeled data",
+    "One week of GPU training with no human labeling needed"
+   ],
+   "a": 0,
+   "e": "Slide 16 states getting labels required paying people to read and tag ~20,000 complaints, taking six weeks and costing tens of thousands of dollars. TF-IDF + logistic regression still needs labeled data (contradicting the 'free' option), and the process is explicitly described as weeks-long and labor-intensive, not an afternoon or GPU-only task.",
+   "d": "medium",
+   "t": 1,
+   "src": "15.766 Lecture 1.pdf p.16"
+  },
+  {
+   "q": "What distinguishes Beam Search from plain Greedy Decoding, per the slide's footnote?",
+   "o": [
+    "Beam Search is noted as a way to improve on greedy decoding, which is 'not necessarily optimal'",
+    "Beam Search is a form of random sampling tuned by temperature",
+    "Beam Search and Greedy Decoding are described as mathematically identical",
+    "Beam Search eliminates the need for a stopping condition in generation"
+   ],
+   "a": 0,
+   "e": "The footnote on slide 36 states greedy decoding is 'not necessarily optimal' and that 'Beam Search can help,' positioning beam search as an alternative/improvement, not as sampling or as identical to greedy decoding. Stopping conditions are a separate, general requirement of generation (p.33), unaffected by decoding method choice.",
+   "d": "hard",
+   "t": 4,
+   "src": "15.766 Lecture 1.pdf p.36"
+  },
+  {
+   "q": "What hardware accelerator does the lecture instruct students to select for the free tier of Google Colab?",
+   "o": [
+    "T4 GPU",
+    "A100 GPU",
+    "L4 GPU",
+    "TPU v5"
+   ],
+   "a": 0,
+   "e": "Slide 55 specifies T4 GPU as the free option, noting that A100 and L4 (and by extension other premium accelerators like TPU v5) require a paid plan.",
+   "d": "easy",
+   "t": 6,
+   "src": "15.766 Lecture 1.pdf p.55"
+  },
+  {
+   "q": "Where should a Parley API key be stored for safe use inside a Colab notebook, per the setup instructions?",
+   "o": [
+    "In Colab Secrets, under a name like PARLEY_API_KEY, with notebook access enabled",
+    "Hardcoded directly as a string in the notebook's code cell",
+    "In a public GitHub repository for easy sharing",
+    "In the Colab notebook's filename"
+   ],
+   "a": 0,
+   "e": "Slide 60 instructs storing the key in Colab Secrets with notebook access switched on, then retrieving it via `userdata.get(...)` (p.61) — this avoids exposing it in plaintext code, in public repos, or anywhere else insecure.",
+   "d": "easy",
+   "t": 6,
+   "src": "15.766 Lecture 1.pdf p.60"
+  },
+  {
+   "q": "What is MIT's monthly API credit allocation for graduate students using Parley, according to the slides?",
+   "o": [
+    "$30 of API keys per month",
+    "$100 per month",
+    "Unlimited, since it's free for students",
+    "$30 per semester"
+   ],
+   "a": 0,
+   "e": "Slide 59 states MIT allocates $30 of API keys per month for Graduate Students, and that API credits are separate from Parley chat credits. The other options misstate either the amount or the billing period.",
+   "d": "medium",
+   "t": 6,
+   "src": "15.766 Lecture 1.pdf p.59"
+  },
+  {
+   "q": "In the customer-service engine case, what three tasks make up 'your job' as stated in the lecture?",
+   "o": [
+    "Route the complaint, pull out key facts, write a short brief for the case officer",
+    "Classify sentiment, translate the complaint, archive it",
+    "Summarize the complaint, forward it to legal, close the ticket",
+    "Label the complaint for training data, retrain the model, deploy it"
+   ],
+   "a": 0,
+   "e": "Slide 14 lists exactly these three tasks: route to the right team, pull out key facts, write a short brief. The other options introduce tasks (sentiment classification, translation, legal escalation, retraining) not mentioned on this slide.",
+   "d": "easy",
+   "t": 1,
+   "src": "15.766 Lecture 1.pdf p.14"
+  }
+ ],
+ "written": [
+  {
+   "q": "Explain how a modern LLM is pre-trained using 'causal language modeling,' and describe the two ingredients the lecture identifies as necessary to learn a good next-token distribution. Use the GPT-3 example to illustrate scale.",
+   "m": "A language model is trained to predict, for any prefix of a text sequence, the next token. Causal language modeling constructs training examples by taking every prefix of a sentence as an input and the actual next word as a 'fake' label — so a single sentence like the MIT Sloan mission statement yields many (input, label) pairs, one per prefix length. The two ingredients needed to learn this distribution effectively are (1) an architecture expressive enough to model complex conditional distributions — the Transformer, with its multi-head attention and feed-forward layers — and (2) an enormous volume of training data drawn from sources like the web, books, and Wikipedia. GPT-3 illustrates the scale required: 96 Transformer layers, 96 attention heads per layer, and roughly 500B tokens of training data, dominated by filtered Common Crawl (410B tokens) with smaller contributions from Books2, WebText2, Books1, and Wikipedia. The lecture frames the GenAI revolution as resulting from the convergence of these two ingredients reaching sufficient scale simultaneously.",
+   "k": [
+    "Defines causal LM: every prefix is an input, next word is the label",
+    "Names the two ingredients: architecture (Transformer) and data (huge volume)",
+    "Mentions GPT-3 specifics: 96 layers, 96 heads",
+    "Mentions GPT-3 data scale (~500B tokens) and dominant source (Common Crawl ~410B)",
+    "Connects convergence of architecture+data to the GenAI revolution"
+   ],
+   "t": 2,
+   "ref": ""
+  },
+  {
+   "q": "Compare greedy decoding and random sampling as text generation strategies, and explain the role of temperature in tuning sampling. Use the lecture's head/tail framing and the aardvark example.",
+   "m": "Greedy decoding always selects the single highest-probability next token at each generation step, producing deterministic output; it is best suited to tasks requiring factual accuracy, such as structured extraction. Random sampling instead draws the next token stochastically in proportion to its probability, which better supports diversity and creativity but introduces risk: the softmax distribution typically has a short 'head' of high-probability good tokens and a long 'tail' of low-probability bad ones, and although any individual tail token is unlikely, the cumulative probability of sampling some tail token can be substantial — and once sampled, the model may not recover, going 'off the rails.' Temperature lets us reshape the distribution before sampling to control this risk: low temperature sharpens the distribution toward the head (more greedy-like, reliable but less diverse), while high temperature flattens it toward uniform, inflating the tail's influence. The lecture's example shows a nonsense token 'aardvark' going from about 3 in 10,000 probability at T=1 to roughly 1 in 10 at T=5 and 1 in 4 at T=50, illustrating how extreme temperature destroys the head/tail distinction and makes the model's output essentially random.",
+   "k": [
+    "Defines greedy decoding and its ideal use case (factual/deterministic)",
+    "Defines random sampling and its ideal use case (diverse/creative)",
+    "Explains head/tail framing and why tail sampling is risky (cumulative tail probability, no recovery)",
+    "Explains temperature's effect: low sharpens, high flattens",
+    "Cites the aardvark example with approximate probabilities at different temperatures"
+   ],
+   "t": 5,
+   "ref": ""
+  }
+ ]
+}

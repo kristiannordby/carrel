@@ -1,0 +1,526 @@
+{
+ "id": "x13",
+ "label": "L13",
+ "title": "R.O.A.D. I to Precision Medicine",
+ "short": "ROAD I",
+ "src": "Lecture13.pdf",
+ "brief": "Lecture 13 presents the R.O.A.D. framework for finding heterogeneous treatment effects (HTE) in observational data and for full use of RCT data, instead of one-variable-at-a-time subgroup analysis. A baseline-risk model is trained on untreated patients and applied to everyone, patients are split into risk buckets, and a per-bucket assignment MIO matches each treated patient to a distinct untreated patient to emulate an RCT. Matching does not remove unobserved confounding, so the treated-arm counterfactual model up-weights treated patients without recurrence by $\\rho$. An Optimal Policy Tree then assigns treatment to minimize predicted recurrence, and recommendations are validated (and $\\rho$ tuned) with sensitivity and specificity. Applications: adjuvant imatinib for GIST (MSK training, Polish external validation, compared with PERSIST-5) and radiotherapy for extremity sarcoma (trained on an MSK RCT). Expect questions on the matching formulation and its constraints, why and in which direction $\\rho$ corrects confounding, the OPT objective, and reading the sensitivity/specificity results.",
+ "kp": [
+  "RCTs are the gold standard but expensive, slow, tuned to the average patient; one-variable-at-a-time subgroup analysis is a clear limitation.",
+  "Data $(x_i,t_i,y_i)$; GIST: $t_i=1$ if imatinib, $y_i=1$ if recurrence.",
+  "Confounding: higher-risk patients got imatinib, so treated mean outcomes were worse although imatinib does not raise recurrence risk.",
+  "Baseline risk $w_i=g_\\theta(x_i)$, with $g_\\theta$ trained on $t_i=0$ only, applied to all; split into $m$ risk buckets $b_i$.",
+  "Per-bucket matching MIO: $\\min_z\\sum_{i\\in S_1^k}\\sum_{j\\in S_0^k}z_{ij}\\|x_i-x_j\\|$ s.t. $\\sum_{j\\in S_0^k}z_{ij}=1\\ \\forall i\\in S_1^k$, $\\sum_{i\\in S_1^k}z_{ij}\\le1\\ \\forall j\\in S_0^k$, $z_{ij}\\in\\{0,1\\}$; gives $n_1^k=n_0^k$.",
+  "Matching reduces prognostic heterogeneity on observed covariates only; unobserved confounders remain in the $t_i=1$ group.",
+  "Counterfactual models: $h_{t=0}$ with plain empirical loss on $S_0$; $h_{t=1}$ with loss $\\frac{1}{n_1^s}\\Big(\\sum_{i\\in S_1^-}\\ell(y_i,h_{t=1}(x_i))+\\rho\\sum_{j\\in S_1^+}\\ell(y_j,h_{t=1}(x_j))\\Big)$.",
+  "OPT: $\\min_{\\tau(\\cdot)}\\sum_{i=1}^{n_s}\\big(\\mathbb 1\\{\\tau(x_i)=0\\}h_{t=0}(x_i)+\\mathbb 1\\{\\tau(x_i)=1\\}h_{t=1}(x_i,\\rho)\\big)$ (minimize predicted recurrences).",
+  "Sensitivity = recurred & recommended / all recurred; specificity = not recurred & not recommended / all not recurred. Higher $\\rho$: sensitivity up, specificity down.",
+  "GIST: $\\rho\\ge2$ needed (7-yr RFS 83% vs 82%); Polish validation sens 89%, spec 70% vs PERSIST-5 91%/63%. Sarcoma RT: sens 90%, spec 15%, age cutoff 52 vs RCT's 60."
+ ],
+ "topics": [
+  {
+   "n": "Motivation: RCTs vs observational data",
+   "x": "RCTs are expensive, long, and answer questions for the average patient; their subgroup analyses split on one baseline variable at a time. Observational data are cheap and plentiful but confounded. R.O.A.D. aims to extract HTE from observational data and to use RCT data beyond the ATE."
+  },
+  {
+   "n": "Setup and confounding",
+   "x": "Each GIST patient is $(x_i,t_i,y_i)$ with $t_i=1$ for imatinib and $y_i=1$ for recurrence. Physicians gave imatinib to higher-risk patients, so treated outcomes look worse, a signature of confounding bias."
+  },
+  {
+   "n": "Risk strata and prognostic matching",
+   "x": "Train $g_\\theta$ on untreated patients, score everyone, and bucket by baseline risk. In each bucket solve an assignment MIO that matches every treated patient to a distinct untreated patient minimizing covariate distance, so the matched cohort emulates an RCT. Unobserved confounding remains."
+  },
+  {
+   "n": "Counterfactual models and reward estimation",
+   "x": "Fit $h_{t=0}$ on matched untreated and $h_{t=1}$ on matched treated patients. The treated loss multiplies the loss of treated non-recurrences by $\\rho$, pushing $h_{t=1}$ toward lower risk to offset the worse unobserved prognosis of treated patients."
+  },
+  {
+   "n": "Optimal Policy Trees and validation",
+   "x": "An OPT picks $\\tau(x)\\in\\{0,1\\}$ per leaf to minimize the sum of predicted recurrence risks. Recommendations are scored by sensitivity (recurred patients who were recommended treatment) and specificity (non-recurred patients spared treatment); these metrics also tune $\\rho$ and check robustness across OPTs."
+  },
+  {
+   "n": "GIST results (observational)",
+   "x": "536 MSK patients, random-forest baseline model, survival RF counterfactual models. $\\rho\\ge2$ was needed before predicted 7-year RFS under imatinib exceeded no imatinib. External validation on 557 Polish patients: sensitivity 89%, specificity 70%, higher specificity than PERSIST-5; OPT found 3 subgroups without and 2 with benefit."
+  },
+  {
+   "n": "Sarcoma RT results (RCT) and conclusions",
+   "x": "Training on a 164-patient MSK RCT of adjuvant radiotherapy (brachytherapy) with oversampling of higher-risk strata. Validation on 936 untreated MSK patients: sensitivity 90%, specificity 15%, age cutoff 52 vs the RCT's univariate 60. Claimed benefits: cheaper and faster than RCTs, fairer, and full use of RCT data."
+  }
+ ],
+ "cards": [
+  {
+   "f": "Heterogeneity of treatment effects (HTE)",
+   "b": "Variation in how the treatment effect differs across patients.",
+   "x": "RCTs answer for the average patient; HTE is what precision medicine needs and RCTs do not deliver.",
+   "t": 0,
+   "ref": "Lecture13.pdf p.3"
+  },
+  {
+   "f": "Main limitation of classic RCT subgroup analysis",
+   "b": "It is one-variable-at-a-time: patients are split sequentially on single baseline characteristics.",
+   "x": "RCTs also do not define subgroups from combinations of patient characteristics; OPTs split on several variables jointly.",
+   "t": 0,
+   "ref": "Lecture13.pdf p.4"
+  },
+  {
+   "f": "GIST data representation",
+   "b": "$(x_i,t_i,y_i)$: covariates (mitotic count, tumor site, size), $t_i=1$ if imatinib, $y_i=1$ if recurrence.",
+   "x": "Outcome is binary recurrence, so lower predicted $y$ is better.",
+   "t": 1,
+   "ref": "Lecture13.pdf p.6"
+  },
+  {
+   "f": "Evidence of confounding in the GIST data",
+   "b": "Imatinib-treated patients had worse mean outcomes than untreated ones, although imatinib does not increase recurrence risk.",
+   "x": "Physicians offered imatinib to patients with worse baseline risk, so naive comparison penalizes the drug.",
+   "t": 1,
+   "ref": "Lecture13.pdf p.7"
+  },
+  {
+   "f": "Baseline risk model $g_\\theta$",
+   "b": "ML model trained on untreated patients ($t_i=0$) to predict recurrence; $w_i=g_\\theta(x_i)$ is then computed for all patients.",
+   "x": "Training only on untreated patients gives a risk under no treatment that is comparable across arms.",
+   "t": 2,
+   "ref": "Lecture13.pdf p.8"
+  },
+  {
+   "f": "Risk buckets",
+   "b": "Split patients into $m$ buckets, each an interval of baseline risk estimates $w_i$; patient becomes $(x_i,t_i,y_i,w_i,b_i)$.",
+   "x": "Matching inside buckets ensures treated and untreated are compared at the same baseline risk.",
+   "t": 2,
+   "ref": "Lecture13.pdf p.8"
+  },
+  {
+   "f": "Per-bucket matching MIO",
+   "b": "$\\min_z\\sum_{i\\in S_1^k}\\sum_{j\\in S_0^k}z_{ij}\\|x_i-x_j\\|$ s.t. $\\sum_{j\\in S_0^k}z_{ij}=1\\ \\forall i\\in S_1^k$, $\\sum_{i\\in S_1^k}z_{ij}\\le1\\ \\forall j\\in S_0^k$, $z_{ij}\\in\\{0,1\\}$",
+   "x": "An assignment problem: every treated patient gets exactly one untreated match, every untreated patient is used at most once.",
+   "t": 2,
+   "ref": "Lecture13.pdf p.10"
+  },
+  {
+   "f": "Goal of the matching step",
+   "b": "Make $n_1^k=n_0^k$ in each bucket $k$, so within a bucket a patient is equally likely to be treated or not, as in an RCT.",
+   "x": "Equal counts per risk stratum is what makes the cohort emulate a randomized trial.",
+   "t": 2,
+   "ref": "Lecture13.pdf p.9"
+  },
+  {
+   "f": "What matching does not fix",
+   "b": "Unobserved confounding: the $t_i=1$ group still has worse outcomes than its baseline estimates, so outcome differences cannot be attributed to treatment.",
+   "x": "The baseline model was trained on $t_i=0$, so it cannot see unobserved factors that drove treatment.",
+   "t": 2,
+   "ref": "Lecture13.pdf p.11"
+  },
+  {
+   "f": "Loss for the treated counterfactual model $h_{t=1}$",
+   "b": "$\\frac{1}{n_1^s}\\Big(\\sum_{i\\in S_1^-}\\ell(y_i,h_{t=1}(x_i))+\\rho\\sum_{j\\in S_1^+}\\ell(y_j,h_{t=1}(x_j))\\Big)$",
+   "x": "$S_1^+$ are treated patients without recurrence; $S_1^-$ treated with recurrence. $h_{t=0}$ uses the unweighted average loss on $S_0$.",
+   "t": 3,
+   "ref": "Lecture13.pdf p.13"
+  },
+  {
+   "f": "Effect of increasing $\\rho$",
+   "b": "The model fits treated non-recurrences better, so $h_{t=1}$ predicts lower recurrence risk under treatment.",
+   "x": "This offsets unobserved worse prognosis of treated patients; too large a $\\rho$ over-recommends treatment.",
+   "t": 3,
+   "ref": "Lecture13.pdf p.14"
+  },
+  {
+   "f": "OPT objective in R.O.A.D.",
+   "b": "$\\min_{\\tau(\\cdot)}\\sum_{i=1}^{n_s}\\big(\\mathbb 1\\{\\tau(x_i)=0\\}h_{t=0}(x_i)+\\mathbb 1\\{\\tau(x_i)=1\\}h_{t=1}(x_i,\\rho)\\big)$",
+   "x": "Each patient is charged the predicted recurrence risk of the arm the tree assigns, so the tree minimizes predicted recurrences.",
+   "t": 4,
+   "ref": "Lecture13.pdf p.15"
+  },
+  {
+   "f": "Sensitivity of an OPT",
+   "b": "Recurred patients for whom OPT recommended treatment, divided by all recurred patients (recommended + not recommended).",
+   "x": "Computed on untreated patients, assuming the drug would have prevented the recurrences.",
+   "t": 4,
+   "ref": "Lecture13.pdf p.16"
+  },
+  {
+   "f": "Specificity of an OPT",
+   "b": "Non-recurred patients for whom OPT did not recommend treatment, divided by all non-recurred patients.",
+   "x": "80% specificity: of 100 untreated non-recurrers, 80 are spared unnecessary treatment.",
+   "t": 4,
+   "ref": "Lecture13.pdf p.17"
+  },
+  {
+   "f": "Minimum $\\rho$ in the GIST study",
+   "b": "$\\rho\\ge2$: at 2, predicted 7-yr RFS under imatinib (83%) exceeded no imatinib (82%); at 1.5 it was still lower (79% vs 82%).",
+   "x": "Tried $\\rho\\in[1.5,3.25]$; below 2 residual unobserved confounding still made the drug look harmful.",
+   "t": 5,
+   "ref": "Lecture13.pdf p.21"
+  },
+  {
+   "f": "GIST external validation results",
+   "b": "557 Polish patients: OPT sensitivity 89%, specificity 70%, vs PERSIST-5 RCT 91% and 63%.",
+   "x": "Similar sensitivity, higher specificity: fewer patients treated unnecessarily.",
+   "t": 5,
+   "ref": "Lecture13.pdf p.24"
+  },
+  {
+   "f": "Sarcoma RT validation results",
+   "b": "936 MSK patients without RT: sensitivity 90%, specificity 15%; various OPTs 88-90% and 15-21%.",
+   "x": "RT is given to all limb-sparing surgery patients today, so sparing 15% who would not benefit is meaningful.",
+   "t": 6,
+   "ref": "Lecture13.pdf p.30"
+  },
+  {
+   "f": "OPT vs RCT age finding (sarcoma)",
+   "b": "The RCT's univariate analysis found age > 60 as the only significant predictor; the OPT found a cutoff of 52.",
+   "x": "The OPT finds multivariable subgroups instead of single-variable splits.",
+   "t": 6,
+   "ref": "Lecture13.pdf p.30"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "What does heterogeneity of treatment effects (HTE) refer to?",
+   "o": [
+    "Variation in treatment effect across patients",
+    "Variation in treatment dose across hospitals",
+    "Differences in outcome definitions across trials",
+    "Random noise in the observed outcomes"
+   ],
+   "a": 0,
+   "e": "HTE is how the effect of a treatment differs between patients, which RCTs aimed at the average patient do not capture. Noise in outcomes is not an effect difference.",
+   "d": "easy",
+   "t": 0,
+   "ref": "Lecture13.pdf p.3"
+  },
+  {
+   "q": "In the GIST setup, what does $y_i=1$ mean?",
+   "o": [
+    "Patient $i$ had a recurrence",
+    "Patient $i$ received imatinib",
+    "Patient $i$ is in risk bucket 1",
+    "Patient $i$ was matched to a control"
+   ],
+   "a": 0,
+   "e": "$y_i$ is the outcome (recurrence); the treatment indicator is $t_i$.",
+   "d": "easy",
+   "t": 1,
+   "ref": "Lecture13.pdf p.6"
+  },
+  {
+   "q": "On which patients is the baseline risk model $g_\\theta$ trained?",
+   "o": [
+    "Untreated patients only ($t_i=0$)",
+    "Treated patients only ($t_i=1$)",
+    "All patients, with $t_i$ as a feature",
+    "Matched pairs from every bucket"
+   ],
+   "a": 0,
+   "e": "$g_\\theta$ is trained on $t_i=0$ and then applied to the treated group to estimate baseline (no-treatment) risk. Using $t_i$ as a feature would mix treatment into the baseline score.",
+   "d": "easy",
+   "t": 2,
+   "ref": "Lecture13.pdf p.8"
+  },
+  {
+   "q": "OPT sensitivity is defined as:",
+   "o": [
+    "Recurred & recommended treatment / all recurred",
+    "Recommended treatment & recurred / all recommended",
+    "Not recurred & not recommended / all not recurred",
+    "Recurred & not recommended / all recommended"
+   ],
+   "a": 0,
+   "e": "Sensitivity is among patients who recurred (and would have benefited). The third option is specificity; the second is a precision-type ratio.",
+   "d": "easy",
+   "t": 4,
+   "ref": "Lecture13.pdf p.16"
+  },
+  {
+   "q": "In the RCT application, which treatment did the OPT evaluate?",
+   "o": [
+    "Adjuvant radiotherapy for extremity or truncal sarcoma",
+    "Adjuvant imatinib for gastrointestinal stromal tumors",
+    "Postoperative chemotherapy for liposarcoma",
+    "Limb-sparing surgery versus amputation"
+   ],
+   "a": 0,
+   "e": "The RCT case is adjuvant RT (brachytherapy) after limb-sparing surgery. Imatinib for GIST is the observational case.",
+   "d": "easy",
+   "t": 6,
+   "ref": "Lecture13.pdf p.25"
+  },
+  {
+   "q": "Which is listed as a benefit of the R.O.A.D. approach in the conclusions?",
+   "o": [
+    "Fairness by including groups underrepresented in RCTs",
+    "Removing the need for any external validation",
+    "Guaranteeing unbiased average treatment effects",
+    "Replacing outcome models with propensity scores"
+   ],
+   "a": 0,
+   "e": "The slides list fairness via women and minorities historically underrepresented in RCTs. The method itself relies on external validation.",
+   "d": "easy",
+   "t": 6,
+   "ref": "Lecture13.pdf p.31"
+  },
+  {
+   "q": "In the MSK GIST data, imatinib-treated patients had worse mean outcomes. The slides conclude:",
+   "o": [
+    "Confounding: higher-risk patients were more likely to get imatinib",
+    "Imatinib increases the risk of recurrence",
+    "The recurrence outcome was mislabeled in the treated group",
+    "The sample was too small to compare the two groups"
+   ],
+   "a": 0,
+   "e": "Treatment was not randomized and physicians gave imatinib to worse-prognosis patients. Since imatinib does not raise recurrence risk, worse treated outcomes signal confounding.",
+   "d": "medium",
+   "t": 1,
+   "ref": "Lecture13.pdf p.7"
+  },
+  {
+   "q": "In the per-bucket matching MIO, what does $\\sum_{j\\in S_0^k}z_{ij}=1\\ \\forall i\\in S_1^k$ enforce?",
+   "o": [
+    "Every treated patient is matched to exactly one untreated patient",
+    "Every untreated patient is matched to exactly one treated patient",
+    "Each bucket contains exactly one treated patient",
+    "Total matching distance in a bucket equals one"
+   ],
+   "a": 0,
+   "e": "The sum runs over controls $j$ for a fixed treated $i$. The reverse direction is constrained by $\\sum_i z_{ij}\\le1$, which only caps reuse of controls.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Lecture13.pdf p.10"
+  },
+  {
+   "q": "What does the constraint $\\sum_{i\\in S_1^k}z_{ij}\\le1\\ \\forall j\\in S_0^k$ ensure?",
+   "o": [
+    "No untreated patient is used as a match more than once",
+    "Every untreated patient must be matched",
+    "Each treated patient has at most one match",
+    "Matched pairs are within distance 1 of each other"
+   ],
+   "a": 0,
+   "e": "It caps each control's usage at one, so matching is without replacement. It is an inequality, so some untreated patients may stay unmatched.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Lecture13.pdf p.10"
+  },
+  {
+   "q": "Why is the matching problem solved separately within each risk bucket?",
+   "o": [
+    "To get equal treated and untreated counts at each baseline risk level",
+    "Because the full problem would be infeasible with binary variables",
+    "To let each bucket use a different distance metric",
+    "To make the baseline risk model consistent across buckets"
+   ],
+   "a": 0,
+   "e": "Requiring $n_1^k=n_0^k$ per bucket balances treatment across risk strata, emulating randomization. Solving per bucket also keeps the problem small, but balance is the stated goal.",
+   "d": "medium",
+   "t": 2,
+   "ref": "Lecture13.pdf p.9"
+  },
+  {
+   "q": "In the loss for $h_{t=1}$, which patients are weighted by $\\rho$?",
+   "o": [
+    "Treated patients who did not have a recurrence ($S_1^+$)",
+    "Treated patients who had a recurrence ($S_1^-$)",
+    "Untreated patients who did not have a recurrence",
+    "All matched patients in the highest risk bucket"
+   ],
+   "a": 0,
+   "e": "$\\rho$ multiplies the loss over $S_1^+$. Up-weighting $S_1^-$ would push $h_{t=1}$ toward higher risk, worsening the confounding bias.",
+   "d": "medium",
+   "t": 3,
+   "ref": "Lecture13.pdf p.13"
+  },
+  {
+   "q": "What does the OPT objective minimize?",
+   "o": [
+    "Sum over patients of predicted recurrence risk under the assigned arm",
+    "Number of patients assigned to treatment",
+    "Misclassification of the observed treatment $t_i$",
+    "Squared error between $h_{t=1}$ and $h_{t=0}$"
+   ],
+   "a": 0,
+   "e": "Each patient contributes $h_{t=0}(x_i)$ or $h_{t=1}(x_i,\\rho)$ depending on $\\tau(x_i)$, so the tree minimizes predicted recurrences. It does not imitate historical treatment.",
+   "d": "medium",
+   "t": 4,
+   "ref": "Lecture13.pdf p.15"
+  },
+  {
+   "q": "An OPT has 80% specificity. This means:",
+   "o": [
+    "Of 100 untreated non-recurrers, 80 were not recommended treatment",
+    "Of 100 untreated recurrers, 80 were recommended treatment",
+    "80% of recommended patients would recur without treatment",
+    "80% of patients follow the OPT recommendation"
+   ],
+   "a": 0,
+   "e": "Specificity counts non-recurrers correctly spared treatment. The second option describes sensitivity.",
+   "d": "medium",
+   "t": 4,
+   "ref": "Lecture13.pdf p.17"
+  },
+  {
+   "q": "In the GIST tuning table, as $\\rho$ rises from 1.5 to 3.25, OPT sensitivity and specificity:",
+   "o": [
+    "Sensitivity rises (85%→94%), specificity falls (76%→52%)",
+    "Both rise together, so the largest $\\rho$ is best",
+    "Sensitivity falls (94%→85%), specificity rises (52%→76%)",
+    "Both stay roughly constant, so $\\rho$ does not matter"
+   ],
+   "a": 0,
+   "e": "Larger $\\rho$ makes treatment look more beneficial, so more patients are recommended: more recurrers caught, more non-recurrers treated unnecessarily. The trend is overall, not strictly monotone (1.5→2.0 goes 85/76 → 84/77).",
+   "d": "medium",
+   "t": 5,
+   "ref": "Lecture13.pdf p.22"
+  },
+  {
+   "q": "How did the GIST OPT compare with the PERSIST-5 RCT on external validation?",
+   "o": [
+    "Similar sensitivity (89% vs 91%), higher specificity (70% vs 63%)",
+    "Higher sensitivity (91% vs 89%), lower specificity (63% vs 70%)",
+    "Both sensitivity and specificity were lower than PERSIST-5",
+    "Identical sensitivity, specificity not reported"
+   ],
+   "a": 0,
+   "e": "On 557 Polish patients the OPT had sensitivity 89% and specificity 70%, vs PERSIST-5's 91% and 63%.",
+   "d": "medium",
+   "t": 5,
+   "ref": "Lecture13.pdf p.24"
+  },
+  {
+   "q": "For radiotherapy in extremity sarcoma, the RCT's univariate analysis and the OPT found:",
+   "o": [
+    "RCT: age > 60 only significant predictor; OPT: age cutoff 52",
+    "RCT: age > 52 only significant predictor; OPT: age cutoff 60",
+    "RCT: tumor grade only significant predictor; OPT: age cutoff 52",
+    "Both found age > 60 as the only relevant split"
+   ],
+   "a": 0,
+   "e": "The slides contrast the RCT's age > 60 with the OPT cutoff of 52.",
+   "d": "medium",
+   "t": 6,
+   "ref": "Lecture13.pdf p.30"
+  },
+  {
+   "q": "After prognostic matching, why can outcome differences between matched treated and untreated patients still not be attributed to treatment?",
+   "o": [
+    "Unobserved confounders remain in the treated arm, unseen by $g_\\theta$",
+    "Matching on $\\|x_i-x_j\\|$ discards the prognostic information in $x$",
+    "Bucket counts still differ, so the cohorts remain unbalanced",
+    "The OPT is trained before matching and ignores the buckets"
+   ],
+   "a": 0,
+   "e": "Matching balances observed baseline risk, but $g_\\theta$ never saw why physicians treated; treated patients still do worse than their baseline estimates. Counts are equal by construction.",
+   "d": "hard",
+   "t": 2,
+   "ref": "Lecture13.pdf p.11"
+  },
+  {
+   "q": "Why does R.O.A.D. up-weight treated non-recurrences ($\\rho>1$) rather than down-weight them?",
+   "o": [
+    "Treated patients' unobserved prognosis is worse, so $h_{t=1}$ overstates risk",
+    "Treated non-recurrences are rare, so up-weighting only fixes class imbalance",
+    "Down-weighting would make the MIO matching problem infeasible",
+    "Untreated patients have worse unobserved prognosis, so $h_{t=0}$ is too low"
+   ],
+   "a": 0,
+   "e": "Unobserved confounding makes treated outcomes look worse than the drug's true effect. Increasing $\\rho$ pulls $h_{t=1}$ toward lower risk to correct that. The class-imbalance reading misses the confounding purpose.",
+   "d": "hard",
+   "t": 3,
+   "ref": "Lecture13.pdf p.14"
+  },
+  {
+   "q": "With $\\rho=1.5$, predicted 7-year RFS was 79% under imatinib vs 82% without. What follows?",
+   "o": [
+    "Residual confounding still dominates; $\\rho$ of at least 2 is needed",
+    "Imatinib is harmful here, so the OPT should never recommend it",
+    "$\\rho=1.5$ is optimal because it maximizes OPT specificity",
+    "Matching failed, so buckets must be redefined before tuning"
+   ],
+   "a": 0,
+   "e": "Imatinib is known not to increase recurrence, so the drug looking worse means confounding remains. At $\\rho=2$ imatinib RFS (83%) exceeds no imatinib (82%).",
+   "d": "hard",
+   "t": 5,
+   "ref": "Lecture13.pdf p.21"
+  },
+  {
+   "q": "A clinician sets $\\rho=3.25$ (sensitivity 94%, specificity 52%) instead of $\\rho=2$ (84%, 77%). The main cost is:",
+   "o": [
+    "Many more non-recurring patients receive unnecessary imatinib",
+    "Many more recurring patients are left untreated",
+    "The OPT can no longer be externally validated",
+    "The matching step must be re-solved with new buckets"
+   ],
+   "a": 0,
+   "e": "Higher $\\rho$ recommends treatment more often: more recurrers caught, but specificity drops from 77% to 52%, so roughly half of non-recurrers get treated.",
+   "d": "hard",
+   "t": 5,
+   "ref": "Lecture13.pdf p.22"
+  },
+  {
+   "q": "Why is OPT sensitivity computed on untreated patients who recurred?",
+   "o": [
+    "Their recurrence shows they would have benefited, assuming the drug is effective",
+    "Treated recurrers are excluded because they were used to train $g_\\theta$",
+    "Untreated patients have no confounding, so labels are unbiased",
+    "Recurrence is only recorded for untreated patients"
+   ],
+   "a": 0,
+   "e": "An untreated recurrer is a patient who needed treatment, provided imatinib would have prevented the recurrence. That assumption is explicit on the slide.",
+   "d": "hard",
+   "t": 4,
+   "ref": "Lecture13.pdf p.16"
+  },
+  {
+   "q": "The sarcoma OPT reached sensitivity 90% but specificity only 15%. The slides interpret this as:",
+   "o": [
+    "The OPT can spare 15% of non-benefiting patients from RT given to everyone today",
+    "The OPT fails, since specificity below 50% is worse than random",
+    "Most patients should not receive RT after limb-sparing surgery",
+    "The OPT is overfit because sensitivity is close to 100%"
+   ],
+   "a": 0,
+   "e": "Current practice gives RT to all limb-sparing surgery patients (specificity 0%), so 15% is a gain while keeping 90% sensitivity.",
+   "d": "hard",
+   "t": 6,
+   "ref": "Lecture13.pdf p.30"
+  }
+ ],
+ "written": [
+  {
+   "q": "Describe how R.O.A.D. turns an observational cohort into one that emulates an RCT. Write the per-bucket matching formulation, explain each constraint, and state what this step does and does not correct.",
+   "m": "Train $g_\\theta$ on untreated patients ($t_i=0$) to predict recurrence and apply it to all patients, giving baseline risk $w_i=g_\\theta(x_i)$. Split patients into $m$ buckets of baseline risk. In bucket $k$, with treated set $S_1^k$ and untreated set $S_0^k$, solve $\\min_z\\sum_{i\\in S_1^k}\\sum_{j\\in S_0^k}z_{ij}\\|x_i-x_j\\|$ s.t. $\\sum_{j\\in S_0^k}z_{ij}=1\\ \\forall i\\in S_1^k$, $\\sum_{i\\in S_1^k}z_{ij}\\le1\\ \\forall j\\in S_0^k$, $z_{ij}\\in\\{0,1\\}$. The first constraint matches each treated patient to exactly one control; the second prevents reusing a control; binaries make it an assignment problem. Objective: matched pairs close in covariates. Result: $n_1^k=n_0^k$ per bucket, so within a risk stratum treatment is equally likely, reducing prognostic heterogeneity like an RCT. It does not correct unobserved confounding: $g_\\theta$ was trained on $t_i=0$, unobserved factors that drove treatment remain in the treated group, and their outcomes stay worse than their baseline estimates, so matched outcome differences cannot be attributed to treatment.",
+   "k": [
+    "Baseline model trained on untreated, applied to all",
+    "Risk buckets",
+    "Correct MIO objective and both constraints explained",
+    "Equal treated/untreated counts per bucket emulate RCT",
+    "Unobserved confounding remains; reason tied to $g_\\theta$ trained on $t=0$"
+   ],
+   "t": 2
+  },
+  {
+   "q": "Explain the counterfactual models and the Optimal Policy Tree in R.O.A.D. Write the treated-arm loss and the OPT objective, explain the role of $\\rho$, and describe how $\\rho$ was chosen in the GIST study.",
+   "m": "$h_{t=0}$ is trained on matched untreated patients $S_0$ with loss $\\frac1{n_0^s}\\sum_{i\\in S_0}\\ell(y_i,h_{t=0}(x_i))$. $h_{t=1}$ is trained on matched treated patients with $\\frac{1}{n_1^s}\\Big(\\sum_{i\\in S_1^-}\\ell(y_i,h_{t=1}(x_i))+\\rho\\sum_{j\\in S_1^+}\\ell(y_j,h_{t=1}(x_j))\\Big)$, where $S_1^+$ are treated non-recurrences. Raising $\\rho$ makes the model fit those patients better, lowering predicted risk under treatment and offsetting the unobserved worse prognosis of treated patients. The OPT solves $\\min_{\\tau(\\cdot)}\\sum_{i=1}^{n_s}\\big(\\mathbb 1\\{\\tau(x_i)=0\\}h_{t=0}(x_i)+\\mathbb 1\\{\\tau(x_i)=1\\}h_{t=1}(x_i,\\rho)\\big)$, assigning each leaf the arm with lower total predicted recurrence. Tuning in GIST: $\\rho\\in[1.5,3.25]$ with survival RFs; at 1.5 predicted 7-year RFS was 79% with vs 82% without imatinib (confounding still visible); at 2, 83% vs 82%, so $\\rho\\ge2$. Sensitivity and specificity then guide the choice: higher $\\rho$ raises sensitivity (85%→94%) and lowers specificity (76%→52%). Convergent sensitivity/specificity across OPTs indicates robustness.",
+   "k": [
+    "$h_{t=1}$ loss with $\\rho$ on $S_1^+$",
+    "Direction: $\\rho$ lowers predicted treated risk to offset confounding",
+    "OPT objective as predicted recurrence under assigned arm",
+    "$\\rho\\ge2$ from RFS comparison",
+    "Sensitivity/specificity trade-off as $\\rho$ grows"
+   ],
+   "t": 3
+  },
+  {
+   "q": "Compare the two R.O.A.D. applications (GIST/imatinib and sarcoma/radiotherapy): data source, validation, results, and what each shows about the advantages over standard RCT analysis.",
+   "m": "GIST: observational training data, 536 MSK patients (1982-2017), confounded because higher-risk patients got imatinib; prognostic matching plus $\\rho$-weighted counterfactual models. External validation on 557 Polish registry patients: sensitivity 89%, specificity 70%, vs PERSIST-5 RCT 91% and 63%; OPT found three subgroups that do not benefit and two that do, whereas prior work split on one variable at a time. Sarcoma: training on a 164-patient MSK randomized trial (77 brachytherapy, 87 not), stratified by baseline risk with oversampling of higher-risk strata. Validation on 936 MSK patients who did not receive RT: sensitivity 90%, specificity 15% (various OPTs 88-90%, 15-21%). Since RT is given to all limb-sparing surgery patients, the OPT could spare 15% of patients who would not benefit; it found an age cutoff of 52 vs the RCT's univariate age > 60. Lessons: observational data can yield validated, interpretable multivariable subgroups, and RCT data can be used beyond the ATE.",
+   "k": [
+    "GIST: observational, matching + $\\rho$, Polish validation numbers",
+    "Comparison with PERSIST-5",
+    "Sarcoma: RCT training data, 936-patient validation numbers",
+    "Interpretation of 15% specificity vs treat-all",
+    "Multivariable subgroups vs one-variable-at-a-time"
+   ],
+   "t": 6
+  }
+ ]
+}

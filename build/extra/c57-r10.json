@@ -1,0 +1,445 @@
+{
+ "id": "r10",
+ "label": "R10",
+ "title": "Adaptive Optimization and Dynamic Programming",
+ "short": "AO & DP",
+ "src": "Recitation 10.pdf",
+ "brief": "Recitation 10 links adaptive (two-stage stochastic) optimization from L15 to dynamic programming from L16 through one idea: immediate cost plus optimal expected future value. A bakery example (bake at \\$2 tonight, buy any shortfall at \\$3 tomorrow, demand 2 or 6) is used to write the two-stage model in compact and extensive form and to compare deterministic, adaptive and wait-and-see benchmarks through VSS and EVPI. The DP half covers the five ingredients, backward induction on a decision tree, and choosing a sufficient state, worked through on the unbounded integer knapsack. The bakery is then recast as a two-stage DP, showing that the AO recourse function is the expected cost-to-go and that DP merges histories a scenario tree keeps apart. Optional slides run Bellman–Ford on a graph with a cycle and Benders decomposition by hand on the bakery.",
+ "kp": [
+  "Two-stage AO: $\\min_{x\\in X} c^\\top x+Q(x)$; first-stage $x$ is static, recourse $y_s$ adapts to each scenario.",
+  "Costs always rank $C_{DET}\\ge C_{AO}\\ge C_{WS}$, so VSS $=C_{DET}-C_{AO}\\ge0$ and EVPI $=C_{AO}-C_{WS}\\ge0$.",
+  "Bakery: $x_{AO}=2$, $C_{AO}=10$; DET bakes 4 with $Z_{DET}=8$ but $C_{DET}=11$; $C_{WS}=8$ → VSS 1, EVPI 2.",
+  "Critical fractile: bake another unit while $P(d>x)\\cdot p$ exceeds the bake cost; AO can bake below the mean.",
+  "$Z_{AO}=C_{AO}$ and $Z_{WS}=C_{WS}$, but $Z_{DET}\\ne C_{DET}$ in general; $Z_{DET}$ vs $Z_{WS}$ has no fixed order.",
+  "DP = stage, sufficient state, decision (+ uncertainty), transition, cost; solve the Bellman equation by backward induction.",
+  "A DP solution is a first decision plus a policy $\\mu^*_t(s_t)$ for every state, not one path.",
+  "Knapsack state: $(i,s)$ for binary, $s$ alone for unbounded integer.",
+  "AO recourse $Q(x)$ = DP expected cost-to-go; DP merges histories with the same state (10 nights: 130 entries vs 1,023 tree nodes).",
+  "Bellman–Ford adds an edge-count stage to make a cyclic recursion acyclic; Benders builds $Q$ from below with cuts until LB = UB."
+ ],
+ "topics": [
+  {
+   "n": "Two-stage adaptive optimization",
+   "x": "The first-stage decision $x$ is fixed before uncertainty is revealed; second-stage recourse $y_s$ is chosen after observing scenario $s$. The model is $\\min_{x\\in X} c^\\top x+Q(x)$ with $Q(x)=\\sum_s\\pi_sQ_s(x)$, where each $Q_s(x)$ is a recourse LP. In the bakery, linearizing $Q_s(x)=3\\max\\{d_s-x,0\\}$ with epigraph variables gives the extensive form."
+  },
+  {
+   "n": "Benchmarks: DET, AO, WS, VSS, EVPI",
+   "x": "DET optimizes against mean data, AO against the distribution, and WS lets $x$ depend on the scenario (clairvoyant). Comparing true expected costs gives $C_{DET}\\ge C_{AO}\\ge C_{WS}$, VSS $=C_{DET}-C_{AO}$ and EVPI $=C_{AO}-C_{WS}$. A model's own optimal value $Z$ equals its true cost $C$ for AO and WS but not for DET, which never sees a shortage."
+  },
+  {
+   "n": "DP ingredients and backward induction",
+   "x": "A DP has stages, a sufficient state, decisions (plus uncertainty depending only on state and decision), a transition and stage costs. The Bellman equation $J_t(s)=\\min_x E[f_t+J_{t+1}(g_t(s,x,u_t))]$ is solved backward from $J_T=f_T$; on a tree, decision nodes take a min and chance nodes an expectation. The output is a first decision plus a rule for every state."
+  },
+  {
+   "n": "Sufficient states and integer knapsack",
+   "x": "The state must carry exactly the information future decisions and costs need: too little makes the recursion wrong, too much makes it expensive. Binary knapsack needs $(i,s)$, while unbounded knapsack needs only remaining capacity $s$, with $J(s)=\\max\\{0,\\max_{j:a_j\\le s}[c_j+J(s-a_j)]\\}$ filled in increasing $s$. Storing the argmax lets you trace back an optimal solution."
+  },
+  {
+   "n": "Connecting AO and DP",
+   "x": "The bakery is a two-stage DP with $s_1=x_0-u_0$ and $J_1(s_1)=3\\max\\{0,-s_1\\}$, so $E[J_1(x_0-u_0)]$ is exactly the AO recourse function $Q(x_0)$. Scenario copies $y_s$ correspond to a policy $\\mu_1^*(s_1)$. Over many periods a scenario tree grows exponentially in histories, while DP merges histories that reach the same state."
+  },
+  {
+   "n": "Bellman–Ford (shortest paths with cycles)",
+   "x": "On a graph with a directed cycle the natural recursion has no computation order. Adding a stage $t$ = maximum number of edges gives $J_t(i)=\\min\\{J_{t-1}(i),\\min_{(j,i)\\in E}[J_{t-1}(j)+c(j,i)]\\}$, which is acyclic. Without negative cycles $|V|-1$ stages suffice, for $O(|V||E|)$ work."
+  },
+  {
+   "n": "Benders decomposition by hand",
+   "x": "The master $\\min 2x+\\theta$ with $\\theta\\ge0$ under-approximates $Q$ with optimality cuts $\\theta\\ge\\sum_s\\pi_s\\lambda_s^k(d_s-x)$ from the subproblem duals. The master value is a lower bound and the best $c^\\top x^k+Q(x^k)$ an upper bound; stop when they meet. In the bakery it converges in three iterations to $x=2$, value 10."
+  }
+ ],
+ "cards": [
+  {
+   "f": "Static vs adaptive decision in a two-stage problem.",
+   "b": "Static: chosen before uncertainty is revealed, same value in every scenario (bakery $x$). Adaptive: chosen after observing it, may differ by scenario (bakery $y_L$, $y_H$).",
+   "x": "Making x adaptive too is wait-and-see (a clairvoyant), not AO.",
+   "t": 0,
+   "ref": "Recitation 10.pdf p.4"
+  },
+  {
+   "f": "Two-stage AO formulation.",
+   "b": "$\\min_{x\\in X} c^\\top x+Q(x)$, $Q(x)=\\sum_s\\pi_sQ_s(x)$, $Q_s(x)=\\min_{y_s\\ge0}\\{f_s^\\top y_s: Vy_s=w_s-U_sx\\}$.",
+   "x": "$Q_s(x)$ is the optimal value of the scenario-$s$ recourse LP; $Q(x)$ is its expectation.",
+   "t": 0,
+   "ref": "Recitation 10.pdf p.6"
+  },
+  {
+   "f": "Bakery: how do you get the extensive form from $Q_s(x)=3\\max\\{d_s-x,0\\}$?",
+   "b": "Linearize each max with an epigraph variable: $y_s\\ge d_s-x$, $y_s\\ge0$, weight $\\pi_s\\cdot3=\\tfrac32$: $\\min 2x+\\tfrac32y_L+\\tfrac32y_H$ s.t. $y_L\\ge2-x$, $y_H\\ge6-x$, $0\\le x\\le6$.",
+   "x": "Minimization pushes $y_s$ down onto $\\max\\{d_s-x,0\\}$, so the linearization is exact.",
+   "t": 0,
+   "ref": "Recitation 10.pdf p.10"
+  },
+  {
+   "f": "Define $C_{DET}$, $C_{AO}$, $C_{WS}$.",
+   "b": "$C_{DET}=c^\\top x_{DET}+Q(x_{DET})$ with $x_{DET}$ from the mean-data model; $C_{AO}=\\min_x c^\\top x+Q(x)$; $C_{WS}=\\sum_s\\pi_s\\min_x\\{c^\\top x+Q_s(x)\\}$.",
+   "x": "$C$ = true expected cost of the first-stage decision; $Z$ = the model's own optimal value.",
+   "t": 1,
+   "ref": "Recitation 10.pdf p.7"
+  },
+  {
+   "f": "VSS and EVPI: definitions and sign.",
+   "b": "VSS $=C_{DET}-C_{AO}$ (value of using the distribution); EVPI $=C_{AO}-C_{WS}$ (value of knowing the outcome first). Both $\\ge0$: $x_{DET}$ is feasible for AO, and WS relaxes AO.",
+   "x": "Ordering that always holds (min): $C_{DET}\\ge C_{AO}\\ge C_{WS}$.",
+   "t": 1,
+   "ref": "Recitation 10.pdf p.8"
+  },
+  {
+   "f": "Bakery results ($c=2$, morning price 3, $d\\in\\{2,6\\}$ w.p. ½).",
+   "b": "$x_{AO}=2$, $C_{AO}=10$; DET bakes 4, $Z_{DET}=8$, $C_{DET}=11$; WS: $C_{WS}=8$. VSS $=1$, EVPI $=2$.",
+   "x": "Expected cost is $12-x$ on $[0,2]$ and $9+x/2$ on $[2,6]$.",
+   "t": 1,
+   "ref": "Recitation 10.pdf p.11"
+  },
+  {
+   "f": "Critical-fractile rule in the bakery.",
+   "b": "Bake another loaf while $P(d>x)\\cdot p>2$ ($p$ = morning price). $p=3$: stop at 2. $p=5$: bake to 6. $p=4$: any $x\\in[2,6]$.",
+   "x": "AO is not 'mean + safety stock': at p = 3 it bakes below the mean of 4.",
+   "t": 1,
+   "ref": "Recitation 10.pdf p.13"
+  },
+  {
+   "f": "For which models does $Z=C$ always hold?",
+   "b": "AO and WS ($Z_{AO}=C_{AO}$, $Z_{WS}=C_{WS}$). DET generally not: bakery $Z_{DET}=8\\ne C_{DET}=11$ because the mean-value model never sees a shortage.",
+   "x": "No fixed order of $Z_{DET}$ vs $Z_{WS}$; with only random RHS in an LP, Jensen gives $Z_{DET}\\le Z_{WS}$.",
+   "t": 1,
+   "ref": "Recitation 10.pdf p.15"
+  },
+  {
+   "f": "Five ingredients of a DP.",
+   "b": "Stage $t$; state $s_t$ (sufficient summary of the past); decision $x_t\\in X_t(s_t)$ plus uncertainty $u_t$ depending only on $(s_t,x_t)$; transition $s_{t+1}=g_t(s_t,x_t,u_t)$; costs $f_t$ and terminal $f_T$.",
+   "x": "Too little state information breaks the recursion; too much makes it expensive.",
+   "t": 2,
+   "ref": "Recitation 10.pdf p.18"
+  },
+  {
+   "f": "Bellman equation (backward induction).",
+   "b": "$J_T(s)=f_T(s)$; $J_t(s)=\\min_{x\\in X_t(s)}E[f_t(s,x,u_t)+J_{t+1}(g_t(s,x,u_t))\\mid s,x]$.",
+   "x": "Work per stage ≈ (# states) × (# choices) × (# outcomes).",
+   "t": 2,
+   "ref": "Recitation 10.pdf p.18"
+  },
+  {
+   "f": "What does backward induction on a decision tree return?",
+   "b": "An optimal first decision $x_0^*$ plus a rule $\\mu_1^*(s_1)$ for every stage-1 state, not a single path.",
+   "x": "Decision nodes take a min; chance nodes take an expectation.",
+   "t": 2,
+   "ref": "Recitation 10.pdf p.19"
+  },
+  {
+   "f": "Smallest sufficient state: binary vs unbounded integer knapsack.",
+   "b": "Binary: $(i,s)$ (item index, remaining capacity) → $n(K+1)$ entries, 2 choices each. Unbounded: $s$ alone → $K+1$ entries, $n$ choices each.",
+   "x": "Binary needs i to know which items are still available.",
+   "t": 3,
+   "ref": "Recitation 10.pdf p.23"
+  },
+  {
+   "f": "Unbounded knapsack recursion and graph view.",
+   "b": "$J(s)=\\max\\{0,\\max_{j:a_j\\le s}[c_j+J(s-a_j)]\\}$, $J(0)=0$; fill in increasing $s$, store the argmax, trace back from $J(K)$. Graph: arcs $s\\to s-a_j$ of length $c_j$; $J(K)$ is a longest path from $K$.",
+   "x": "$a_j>0$ makes the graph acyclic, so increasing $s$ is a valid order.",
+   "t": 3,
+   "ref": "Recitation 10.pdf p.28"
+  },
+  {
+   "f": "AO ↔ DP dictionary.",
+   "b": "First-stage $x$ ↔ $x_0$ in $s_0$; scenario $s$ w.p. $\\pi_s$ ↔ uncertainty $u_0$; per-scenario $y_s$ ↔ policy $\\mu_1^*(s_1)$; recourse $Q(x)$ ↔ expected cost-to-go $E[J_1(s_1)]$.",
+   "x": "Trap: s indexes scenarios in AO but denotes the state in DP.",
+   "t": 4,
+   "ref": "Recitation 10.pdf p.32"
+  },
+  {
+   "f": "Bellman–Ford recursion.",
+   "b": "$J_t(i)=\\min\\{J_{t-1}(i),\\min_{j:(j,i)\\in E}[J_{t-1}(j)+c(j,i)]\\}$, $J_0(o)=0$, $J_0(i)=\\infty$ otherwise; $t$ = max edges. $|V|-1$ stages suffice with no negative cycle; work $O(|V||E|)$.",
+   "x": "The edge-count stage makes the recursion acyclic even when the graph is not.",
+   "t": 5,
+   "ref": "Recitation 10.pdf p.37"
+  },
+  {
+   "f": "Benders on the bakery: master, cuts, bounds.",
+   "b": "Master $\\min 2x+\\theta$, $0\\le x\\le6$, $\\theta\\ge0$, plus cuts $\\theta\\ge\\sum_s\\tfrac12\\lambda_s^k(d_s-x)$. LB = $2x^k+\\theta^k$; UB = $\\min_{\\tau\\le k}\\{2x^\\tau+Q(x^\\tau)\\}$. Stop when LB = UB.",
+   "x": "Without $\\theta\\ge0$ the first master (no cuts) is unbounded.",
+   "t": 6,
+   "ref": "Recitation 10.pdf p.40"
+  }
+ ],
+ "quiz": [
+  {
+   "q": "Bakery: bake $x$ tonight before demand is known, then buy $y$ more after seeing $d$. Which decisions are adaptive?",
+   "o": [
+    "Only $y$",
+    "Both $x$ and $y$",
+    "Only $x$",
+    "Neither"
+   ],
+   "a": 0,
+   "e": "$y$ is chosen after $d$ is observed, so $y_L$ and $y_H$ may differ; $x$ is fixed before. 'Both' is wait-and-see: a clairvoyant who knows $d$ tonight.",
+   "d": "easy",
+   "t": 0,
+   "src": "Recitation 10.pdf p.4"
+  },
+  {
+   "q": "For a minimization problem, which ordering of true expected costs always holds?",
+   "o": [
+    "$C_{DET}\\ge C_{AO}\\ge C_{WS}$",
+    "$C_{DET}\\ge C_{WS}\\ge C_{AO}$",
+    "$C_{WS}\\ge C_{DET}\\ge C_{AO}$",
+    "$C_{AO}\\ge C_{WS}\\ge C_{DET}$"
+   ],
+   "a": 0,
+   "e": "$x_{DET}$ is one feasible first-stage choice for AO, so $C_{AO}\\le C_{DET}$; WS lets $x$ depend on $s$, a relaxation of AO, so $C_{WS}\\le C_{AO}$. WS can never cost more than AO.",
+   "d": "easy",
+   "t": 1,
+   "src": "Recitation 10.pdf p.8"
+  },
+  {
+   "q": "Bakery (bake \\$2, morning price \\$3, $d\\in\\{2,6\\}$ w.p. ½). DET plans for $\\bar d=4$ and bakes 4. What is $C_{DET}$?",
+   "o": [
+    "11",
+    "8",
+    "10",
+    "14"
+   ],
+   "a": 0,
+   "e": "If $d=2$: cost 8. If $d=6$: buy 2 at \\$3, cost 14. Average 11. 8 is $Z_{DET}$, the model's own value, which never sees a shortage.",
+   "d": "medium",
+   "t": 1,
+   "src": "Recitation 10.pdf p.11"
+  },
+  {
+   "q": "In the same bakery, $C_{AO}=10$ and $C_{WS}=8$. What are VSS and EVPI?",
+   "o": [
+    "VSS = 1, EVPI = 2",
+    "VSS = 2, EVPI = 1",
+    "VSS = 3, EVPI = 2",
+    "VSS = 1, EVPI = 3"
+   ],
+   "a": 0,
+   "e": "VSS $=C_{DET}-C_{AO}=11-10=1$; EVPI $=C_{AO}-C_{WS}=10-8=2$. 3 is $C_{DET}-C_{WS}$, the sum of the two gaps.",
+   "d": "medium",
+   "t": 1,
+   "src": "Recitation 10.pdf p.11"
+  },
+  {
+   "q": "The morning price rises from \\$3 to \\$5 (bake cost still \\$2). How many loaves does AO bake tonight?",
+   "o": [
+    "6",
+    "2",
+    "4",
+    "Any $x\\in[2,6]$"
+   ],
+   "a": 0,
+   "e": "A loaf in $[2,6]$ saves \\$5 only if $d=6$: expected $\\tfrac12\\cdot5=2.5>2$, so bake up to 6. 'Any $x\\in[2,6]$' is the \\$4 case, where $\\tfrac12\\cdot4=2$ exactly.",
+   "d": "medium",
+   "t": 1,
+   "src": "Recitation 10.pdf p.13"
+  },
+  {
+   "q": "At a morning price of \\$5, what is the EVPI of the bakery?",
+   "o": [
+    "4",
+    "2",
+    "1",
+    "0"
+   ],
+   "a": 0,
+   "e": "AO bakes 6, cost 12 in both scenarios, so $C_{AO}=12$. WS bakes exactly $d$ and never buys in the morning, so $C_{WS}=8$ whatever the price. EVPI $=12-8=4$; 2 is the EVPI at \\$3.",
+   "d": "hard",
+   "t": 1,
+   "src": "Recitation 10.pdf p.13"
+  },
+  {
+   "q": "Which pair of equalities between a model's optimal value $Z$ and its true expected cost $C$ always holds?",
+   "o": [
+    "$Z_{AO}=C_{AO}$ and $Z_{WS}=C_{WS}$",
+    "$Z_{DET}=C_{DET}$ and $Z_{AO}=C_{AO}$",
+    "Only $Z_{DET}=C_{DET}$",
+    "None of them"
+   ],
+   "a": 0,
+   "e": "The AO and WS objectives are their true expected costs by definition. DET optimizes against mean data and never sees the shortage: bakery $Z_{DET}=8$ but $C_{DET}=11$.",
+   "d": "medium",
+   "t": 1,
+   "src": "Recitation 10.pdf p.15"
+  },
+  {
+   "q": "Variant: demand is known to be 4, baking costs \\$2, and the morning price is \\$1 or \\$5 w.p. ½. Compute $Z_{DET}$ and $Z_{WS}$.",
+   "o": [
+    "$Z_{DET}=8$, $Z_{WS}=6$",
+    "$Z_{DET}=6$, $Z_{WS}=8$",
+    "$Z_{DET}=8$, $Z_{WS}=8$",
+    "$Z_{DET}=12$, $Z_{WS}=6$"
+   ],
+   "a": 0,
+   "e": "DET sees the mean price \\$3 > \\$2 and bakes 4: 8. WS buys all 4 at \\$1 in the low case (4) and bakes 4 in the high case (8): average 6. So $Z_{DET}>Z_{WS}$ here; Jensen's $Z_{DET}\\le Z_{WS}$ needs randomness only in the RHS.",
+   "d": "hard",
+   "t": 1,
+   "src": "Recitation 10.pdf p.15"
+  },
+  {
+   "q": "In a DP, the state $s_t$ should be:",
+   "o": [
+    "A sufficient summary of the past for future decisions and costs",
+    "The full history of all past decisions and outcomes",
+    "The current decision $x_t$",
+    "The terminal cost $f_T$"
+   ],
+   "a": 0,
+   "e": "Too little information makes the recursion incorrect; the full history is sufficient but needlessly expensive.",
+   "d": "easy",
+   "t": 2,
+   "src": "Recitation 10.pdf p.18"
+  },
+  {
+   "q": "Option $a$ costs 1 now and leads (w.p. ½ each) to states with $J_1=4$ or $2$; option $b$ costs 3 now and leads to $J_1=1$ or $2$. What are $J_0$ and $x_0^*$?",
+   "o": [
+    "$J_0=4$, $x_0^*=a$",
+    "$J_0=4.5$, $x_0^*=b$",
+    "$J_0=3$, $x_0^*=a$",
+    "$J_0=1.5$, $x_0^*=b$"
+   ],
+   "a": 0,
+   "e": "$a$: $1+\\tfrac12(4+2)=4$; $b$: $3+\\tfrac12(1+2)=4.5$; take the min. Dropping the stage-0 cost gives 3 vs 1.5 and wrongly picks $b$.",
+   "d": "medium",
+   "t": 2,
+   "src": "Recitation 10.pdf p.21"
+  },
+  {
+   "q": "Deciding knapsack items one by one, what is the smallest sufficient state for the unbounded integer knapsack?",
+   "o": [
+    "Remaining capacity $s$ alone",
+    "Item index and capacity $(i,s)$",
+    "Item index $i$ alone",
+    "The vector of quantities chosen so far"
+   ],
+   "a": 0,
+   "e": "With unlimited copies it does not matter which items were used, only how much capacity is left. $(i,s)$ is what the binary version needs.",
+   "d": "easy",
+   "t": 3,
+   "src": "Recitation 10.pdf p.23"
+  },
+  {
+   "q": "$\\max 11x_1+7x_2+5x_3+x_4$ s.t. $6x_1+4x_2+3x_3+x_4\\le s$, $x\\in\\mathbb{Z}^4_+$. Given $J(0..3)=0,1,2,5$, compute $J(4)$.",
+   "o": [
+    "7",
+    "6",
+    "5",
+    "8"
+   ],
+   "a": 0,
+   "e": "Items that fit: $j=2$: $7+J(0)=7$; $j=3$: $5+J(1)=6$; $j=4$: $1+J(3)=6$. Max is 7. 6 comes from starting with item 3 or 4.",
+   "d": "medium",
+   "t": 3,
+   "src": "Recitation 10.pdf p.25"
+  },
+  {
+   "q": "Bake whole loaves for 10 nights; demand each night is independently 2 or 6; inventory carries over with capacity 12. How many scenario-tree decision nodes vs DP state entries (night, stock)?",
+   "o": [
+    "Tree 1,023; DP 130",
+    "Tree 20; DP 130",
+    "Tree 1,023; DP 1,023",
+    "Tree 130; DP 1,023"
+   ],
+   "a": 0,
+   "e": "Tree: $1+2+\\dots+2^9=2^{10}-1=1{,}023$. DP: 13 stock levels (0–12) × 10 nights = 130, since many histories lead to the same stock. 20 counts nights × outcomes, not histories.",
+   "d": "hard",
+   "t": 4,
+   "src": "Recitation 10.pdf p.33"
+  },
+  {
+   "q": "In the AO ↔ DP dictionary, the recourse function $Q(x)$ corresponds to:",
+   "o": [
+    "The expected cost-to-go $E[J_1(s_1)]$",
+    "The policy $\\mu_1^*(s_1)$",
+    "The terminal cost $f_T$",
+    "The stage-0 cost $f_0$"
+   ],
+   "a": 0,
+   "e": "In the bakery DP, $E[J_1(x_0-u_0)]$ is exactly $Q(x_0)$. The policy corresponds to the per-scenario recourse variables $y_s$, not to $Q$.",
+   "d": "easy",
+   "t": 4,
+   "src": "Recitation 10.pdf p.32"
+  },
+  {
+   "q": "Arcs $o\\to a$ (4), $o\\to b$ (2), $b\\to a$ (1), $a\\to b$ (2), $a\\to d$ (3), $b\\to d$ (6); $J_1=(0,4,2,\\infty)$ for $(o,a,b,d)$. Find $J_2(d)$ and $J_3(d)$.",
+   "o": [
+    "$J_2(d)=7$, $J_3(d)=6$",
+    "$J_2(d)=8$, $J_3(d)=7$",
+    "$J_2(d)=6$, $J_3(d)=6$",
+    "$J_2(d)=7$, $J_3(d)=7$"
+   ],
+   "a": 0,
+   "e": "$J_2(d)=\\min\\{4+3,2+6\\}=7$ and $J_2(a)=\\min\\{4,2+1\\}=3$, so $J_3(d)=\\min\\{7,3+3,2+6\\}=6$ via $o\\to b\\to a\\to d$. Cost 6 needs three edges, so it cannot appear at $t=2$.",
+   "d": "medium",
+   "t": 5,
+   "src": "Recitation 10.pdf p.38"
+  },
+  {
+   "q": "Benders on the bakery, iteration 2 evaluates $x^2=4$ (iteration 1 gave UB = 12). What are $Q(4)$ and the new UB?",
+   "o": [
+    "$Q(4)=3$, UB $=11$",
+    "$Q(4)=6$, UB $=14$",
+    "$Q(4)=0$, UB $=8$",
+    "$Q(4)=3$, UB $=8$"
+   ],
+   "a": 0,
+   "e": "Only $d_H$ is short, by 2 at \\$3 w.p. ½: $Q(4)=3$, so $2\\cdot4+3=11<12$. $Q=0$ is the master's $\\theta^2$; UB $=8$ confuses it with the LB.",
+   "d": "medium",
+   "t": 6,
+   "src": "Recitation 10.pdf p.41"
+  },
+  {
+   "q": "At $x^2=4$ the subproblem duals are $\\lambda_s=3$ if $x<d_s$ and $0$ if $x>d_s$. Which optimality cut is added?",
+   "o": [
+    "$\\theta\\ge 9-1.5x$",
+    "$\\theta\\ge 12-3x$",
+    "$\\theta\\ge 18-3x$",
+    "$\\theta\\ge 3$"
+   ],
+   "a": 0,
+   "e": "$\\lambda_L=0$ ($4>2$), $\\lambda_H=3$: $\\theta\\ge\\tfrac12\\cdot3(6-x)=9-1.5x$. $12-3x$ is cut 1 (both scenarios short); $18-3x$ drops the ½; $\\theta\\ge3$ is a constant, not a cut valid for all $x$.",
+   "d": "hard",
+   "t": 6,
+   "src": "Recitation 10.pdf p.41"
+  },
+  {
+   "q": "Which statement holds at every Benders iteration k?",
+   "o": [
+    "$c^\\top x^k+\\theta^k\\le C_{AO}$",
+    "$c^\\top x^k+Q(x^k)$ is nonincreasing in $k$",
+    "The master is bounded even with no lower bound on $\\theta$",
+    "$c^\\top x^k+\\theta^k\\ge C_{AO}$"
+   ],
+   "a": 0,
+   "e": "Cuts under-estimate $Q$, so the master is a relaxation and its value is a lower bound. The iterate's true cost can rise (it only happens to fall in the bakery), which is why the best UB so far is reported.",
+   "d": "hard",
+   "t": 6,
+   "src": "Recitation 10.pdf p.42"
+  }
+ ],
+ "written": [
+  {
+   "q": "Bakery: bake $x\\in[0,6]$ loaves tonight at \\$2; demand is 2 or 6 w.p. ½; any shortfall is bought tomorrow at price $p$; leftovers are wasted. (a) Write the AO extensive form. (b) For $p=3$, compute $x_{AO}$, $C_{AO}$, $Z_{DET}$, $C_{DET}$, $C_{WS}$, VSS and EVPI. (c) State the rule that determines how much AO bakes, find $x_{AO}$ for $p=5$, and explain why DET does not change its decision.",
+   "m": "(a) $\\min 2x+\\tfrac p2y_L+\\tfrac p2y_H$ s.t. $y_L\\ge2-x$, $y_H\\ge6-x$, $0\\le x\\le6$, $y_L,y_H\\ge0$ (epigraph of $p\\max\\{d_s-x,0\\}$). (b) $2x+Q(x)=12-x$ on $[0,2]$ and $9+x/2$ on $[2,6]$, so $x_{AO}=2$, $C_{AO}=10$. DET plans for $\\bar d=4$, bakes 4: $Z_{DET}=8$, true cost 8 or 14, $C_{DET}=11$. WS bakes $d$: 4 or 12, $C_{WS}=8$. VSS $=1$, EVPI $=2$. (c) Critical fractile: bake another loaf while $P(d>x)\\,p>2$. On $[2,6]$, $P(d>x)=\\tfrac12$; at $p=5$, $2.5>2$, so $x_{AO}=6$, $C_{AO}=12$ (vs $C_{DET}=13$). DET bakes 4 for any $p>2$ because the mean-value model never sees a shortage, so the price of the recourse never enters its decision.",
+   "k": [
+    "Extensive form with epigraph variables and ½ probability weights",
+    "Piecewise expected cost and $x_{AO}=2$, $C_{AO}=10$",
+    "Distinguishes $Z_{DET}=8$ from $C_{DET}=11$",
+    "$C_{WS}=8$, VSS $=1$, EVPI $=2$ with correct definitions",
+    "Critical fractile rule and $x_{AO}=6$ at $p=5$",
+    "Explains DET's insensitivity to the morning price"
+   ],
+   "t": 1
+  },
+  {
+   "q": "Unbounded integer knapsack: $\\max 11x_1+7x_2+5x_3+x_4$ s.t. $6x_1+4x_2+3x_3+x_4\\le25$, $x\\in\\mathbb{Z}^4_+$. (a) Define the DP state, decision, transition and reward. (b) Write the Bellman recursion and justify the order of computation. (c) Compute $J(0),\\dots,J(6)$. (d) Why does the binary (0/1) version need a larger state, and how big is each table? (e) Given $J(25)=45$ with stored argmaxes, recover one optimal solution.",
+   "m": "(a) State $s$ = remaining capacity; decision = next item $j$ with $a_j\\le s$ (or stop); transition $s\\to s-a_j$; reward $c_j$. (b) $J(s)=\\max\\{0,\\max_{j:a_j\\le s}[c_j+J(s-a_j)]\\}$, $J(0)=0$. Every $a_j>0$, so transitions strictly reduce $s$ and the table can be filled for $s=0,1,\\dots,25$ in increasing order (a longest path on an acyclic graph). (c) $J=0,1,2,5,7,8,11$ for $s=0..6$; e.g. $J(4)=\\max\\{7+0,5+1,1+5\\}=7$, $J(6)=\\max\\{11+0,7+2,5+5,1+8\\}=11$. (d) In the 0/1 version each item can be used once, so the state must record which items remain: $(i,s)$ with $n(K+1)$ entries and 2 choices each, vs $K+1$ entries with $n$ choices for the unbounded version. (e) Trace back $25\\to19\\to13\\to7\\to1\\to0$ using item 1 four times and item 4 once: $x^*=(4,0,0,1)$, value 45. A tie at $s=7$ ($7\\to3\\to0$ via items 2 and 3) gives another optimum, $(3,1,1,0)$.",
+   "k": [
+    "State = remaining capacity, with decision/transition/reward",
+    "Correct recursion with J(0)=0 and increasing-s order justified by a_j > 0",
+    "J(0..6) = 0,1,2,5,7,8,11",
+    "Binary needs (i,s); table sizes n(K+1) vs K+1",
+    "Valid traceback to (4,0,0,1) or (3,1,1,0), value 45"
+   ],
+   "t": 3
+  }
+ ]
+}
