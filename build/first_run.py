@@ -8,7 +8,7 @@ The app's welcome screen starts the first sync once Canvas is connected:
        links to its page in your own copy of the slides;
     3. the study sets and the planner data are rebuilt from this vault.
 """
-import os, re, json, time, shutil, threading, importlib, datetime as dt
+import os, re, sys, json, time, shutil, threading, importlib, datetime as dt
 
 from config import VAULT, COURSES, LECTURE_DIRS, ROOT
 
@@ -95,10 +95,13 @@ def seed_decks():
 
 def rebuild(log=lambda s: None):
     """Read the seed decks' slide text, then rebuild the study sets and planner data from this vault."""
-    import extract_slides, build_courses, vault_sources
+    import extract_slides, vault_sources
     decks = seed_decks()
     extract_slides.extract(decks, log=log)
-    importlib.reload(build_courses)  # it reads slides_text.json when imported
+    # build_courses reads slides_text.json when it is imported, so import it only now (and reload it if it was imported before)
+    if 'build_courses' in sys.modules:
+        importlib.reload(sys.modules['build_courses'])
+    import build_courses
     build_courses.main()
     vault_sources.write_js()
     return len(decks)

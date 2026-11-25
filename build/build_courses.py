@@ -124,6 +124,15 @@ def lec_map(course):
 LEC = {c: lec_map(c) for c in ('c57', '095', '072')}
 
 
+class Missing(list):
+    """files_from_src found none of the decks a source names: this vault lacks them (or names them differently).
+    Empty and falsy, so 'files or course_files(...)' still falls back, but link() leaves such items unlinked
+    rather than pinning them to whichever deck of the course happens to be there."""
+
+
+NAMES_A_DECK = re.compile(r'\.pdf\b|\b(?:Lec|Lecture|L|Rec|Recitation|R)\s?\d', re.I)
+
+
 def files_from_src(course, src):
     out = []
     by_name = {SLIDES[k]['file'].lower(): k for k in course_files(course)}
@@ -146,7 +155,7 @@ def files_from_src(course, src):
                 out.append(k)
     if re.search(r'practice[ -]exam|Practice exam|^PE\b', src, re.I):
         out += [k for k in course_files(course) if 'practice-exam' in k and k not in out]
-    return out
+    return out or (Missing() if NAMES_A_DECK.search(src or '') else out)
 
 
 def parse_ref(course, src):
@@ -182,6 +191,8 @@ def slide_tuple(ref):
 
 
 def link(index, text, files):
+    if isinstance(files, Missing):
+        return None
     k, p, s = index.best(text, set(files) if files else None)
     if not k and files:
         k, p, s = index.best(text)
