@@ -10,6 +10,7 @@ Options:
     --no-window          skip building the Carrel desktop window (Windows); Carrel then opens in your browser
     --startup            start Carrel when you sign in to Windows
     --no-tailscale       skip sharing Carrel to your phone through Tailscale
+    --no-shortcuts       don't add desktop / Start-menu / startup shortcuts (for a second, test copy)
 
 It installs one Python package (pypdf), writes carrel.config.json, creates the vault's folders and starter notes,
 puts a Carrel shortcut on your desktop, and shares Carrel with your phone through Tailscale if Tailscale is set up.
@@ -83,6 +84,7 @@ def main():
     p.add_argument('--no-window', action='store_true')
     p.add_argument('--startup', action='store_true')
     p.add_argument('--no-tailscale', action='store_true')
+    p.add_argument('--no-shortcuts', action='store_true')
     a = p.parse_args()
     auto = a.yes
 
@@ -143,12 +145,15 @@ def main():
             if r.returncode != 0 or not os.path.exists(exe):
                 say('    could not build the window (%s); Carrel will open in your browser instead.' % (r.stdout + r.stderr).strip()[-300:])
         launch = exe if os.path.exists(exe) else os.path.join(ROOT, 'Start Carrel.cmd')
-        ok = shortcut(os.path.join(desktop_dir(), 'Carrel.lnk'), launch, ROOT)
+        if a.no_shortcuts:
+            say('    no shortcuts (--no-shortcuts); start Carrel with %s' % launch)
+        ok = not a.no_shortcuts and shortcut(os.path.join(desktop_dir(), 'Carrel.lnk'), launch, ROOT)
         menu = os.path.join(os.environ.get('APPDATA', ''), 'Microsoft', 'Windows', 'Start Menu', 'Programs')
-        if os.path.isdir(menu):
+        if os.path.isdir(menu) and not a.no_shortcuts:
             shortcut(os.path.join(menu, 'Carrel.lnk'), launch, ROOT)
-        say('    %s' % ('Carrel is on your desktop and in the Start menu.' if ok else 'Could not make a shortcut; open %s directly.' % launch))
-        if a.startup or (not auto and yes('Start Carrel when you sign in to Windows? (lets your phone reach it any time)', True, False)):
+        if not a.no_shortcuts:
+            say('    %s' % ('Carrel is on your desktop and in the Start menu.' if ok else 'Could not make a shortcut; open %s directly.' % launch))
+        if not a.no_shortcuts and (a.startup or (not auto and yes('Start Carrel when you sign in to Windows? (lets your phone reach it any time)', True, False))):
             startup = os.path.join(os.environ.get('APPDATA', ''), 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'Carrel.lnk')
             say('    %s' % ('Carrel will start when you sign in.' if shortcut(startup, launch, ROOT, minimized=True) else 'Could not add the startup shortcut.'))
     else:
@@ -157,7 +162,7 @@ def main():
             f.write('#!/bin/bash\ncd "$(dirname "$0")"\nexec "%s" server.py\n' % sys.executable)
         os.chmod(launch, 0o755)
         link = os.path.join(desktop_dir(), 'Carrel.command')
-        if not os.path.exists(link):
+        if not os.path.exists(link) and not a.no_shortcuts:
             try:
                 os.symlink(launch, link)
             except OSError:
